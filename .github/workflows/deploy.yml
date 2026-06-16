@@ -6,13 +6,17 @@ on:
   pull_request:
     branches: [main]
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  # Build is independent of deploy so it gives a clean green CI signal even
+  # while the Cloudflare token is being sorted. The static export (out/) is the
+  # build output Cloudflare Pages serves.
+  build:
+    name: Build
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -34,11 +38,56 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Build
+      - name: Build (static export)
+        run: pnpm --filter @bushpop/web build
+
+  # Deploy is isolated and only runs on push to main, so it can be re-run
+  # independently once a Pages-scoped Cloudflare token is in the
+  # CLOUDFLARE_API_TOKEN secret.
+  #
+  # BLOCKER (16/06/2026): the current bushpop CF token has Zone scope only, not
+  # Cloudflare Pages:Edit — so this job fails at the deploy step until Ben mints
+  # a Pages-scoped token and updates the CLOUDFLARE_API_TOKEN secret. The
+  # CLOUDFLARE_ACCOUNT_ID secret is already set. See bushpop-v2 README +
+  # ~/projects/Bushpop/docs/architecture-decisions.md.
+  deploy:
+    name: Deploy to Cloudflare Pages
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (static export)
         run: pnpm --filter @bushpop/web build
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
+        # Inject credentials as env vars too (belt-and-braces): wrangler reads
+        # CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID directly from the
+        # environment, which is more robust than relying on action inputs alone.
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy apps/web/out --project-name bushpop-v2 --commit-dirty=true
