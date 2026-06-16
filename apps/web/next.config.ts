@@ -21,6 +21,13 @@ const nextConfig: NextConfig = {
 
   // Enable .mdx file routing
   pageExtensions: ["ts", "tsx", "mdx"],
+
+  // Silence the workspace-root detection warning — Next 16 Turbopack picks up
+  // the wrong root when a parent directory has a lockfile. Point it at the
+  // monorepo root (two levels up from apps/web).
+  turbopack: {
+    root: "../../",
+  },
 };
 
 export default withMDX(nextConfig);
