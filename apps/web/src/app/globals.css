@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+/*
+  Bushpop brand tokens — placeholder values for Launch 1.
+  Will expand when packages/ui design tokens land at Launch 2.
+*/
+@theme {
+  --color-bushpop-green: #2d6a4f;
+  --color-bushpop-cream: #fefae0;
+  --color-bushpop-rust: #bc6c25;
+  --font-display: "Helvetica Neue", "Arial", sans-serif;
+  --font-body: "Helvetica Neue", "Arial", sans-serif;
+}

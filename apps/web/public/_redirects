@@ -1,0 +1,15 @@
+# Cloudflare Pages _redirects
+# Reference: https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# IMPORTANT: next.config redirects() are ignored under output: 'export'.
+#            ALL redirect rules live in this file only.
+#
+# Filled in by the URL-mapping handoff (see ~/projects/Bushpop/docs/architecture-decisions.md §6).
+# Template patterns (uncomment + adjust targets when URL-mapping handoff runs):
+#
+# /shop/*  /shop  301
+# /brand/* /guides/size-charts/ 301
+# /uncategorized/* /gone 410
+#
+# Cap: Cloudflare Pages free tier supports ~2,000 static redirect rules.
+# Use splat patterns (above) to handle 1,666 product URLs + 73 brand URLs in ~3 rules.
