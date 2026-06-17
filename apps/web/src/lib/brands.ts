@@ -273,6 +273,464 @@ export const BRANDS: Brand[] = [
     ],
     lastVerified: "June 2026",
   },
+  {
+    slug: "zara",
+    name: "Zara",
+    category: "Global fast fashion · women's",
+    unitNote:
+      "Zara labels womenswear with both an alpha size (XS–XL) and a European numeric size. Its body chart is centimetre-native.",
+    answer:
+      "Zara is a Spanish brand that labels womenswear with both an alpha size (XS to XL) and a European numeric size, and its body chart is published natively in centimetres. A size Medium fits roughly a 90cm bust, 70cm waist and 98cm hip, which lines up with an EU 38 or an Australian 12. The single most useful thing to know about Zara is that it runs small and cuts slim, especially through tops, shoulders and tailored jackets, so many shoppers size up one from their usual fit. Sizing is also inconsistent between ranges and seasons, because Zara produces collections on very short cycles. Australian sizing follows UK numbers, so an AU 10 maps to a Zara Small or EU 36. When buying Zara secondhand, measure the garment flat against the chart rather than trusting the tag, since the cut varies more than the label suggests.",
+    sizeRows: [
+      { size: "XXS", bust: "80", waist: "58", hip: "86" },
+      { size: "XS", bust: "82", waist: "62", hip: "90" },
+      { size: "S", bust: "86", waist: "66", hip: "94" },
+      { size: "M", bust: "90", waist: "70", hip: "98" },
+      { size: "L", bust: "96", waist: "76", hip: "104" },
+      { size: "XL", bust: "102", waist: "82", hip: "110" },
+      { size: "XXL", bust: "108", waist: "88", hip: "116" },
+    ],
+    hasLetters: false,
+    intl: [
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+      { au: "16", us: "12", uk: "16", eu: "44" },
+    ],
+    fitNote:
+      "Zara runs small and cuts slim, particularly through tops, shoulders and tailored jackets, so many shoppers size up one. Fit is also inconsistent between ranges and seasons because of the brand's short production cycles.",
+    faqs: [
+      {
+        q: "Does Zara run small?",
+        a: "Yes — Zara is widely reported to run small and cut slim relative to other high-street brands, especially in tops, shoulders and structured jackets, so sizing up one is common. Fit also varies noticeably between ranges and seasons, so the same labelled size can feel different across two Zara pieces.",
+      },
+      {
+        q: "What is a Zara Medium in Australian sizes?",
+        a: "A Zara Medium fits roughly a 90cm bust, 70cm waist and 98cm hip, which corresponds to an EU 38 and an Australian 12. Zara uses UK numbers for its numeric labels, and Australian women's sizing follows UK sizing, so an AU 10 maps to a Zara Small or EU 36.",
+      },
+      {
+        q: "How do I check Zara sizing when buying secondhand?",
+        a: "Measure the garment flat and compare it to the centimetre chart above rather than relying on the size tag, because Zara's cut varies more than the label implies. Pay particular attention to bust and shoulder width on fitted tops, where Zara runs tightest.",
+      },
+    ],
+    verified: "medium",
+    cmConverted: false,
+    sources: [
+      "https://www.sizedepo.com/sc/sizechart/zara-women-234",
+      "https://size-charts.com/brands/zara-size-charts/zara-womens-size-chart/",
+    ],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "hm",
+    name: "H&M",
+    category: "Global fast fashion · women's",
+    unitNote:
+      "H&M uses European numeric sizing as its base, mapped to alpha labels. The centimetre ranges below are H&M's own body measurements.",
+    answer:
+      "H&M is a Swedish brand that bases its womenswear on European numeric sizing, mapped to alpha labels from XXS to XL, with body measurements published in centimetres. A size Small spans roughly an 82–90cm bust, a 66–74cm waist and a 90–97.5cm hip, which maps to an EU 36–38 or an Australian 8–10. The key thing to know is that H&M's alpha size bands are unusually wide, so a single letter can cover an 8cm bust range and fit varies a lot within one size. Fit also differs by line: Basics tend to run slightly generous, while the Premium and tailored ranges sit closer to the body chart. Australian sizing follows UK numbers. Because H&M garment cuts are inconsistent across collections, the most reliable approach when buying secondhand is to measure the item flat and match it to these centimetre ranges rather than trusting the label alone.",
+    sizeRows: [
+      { size: "XXS", bust: "74–78", waist: "58–62", hip: "82–86" },
+      { size: "XS", bust: "78–82", waist: "62–66", hip: "86–90" },
+      { size: "S", bust: "82–90", waist: "66–74", hip: "90–97.5" },
+      { size: "M", bust: "90–98", waist: "74–82.5", hip: "97.5–103.5" },
+      { size: "L", bust: "98–107", waist: "82.5–93", hip: "103.5–110.5" },
+      { size: "XL", bust: "107–119", waist: "93–105", hip: "110.5–120.5" },
+    ],
+    hasLetters: false,
+    intl: [
+      { au: "6", us: "2", uk: "6", eu: "32" },
+      { au: "8", us: "4", uk: "8", eu: "34" },
+      { au: "10", us: "6", uk: "10", eu: "36" },
+      { au: "12", us: "8", uk: "12", eu: "38" },
+      { au: "14", us: "10", uk: "14", eu: "40" },
+      { au: "16", us: "12", uk: "16", eu: "42" },
+    ],
+    fitNote:
+      "H&M's alpha size bands are unusually wide, so fit varies a lot within a single letter. Basics run slightly generous while Premium and tailored lines sit closer to the body chart — check each garment's own measurements.",
+    faqs: [
+      {
+        q: "Why do H&M sizes feel inconsistent?",
+        a: "H&M designs across several lines — Basics, Trend and Premium — and its alpha size bands are wide, so a Small can span an 82–90cm bust. The same labelled size genuinely fits differently between collections, which is why H&M lists individual measurements on each product page.",
+      },
+      {
+        q: "What is an H&M EU 36 in Australian sizing?",
+        a: "EU 36 maps to UK 10 and Australian 10 in H&M's conversion, sitting in the Small to Medium band with roughly an 84–90cm bust. H&M does not publish a separate Australian column, but Australian women's sizing follows UK numbers.",
+      },
+      {
+        q: "Does H&M run small or large?",
+        a: "It depends on the line. H&M Basics tend to run slightly generous for the stated measurement, while Premium and tailored pieces run true to the body chart. When buying secondhand, measure the garment flat against the centimetre ranges above rather than trusting the label.",
+      },
+    ],
+    verified: "medium",
+    cmConverted: false,
+    sources: [
+      "https://pitapats.com/pages/h-m-woman-size-chart",
+      "https://sizechartly.com/hm-womens-size-chart/",
+    ],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "uniqlo",
+    name: "Uniqlo",
+    category: "Global basics · women's",
+    unitNote:
+      "Uniqlo uses alpha sizing (XXS–XXL) with a US numeric mapping. The centimetre figures below are Uniqlo's published body measurements.",
+    answer:
+      "Uniqlo is a Japanese brand that sizes womenswear with alpha labels from XXS to XXL, alongside a US numeric mapping, and publishes body measurements in centimetres. A size Medium maps to US 8–10 and fits roughly an 89–94cm bust, a 71–74cm waist and a 96–102cm hip. The most important thing to know is that Uniqlo is drafted to Japanese body proportions and runs small by Western standards, so many shoppers size up one — a Western Medium often wears better as a Uniqlo Large, particularly in fitted tops and dresses. Outerwear and the relaxed LifeWear basics are more forgiving. Uniqlo revised its women's body chart from late 2025, so re-check the ranges if you sized from an older guide. Australian stores use the same alpha labels. When buying Uniqlo secondhand, go by the centimetre body measurements rather than converting from your usual AU dress size, since the alpha cut sits smaller than the number suggests.",
+    sizeRows: [
+      { size: "XXS", letter: "US 000–00", bust: "74–79", waist: "56–58", hip: "83–87" },
+      { size: "XS", letter: "US 0–2", bust: "79–84", waist: "61–64", hip: "87–91" },
+      { size: "S", letter: "US 4–6", bust: "84–89", waist: "66–69", hip: "91–96" },
+      { size: "M", letter: "US 8–10", bust: "89–94", waist: "71–74", hip: "96–102" },
+      { size: "L", letter: "US 12", bust: "94–99", waist: "76", hip: "102–108" },
+      { size: "XL", letter: "US 14", bust: "99–104", waist: "81", hip: "108–114" },
+      { size: "XXL", letter: "US 16", bust: "104–109", waist: "86", hip: "114–120" },
+    ],
+    hasLetters: true,
+    fitNote:
+      "Uniqlo is drafted to Japanese body proportions and runs small by Western standards, so many shoppers size up one — a Western Medium often fits better as a Uniqlo Large. Outerwear and relaxed LifeWear basics are more forgiving.",
+    faqs: [
+      {
+        q: "Does Uniqlo run small?",
+        a: "Yes. Uniqlo sizing is based on Japanese body proportions, which run smaller than Western averages, so most Western shoppers with a Medium body measurement find a Uniqlo Large or XL more comfortable, especially in fitted tops and dresses. Outerwear and relaxed basics are more forgiving.",
+      },
+      {
+        q: "What is a Uniqlo Medium in centimetres?",
+        a: "A Uniqlo Medium maps to US 8–10 and fits roughly an 89–94cm bust, 71–74cm waist and 96–102cm hip on the brand's body chart. Uniqlo revised its women's measurements from late 2025, so re-check against the current ranges if you sized from an older guide.",
+      },
+      {
+        q: "How does Uniqlo sizing work in Australia?",
+        a: "Uniqlo Australia uses the same alpha labels (XS, S, M, L, XL) as the rest of the world and does not publish an Australian numeric conversion. The most reliable approach is to match your body measurements to the centimetre ranges above rather than converting from your usual AU dress size.",
+      },
+    ],
+    verified: "medium",
+    cmConverted: false,
+    sources: ["https://www.sizedepo.com/sc/sizechart/uniqlo-women-242"],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "witchery",
+    name: "Witchery",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Witchery uses AU numeric sizing (4–20) with an XXS–XXXL letter mapping. Its chart is published in centimetres as ranges per size.",
+    answer:
+      "Witchery is an Australian brand using AU numeric sizing from 4 to 20, with a letter mapping where a 10 is Small, 12 is Medium and 14 is Large, and its chart is published in centimetres as ranges. A size 12 fits a 97–101cm bust, 77–81cm waist and 106–110cm hip. The useful thing to know about Witchery is that it sizes close to the standard Australian scale, so it is one of the more predictable AU brands to buy unseen — the tagged number generally matches the body it is drafted for. The exception is Witchery's relaxed and oversized styles, which the brand grades across two numeric sizes at once (a single label covering, say, AU 4 to 8), so those pieces wear larger and looser by design. Because Witchery is a common secondhand find and pieces are rarely altered, the size tag is dependable — just identify whether a piece is a tailored or a relaxed cut before choosing.",
+    sizeRows: [
+      { size: "6", letter: "XXS", bust: "82–86", waist: "62–66", hip: "91–95" },
+      { size: "8", letter: "XS", bust: "87–91", waist: "67–71", hip: "96–100" },
+      { size: "10", letter: "S", bust: "92–96", waist: "72–76", hip: "101–105" },
+      { size: "12", letter: "M", bust: "97–101", waist: "77–81", hip: "106–110" },
+      { size: "14", letter: "L", bust: "102–106", waist: "82–86", hip: "111–115" },
+      { size: "16", letter: "XL", bust: "107–111", waist: "87–91", hip: "116–120" },
+    ],
+    hasLetters: true,
+    fitNote:
+      "Witchery sizes close to the standard Australian scale, making it predictable to buy unseen. The exception is its relaxed and oversized styles, which are graded across two numeric sizes at once and wear larger and looser by design.",
+    faqs: [
+      {
+        q: "Does Witchery fit true to size?",
+        a: "Largely yes — Witchery sizes close to the standard Australian scale, so the tagged number generally matches the body it is drafted for, making it one of the more predictable AU brands. The exception is its relaxed and oversized styles, which are graded across two numeric sizes and wear looser by design.",
+      },
+      {
+        q: "What is a Witchery size 12 in cm?",
+        a: "A Witchery size 12 (Medium) fits a 97–101cm bust, 77–81cm waist and 106–110cm hip on the brand's official centimetre chart. Witchery publishes ranges rather than single points, so if you fall at the top of a band the next size up may suit a tailored piece better.",
+      },
+      {
+        q: "Is Witchery reliable to buy secondhand?",
+        a: "Yes. Witchery pieces are rarely altered, so the original AU size tag is dependable. Identify whether a garment is a tailored or a relaxed/oversized cut first, then match the centimetre ranges above — measuring the item flat is the safest check when buying preloved.",
+      },
+    ],
+    verified: "medium",
+    cmConverted: false,
+    sources: ["https://lodstore.com.au/pages/witchery-womens-size-guide"],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "seed-heritage",
+    name: "Seed Heritage",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Seed Heritage uses AU numeric sizing (4–18) with an XXS–XL letter mapping, and publishes an official AU/UK/US/EU conversion. Its chart is centimetre-native.",
+    answer:
+      "Seed Heritage is an Australian brand using AU numeric sizing from 4 to 18, with a letter mapping where a 10 is Small, 12 is Medium and 14 is Large, and a centimetre-native chart. A size 10 fits a 90–95cm bust, 70–75cm waist and 97–102cm hip. Seed sizes to a fairly slim, tailored silhouette, so its pieces tend to fit close through the waist and shoulders — shoppers who carry weight there, or who prefer a relaxed fit, often size up one. Unlike most Australian brands, Seed publishes a full international conversion (AU 10 = UK 8 = US 6 = EU 38), which makes it easy to cross-reference against imported labels. Seed is a frequent secondhand find and its tailored pieces hold their shape, so the size tag is reliable for structured items; check the listing photos for any relaxed knitwear, which wears looser than the chart implies.",
+    sizeRows: [
+      { size: "6", letter: "XXS", bust: "80–85", waist: "60–65", hip: "87–92" },
+      { size: "8", letter: "XS", bust: "85–90", waist: "65–70", hip: "92–97" },
+      { size: "10", letter: "S", bust: "90–95", waist: "70–75", hip: "97–102" },
+      { size: "12", letter: "M", bust: "95–100", waist: "75–80", hip: "102–107" },
+      { size: "14", letter: "L", bust: "100–105", waist: "80–85", hip: "107–112" },
+      { size: "16", letter: "XL", bust: "105–110", waist: "85–90", hip: "112–117" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "6", us: "2", uk: "4", eu: "34" },
+      { au: "8", us: "4", uk: "6", eu: "36" },
+      { au: "10", us: "6", uk: "8", eu: "38" },
+      { au: "12", us: "8", uk: "10", eu: "40" },
+      { au: "14", us: "10", uk: "12", eu: "42" },
+      { au: "16", us: "12", uk: "14", eu: "44" },
+    ],
+    fitNote:
+      "Seed Heritage is cut to a slim, tailored silhouette and fits close through the waist and shoulders, so shoppers who carry weight there or prefer a relaxed fit often size up. Its relaxed knitwear wears looser than the chart implies.",
+    faqs: [
+      {
+        q: "Does Seed Heritage run small?",
+        a: "Seed Heritage is cut to a slim, tailored silhouette, fitting close through the waist and shoulders, so people who carry weight there or who prefer a relaxed fit often size up one. Structured pieces sit true to the body chart; only the relaxed knitwear wears looser than the measurements suggest.",
+      },
+      {
+        q: "What is a Seed Heritage size 10 in US sizing?",
+        a: "An AU 10 at Seed Heritage equals a UK 8, US 6 and EU 38 on the brand's officially published conversion. A size 10 fits a 90–95cm bust, 70–75cm waist and 97–102cm hip.",
+      },
+      {
+        q: "Is Seed Heritage reliable to buy secondhand?",
+        a: "Yes for structured and tailored pieces, which hold their shape and match the size tag. For relaxed knitwear, check the listing photos and any flat measurements, since those styles wear looser than the chart. Measuring the garment against the centimetre figures above is the safest check.",
+      },
+    ],
+    verified: "medium",
+    cmConverted: false,
+    sources: ["https://www.seedheritage.com/size-chart-woman.html"],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "sportsgirl",
+    name: "Sportsgirl",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Sportsgirl uses AU numeric sizing (4–18) with an XXXS–XXL letter mapping. Its chart is centimetre-native with single-point measurements.",
+    answer:
+      "Sportsgirl is an Australian brand using AU numeric sizing from 4 to 18, with a letter mapping where a 10 is Small, 12 is Medium and 14 is Large, and a centimetre-native chart. A size 10 fits a 90cm bust, 70cm waist and 97cm hip. The useful thing to know about Sportsgirl is that it grades cleanly in 5cm steps across bust, waist and hip, with no vanity sizing, so the tagged number reflects standard Australian body measurements closely and the brand is predictable to buy unseen. Sportsgirl targets a younger market and many of its tops and dresses are cut on the relaxed or cropped side, so the silhouette reads casual even though the underlying measurements are true. Because Sportsgirl pieces turn over quickly and are rarely altered, the AU size tag is dependable secondhand — match your measurements to the centimetre figures and factor in whether a style is fitted or deliberately oversized.",
+    sizeRows: [
+      { size: "6", letter: "XXS", bust: "80", waist: "60", hip: "87" },
+      { size: "8", letter: "XS", bust: "85", waist: "65", hip: "92" },
+      { size: "10", letter: "S", bust: "90", waist: "70", hip: "97" },
+      { size: "12", letter: "M", bust: "95", waist: "75", hip: "102" },
+      { size: "14", letter: "L", bust: "100", waist: "80", hip: "107" },
+      { size: "16", letter: "XL", bust: "105", waist: "85", hip: "112" },
+    ],
+    hasLetters: true,
+    fitNote:
+      "Sportsgirl grades cleanly in 5cm steps with no vanity sizing, so the tag reflects standard Australian body measurements closely. Many tops and dresses are cut relaxed or cropped, so the silhouette reads casual even though the measurements are true.",
+    faqs: [
+      {
+        q: "Does Sportsgirl fit true to size?",
+        a: "Yes — Sportsgirl grades cleanly in 5cm increments across bust, waist and hip with no vanity sizing, so the tagged number reflects standard Australian body measurements and the brand is predictable to buy unseen. Many styles are cut relaxed or cropped, so check whether a piece is fitted or oversized.",
+      },
+      {
+        q: "What is a Sportsgirl size 10 in cm?",
+        a: "A Sportsgirl size 10 (Small) fits a 90cm bust, 70cm waist and 97cm hip on the brand's centimetre chart. Each size up adds roughly 5cm to each measurement, so a 12 is a 95cm bust and a 14 is a 100cm bust.",
+      },
+      {
+        q: "Is Sportsgirl reliable to buy secondhand?",
+        a: "Yes. Sportsgirl pieces turn over quickly and are rarely altered, so the AU size tag is dependable. Match your body measurements to the centimetre figures above, and factor in whether a style is fitted or deliberately oversized when judging the listing photos.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://www.sportsgirl.com.au/bridget-oversized-shirt-2-082960"],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "cotton-on",
+    name: "Cotton On",
+    category: "Australian fast fashion · women's",
+    unitNote:
+      "Cotton On uses AU/UK numeric sizing (4–24) with an alpha overlay (3XS–5XL), and publishes an official AU/US/EU conversion. Its chart is centimetre-native.",
+    answer:
+      "Cotton On is an Australian brand using AU/UK numeric sizing from 4 to 24, with an alpha overlay from 3XS to 5XL, and a centimetre-native chart. A size 10 (Small) fits a 90cm bust, 72cm waist and 98cm hip. The useful thing to know about Cotton On is that it treats AU and UK numbers as identical (an AU 10 is a UK 10), and publishes a single unified women's chart, so there is no UK offset to worry about. Cotton On's own guidance is to choose the larger size when you fall between two, because many of its tops, tees and dresses are cut on the relaxed, casual side. The brand also carries one of the broader size ranges on the high street, running to a 24. As a high-volume secondhand brand, Cotton On's tags are reliable; measure the garment flat against the chart and lean to the larger size for fitted styles.",
+    sizeRows: [
+      { size: "6", letter: "2XS", bust: "80", waist: "62", hip: "88" },
+      { size: "8", letter: "XS", bust: "85", waist: "67", hip: "93" },
+      { size: "10", letter: "S", bust: "90", waist: "72", hip: "98" },
+      { size: "12", letter: "M", bust: "95", waist: "77", hip: "103" },
+      { size: "14", letter: "L", bust: "101", waist: "83", hip: "109" },
+      { size: "16", letter: "XL", bust: "107", waist: "89", hip: "115" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+      { au: "16", us: "12", uk: "16", eu: "44" },
+    ],
+    fitNote:
+      "Cotton On treats AU and UK numbers as identical and cuts many tops, tees and dresses on the relaxed side. Its own guidance is to choose the larger size when between two — the brand also runs one of the broader size ranges on the high street.",
+    faqs: [
+      {
+        q: "Is Cotton On AU sizing the same as UK?",
+        a: "Yes — Cotton On uses a single unified women's chart where the AU and UK numbers are identical, so an AU 10 is a UK 10 with no offset. The official conversion maps that to a US 6 and an EU 38.",
+      },
+      {
+        q: "Does Cotton On run big or small?",
+        a: "Cotton On cuts many of its tops, tees and dresses on the relaxed, casual side, and its own size guide recommends choosing the larger size when you fall between two. For a closer fit on a fitted style, measuring the garment flat against the chart is the safest check.",
+      },
+      {
+        q: "What is a Cotton On size 10 in cm?",
+        a: "A Cotton On size 10 (Small) fits a 90cm bust, 72cm waist and 98cm hip on the brand's centimetre-native chart. Cotton On carries a broad range from AU 4 up to AU 24, so extended sizes follow the same grading.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://cottonon.com/AU/size-guide.html"],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "asos",
+    name: "ASOS",
+    category: "Global fast fashion · women's",
+    unitNote:
+      "ASOS Design uses UK numeric sizing (4–18) as its primary label, with body measurements published in centimetres. Australian sizing follows UK numbers.",
+    answer:
+      "ASOS is a British online retailer whose own-brand ASOS Design womenswear uses UK numeric sizing from 4 to 18 as the primary label, with body measurements published in centimetres. A UK 10 fits roughly a 91.5cm bust, 72.5cm waist and 96.5cm hip, which equals an Australian 10 and a US 6. The most useful thing to know is that ASOS Design follows standard UK body measurements fairly closely, but because ASOS sells across many sub-ranges, fit can vary by style — the brand itself flags that some lines differ from the base chart. Australian women's sizing matches UK numbers, so there is no conversion needed beyond reading the UK label. ASOS also runs separate Petite, Tall and Curve charts with different proportions. When buying ASOS Design secondhand, work from the UK size and the centimetre measurements together, and check whether a piece belongs to a speciality range before trusting the standard chart.",
+    sizeRows: [
+      { size: "4", letter: "XS", bust: "81.5", waist: "62", hip: "86.5" },
+      { size: "6", letter: "XS", bust: "84", waist: "65", hip: "89" },
+      { size: "8", letter: "S", bust: "86.5", waist: "67.5", hip: "91.5" },
+      { size: "10", letter: "S/M", bust: "91.5", waist: "72.5", hip: "96.5" },
+      { size: "12", letter: "M", bust: "96.5", waist: "77.5", hip: "101.5" },
+      { size: "14", letter: "L", bust: "101.5", waist: "82.5", hip: "106.5" },
+      { size: "16", letter: "XL", bust: "106.5", waist: "87.5", hip: "112" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "4", us: "0", uk: "4", eu: "32" },
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+      { au: "16", us: "12", uk: "16", eu: "44" },
+    ],
+    fitNote:
+      "ASOS Design follows standard UK body measurements fairly closely, but fit varies by style across the brand's many ranges — ASOS itself flags that some lines differ from the base chart. Petite, Tall and Curve lines use separate charts.",
+    faqs: [
+      {
+        q: "Does ASOS use UK or US sizing?",
+        a: "ASOS uses UK sizing as the primary label for its own-brand womenswear — a UK 10, 12 and so on. US shoppers subtract four (UK 12 = US 8), and Australian women's sizing matches the UK numbers directly, so an ASOS UK 10 is an AU 10.",
+      },
+      {
+        q: "What is an ASOS UK 10 in centimetres?",
+        a: "An ASOS Design UK 10 fits roughly a 91.5cm bust, 72.5cm waist and 96.5cm hip, equal to an AU 10, US 6 and EU 38. These are body measurements, so measure yourself and match to the chart rather than the finished garment.",
+      },
+      {
+        q: "Why does ASOS sizing vary between items?",
+        a: "ASOS carries many sub-ranges and notes that some lines differ from its base chart, so the same UK size can fit differently across styles. Petite, Tall and Curve lines use separate charts entirely, so check which range a piece belongs to before relying on the standard sizing.",
+      },
+    ],
+    verified: "medium",
+    cmConverted: false,
+    sources: ["https://sizecharter.com/brands/asos/womens"],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "ralph-lauren",
+    name: "Ralph Lauren",
+    category: "US heritage · women's",
+    unitNote:
+      "Ralph Lauren women's uses US numeric sizing (0–18) with an XS–XL letter mapping. The brand publishes in inches; centimetres below are converted.",
+    answer:
+      "Ralph Lauren women's apparel uses US numeric sizing from 0 to 18, with a letter mapping where a 4–6 is Small, 8–10 is Medium and 12–14 is Large. The brand publishes its chart in inches, so the centimetre figures here are converted: a US 8 (Medium) fits roughly a 90cm bust, 72.5cm waist and 98cm hip. The key conversion to remember is that Australian sizing runs four numbers above US sizing, so a US 8 equals an AU 12 and a UK 12. Ralph Lauren's Lauren diffusion line, the one most common in department stores and secondhand, is cut with a little more ease than the designer Collection range, and the brand advises sizing down one if you are between sizes and want a closer fit. Tailored shirts and outerwear are drafted to layer. When buying Ralph Lauren secondhand, confirm whether a piece is the Lauren or the Collection line, since the same US number fits slightly differently between them.",
+    sizeRows: [
+      { size: "0", letter: "XS", bust: "80", waist: "62", hip: "87.5" },
+      { size: "2", letter: "XS", bust: "82.5", waist: "65", hip: "90" },
+      { size: "4", letter: "S", bust: "85", waist: "67.5", hip: "92.5" },
+      { size: "6", letter: "S", bust: "87.5", waist: "70", hip: "95.5" },
+      { size: "8", letter: "M", bust: "90", waist: "72.5", hip: "98" },
+      { size: "10", letter: "M", bust: "92.5", waist: "75", hip: "100.5" },
+      { size: "12", letter: "L", bust: "96.5", waist: "78.5", hip: "104" },
+      { size: "14", letter: "L", bust: "101.5", waist: "84", hip: "106.5" },
+      { size: "16", letter: "XL", bust: "106.5", waist: "89", hip: "111.5" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "4", us: "0", uk: "4", eu: "32" },
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+      { au: "16", us: "12", uk: "16", eu: "44" },
+    ],
+    fitNote:
+      "Ralph Lauren's Lauren diffusion line is cut with a little more ease than the designer Collection range, and the brand advises sizing down one if between sizes. Tailored shirts and outerwear are drafted to layer.",
+    faqs: [
+      {
+        q: "What is a Ralph Lauren US 8 in Australian sizing?",
+        a: "Australian sizing runs four numbers above US sizing for Ralph Lauren, so a US 8 equals an AU 12 and a UK 12 (EU 40). A US 8 Medium fits roughly a 90cm bust, 72.5cm waist and 98cm hip, converted from the brand's inch chart.",
+      },
+      {
+        q: "Does Ralph Lauren run big or small?",
+        a: "The Lauren diffusion line, the most common in department stores and secondhand, is cut with slightly more ease, and Ralph Lauren advises sizing down one if you are between sizes and want a closer fit. The designer Collection range runs a touch trimmer than Lauren at the same number.",
+      },
+      {
+        q: "How do I size Ralph Lauren when buying secondhand?",
+        a: "Confirm whether a piece is the Lauren or the Collection line, since the same US number fits slightly differently between them, then match the centimetre measurements above. Remember the AU number is four above the US tag, so a tagged US 8 wears like an AU 12.",
+      },
+    ],
+    verified: "medium",
+    cmConverted: true,
+    sources: [
+      "https://size-charts.com/topics/clothes-size-chart/ralph-lauren-women-size/",
+      "https://sizecharter.com/brands/ralph-lauren/womens",
+    ],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "tommy-hilfiger",
+    name: "Tommy Hilfiger",
+    category: "US heritage · women's",
+    unitNote:
+      "Tommy Hilfiger women's uses AU/UK numeric sizing (4–16) with an XXS–XXL letter mapping, and publishes body measurements natively in centimetres.",
+    answer:
+      "Tommy Hilfiger women's apparel uses AU/UK numeric sizing from 4 to 16, with a letter mapping where an 8 is Small, 10 is Medium and 12 is Large, and the brand's Australian site publishes body measurements natively in centimetres. A size 10 (Medium) fits an 89–92cm bust, 73–76cm waist and 98–101cm hip. The conversion worth knowing is that Tommy treats AU and UK numbers as the same, while US sizing runs four numbers lower — so an AU 8 is a US 4. Tommy's womenswear follows a classic American sportswear fit with moderate ease, so it generally runs true to its chart; the measurement ranges mean that if you sit at the top of a band, sizing up gives a more relaxed fit. The brand offers extended sizes well beyond a 16. When buying Tommy Hilfiger secondhand, match the centimetre ranges and check whether the tag uses an AU/UK or a US number, since the two differ by four.",
+    sizeRows: [
+      { size: "4", letter: "XXS", bust: "77–80", waist: "61–64", hip: "86–89" },
+      { size: "6", letter: "XS", bust: "81–84", waist: "65–68", hip: "90–93" },
+      { size: "8", letter: "S", bust: "85–88", waist: "69–72", hip: "94–97" },
+      { size: "10", letter: "M", bust: "89–92", waist: "73–76", hip: "98–101" },
+      { size: "12", letter: "L", bust: "93–97", waist: "77–80", hip: "102–105" },
+      { size: "14", letter: "XL", bust: "98–102", waist: "82–86", hip: "106–111" },
+      { size: "16", letter: "XXL", bust: "102–106", waist: "87–92", hip: "112–116" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "4", us: "0", uk: "4", eu: "32" },
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+      { au: "16", us: "12", uk: "16", eu: "44" },
+    ],
+    fitNote:
+      "Tommy Hilfiger follows a classic American sportswear fit with moderate ease and generally runs true to its centimetre chart. The chart uses ranges, so if you sit at the top of a band, sizing up gives a more relaxed fit.",
+    faqs: [
+      {
+        q: "Is Tommy Hilfiger AU sizing the same as UK?",
+        a: "Yes — Tommy Hilfiger maps Australian and UK women's sizes as identical, so an AU 8 is a UK 8. US sizing runs four numbers lower, so that same piece is a US 4 (EU 36). The brand's Australian site publishes measurements in centimetres.",
+      },
+      {
+        q: "Does Tommy Hilfiger run true to size?",
+        a: "Generally yes. Tommy's womenswear uses a classic American sportswear fit with moderate ease and follows its body chart closely. Because the chart gives ranges, sitting at the top of a band means sizing up will give a more relaxed fit, while the mid-range is the intended fit.",
+      },
+      {
+        q: "What is a Tommy Hilfiger size 10 in cm?",
+        a: "A Tommy Hilfiger AU/UK size 10 (Medium, US 6) fits an 89–92cm bust, 73–76cm waist and 98–101cm hip on the brand's centimetre chart. When buying secondhand, check whether the tag is an AU/UK or US number, since the two differ by four.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: [
+      "https://au.tommy.com/size_guide_womens",
+      "https://cy.tommy.com/size-guide/women/",
+    ],
+    lastVerified: "June 2026",
+  },
 ];
 
 export function getBrand(slug: string): Brand | undefined {
