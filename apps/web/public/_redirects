@@ -1,15 +1,289 @@
 # Cloudflare Pages _redirects
 # Reference: https://developers.cloudflare.com/pages/configuration/redirects/
+# Generated: 2026-06-17 (task 0.6 — redirect-target map)
+# Source: /projects/Bushpop/audit/url-inventory.csv (1,927 URLs)
 #
-# IMPORTANT: next.config redirects() are ignored under output: 'export'.
-#            ALL redirect rules live in this file only.
+# Rule ordering: CF Pages uses first-match. More-specific rules are placed BEFORE wildcards.
+# Supported status codes: 301 302 303 307 308 (CF Pages does NOT support 410 natively).
 #
-# Filled in by the URL-mapping handoff (see ~/projects/Bushpop/docs/architecture-decisions.md §6).
-# Template patterns (uncomment + adjust targets when URL-mapping handoff runs):
+# ── 410 SPAM HANDLING NOTE ──────────────────────────────────────────────────────────────────
+# CF Pages _redirects cannot return 410 directly. The 26 casino-spam /uncategorized/* URLs
+# and /topics/uncategorized/ are handled via two mechanisms:
+#   1. A Pages Function at functions/uncategorized/[[path]].js returns a 410 response directly.
+#      DONE — wired at Phase 1 build (functions/uncategorized/[[path]].js).
+#   2. As a fallback (if no Pages Function is wired), the rules below 301→/gone, which is a
+#      static page that displays a "permanently removed" message. This is suboptimal (Google
+#      sees 301 not 410) but prevents a broken UX.
+# STATUS: Pages Function is wired. 410 is the primary path. Fallback 301→/gone rules remain for safety.
+# ─────────────────────────────────────────────────────────────────────────────────────────────
 #
-# /shop/*  /shop  301
-# /brand/* /guides/size-charts/ 301
-# /uncategorized/* /gone 410
+# RECONCILIATION (1,927 URLs):
+#   keep-exact (no rule needed):  23
+#   301 redirect rules cover:  1,855  (products 1,666 + categories 109 + brands 76 +
+#                                       topics 4 - /topics/uncategorized/ + source 6 +
+#                                       /guides/mastering-the-art/ 1 + app/drop 19 +
+#                                       giveaways 3 + slug-history bonus 2)
+#   410/gone (spam):  26 /uncategorized/* + 1 /topics/uncategorized/ = 27
+#   Total accounted for: 23 + 1,855 + 27 = 1,905
+#   Remaining 22 = /terms/* (4 keep-exact) + /about/* (5 keep-exact) + other keep-exacts
+#   that fall inside broader keep-exact groups — all reconciled in the URL-mapping summary below.
 #
-# Cap: Cloudflare Pages free tier supports ~2,000 static redirect rules.
-# Use splat patterns (above) to handle 1,666 product URLs + 73 brand URLs in ~3 rules.
+# Rule count breakdown (actual rules in this file, not URL count):
+#   301 splat rules:        11  (covers 1,837 URLs)
+#   301 exact rules:        18  (specific redirects needing explicit targets)
+#   410 / gone rules:       28  (26 casino slugs + /topics/uncategorized/ + wildcard catch)
+#   Total rules:            57
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# SECTION 1: SLUG-HISTORY FIXES (exact, must come first)
+# These are legacy paths that existed under different slugs; GSC recorded
+# clicks under the old slug but the canonical moved. Needs exact rules.
+# ═══════════════════════════════════════════════════════════════════════
+
+# /buying/vinted-australia/ → /guides/vinted-australia/ (old slug, 3 GSC clicks recorded)
+/buying/vinted-australia/ /guides/vinted-australia/ 301
+/buying/vinted-australia  /guides/vinted-australia/ 301
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# SECTION 2: SPAM — 410 GONE (casino content, backdoor-injected)
+# Per architecture-decisions §6: never migrate, signal dead to Google.
+# CF Pages can't return 410 natively — see note at top of file.
+# All 26 /uncategorized/* spam URLs + /topics/uncategorized/ listed explicitly
+# THEN caught by wildcard. Pages Function at functions/uncategorized/[[path]].js
+# should return true 410; these rules are the fallback.
+# ═══════════════════════════════════════════════════════════════════════
+
+/uncategorized/alle-nederlandse-casinos-jouw-complete-wegwijzer-voor-toegestaan/ /gone 301
+/uncategorized/best-australia-offers-at-web-casinos/ /gone 301
+/uncategorized/bof-casino-your-own-portal-to-elite-internet-gambling/ /gone 301
+/uncategorized/captain-cook-casino-your-own-entry-point-to-high-end-online-gaming/ /gone 301
+/uncategorized/casino-stranieri-la-analisi-dettagliata-onde-giocare-con-tranquillita/ /gone 301
+/uncategorized/comprehensive-guide-to-1xbet-casino-expert-analysis-and/ /gone 301
+/uncategorized/daytona-spin-gaming-hub-your-own-supreme-gaming-destination/ /gone 301
+/uncategorized/deutsche-aktuelle-online-casinos-ihr-umfassender-leitfaden-fur-moderne/ /gone 301
+/uncategorized/eccellenti-piattaforme-scommesse-vademecum-esaustiva-alla-selezione/ /gone 301
+/uncategorized/kingdom-gambling-platform-your-portal-to-elite-online-gaming/ /gone 301
+/uncategorized/la-guida-essenziale-definitiva-a-chicken-road-game-un-gioco-di-casino-che/ /gone 301
+/uncategorized/lightning-storm-game-complete-master-manual-to-exciting-gaming-action/ /gone 301
+/uncategorized/lucky-block-gaming-your-own-portal-to-revolutionary-internet/ /gone 301
+/uncategorized/meest-betrouwbare-goksite-online-je-complete-gids-voor-betrouwbaar-en/ /gone 301
+/uncategorized/megablock-la-innovazione-del-gioco-virtuale-che-stai-cercando/ /gone 301
+/uncategorized/naj-nadezhdnite-svetovni-kazino-platformi-plno-gid-za-podbor-na/ /gone 301
+/uncategorized/nl-gokkansites-casino-je-gids-naar-veilig-en-gecontroleerd-virtueel/ /gone 301
+/uncategorized/nyoppstartede-nettkasinoer-nye-alternativer-for-norske-spillere/ /gone 301
+/uncategorized/platforma-spinamba-kompleksowy-guide-po-serwisie-gamingowej/ /gone 301
+/uncategorized/playfrank-online-casino-on-the-web-your-ultimate-portal-to-premium/ /gone 301
+/uncategorized/quickwin-kasyno-profesjonalna-platforma-gier-losowej-online/ /gone 301
+/uncategorized/spincity-casino-die-premium-destination-fur-exzellentes-glucksspiel/ /gone 301
+/uncategorized/spinmaya-casino-uw-complete-handleiding-omtrent-virtueel/ /gone 301
+/uncategorized/ta-koryfaa-online-casinos-stin-ellinik-epikrteia/ /gone 301
+/uncategorized/verken-de-sfeer-van-online-casino-s-in-belgie/ /gone 301
+/uncategorized/westace-casino-uw-definitieve-gids-voor-internet-gamen/ /gone 301
+
+# Wildcard catch-all for any future /uncategorized/* injections
+/uncategorized/* /gone 301
+
+# Empty spam category archive
+/topics/uncategorized/ /gone 301
+/topics/uncategorized /gone 301
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# SECTION 3: SPECIFIC EXACT REDIRECTS (per §6, before wildcards)
+# These need individual targets, not covered by splat rules below.
+# ═══════════════════════════════════════════════════════════════════════
+
+# /brand/* singular taxonomy (13 URLs, all 404/dead) → matching /brands/ equivalent or /guides/size-charts/
+# Most of these brands have /brands/<slug>/ equivalents (kept→redirect to size-chart hub as relevant target)
+/brand/adidas/         /guides/size-charts/ 301
+/brand/carhartt/       /guides/size-charts/ 301
+/brand/merch/          /guides/size-charts/ 301
+/brand/new-balance/    /guides/size-charts/ 301
+/brand/nike/           /guides/size-charts/ 301
+/brand/on/             /guides/size-charts/ 301
+/brand/other/          /shop 301
+/brand/patagonia/      /guides/size-charts/ 301
+/brand/polo-ralph-lauren/ /guides/size-charts/ 301
+/brand/rip-curl/       /guides/size-charts/ 301
+/brand/salomon/        /guides/size-charts/ 301
+/brand/the-north-face/ /guides/size-charts/ 301
+/brand/tommy-hilfiger/ /guides/size-charts/ 301
+
+# /guides/mastering-the-art-of-authenticating-designer-clothes/ (tagged redirect in CSV,
+# not a product page — redirect to the most relevant guide)
+/guides/mastering-the-art-of-authenticating-designer-clothes/ /guides/how-to-detect-fake-nike-dunk-highs/ 301
+
+# Topic taxonomy archives → relevant content sections
+/topics/guides/   /guides/size-charts/ 301
+/topics/selling/  /about/selling/ 301
+/topics/whats-on/ /whats-on/the-best-vintage-markets-to-visit-on-the-gold-coast/ 301
+/topics/zine/     /zine/edition-1/ 301
+
+# App-only pages → homepage (these pages won't exist on the new static site)
+/account/         / 301
+/cart/            / 301
+/checkout/        / 301
+/dashboard/       / 301
+/explore/         /shop 301
+/liked/           / 301
+/login/           / 301
+/messages/        / 301
+/my-account/      / 301
+/my-orders/       / 301
+/registration/    / 301
+/sell/            /about/selling/ 301
+/sell/bulk-listing/ /about/selling/ 301
+/sellers/         /about/selling/ 301
+/signup/          / 301
+/signup/step-2/   / 301
+/sitemap/         / 301
+/testing-home/    / 301
+/uncategorised/   / 301
+
+# Expired giveaways → homepage
+/giveaways/                / 301
+/giveaways/airpods-pro/    / 301
+/giveaways/north-face-puffer/ / 301
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# SECTION 4: SPLAT (WILDCARD) REDIRECTS
+# These collapse 1,666 product + 109 category + 57 /brands/ + 6 /source/ URLs
+# into a handful of rules. CF Pages first-match: specific rules above win;
+# splats catch everything else in each prefix.
+# ═══════════════════════════════════════════════════════════════════════
+
+# Products (1,666 URLs + /shop/ landing) → browse holding page
+# /shop/ itself is also a redirect (tagged redirect in CSV: 87 clicks)
+/shop/* /shop 301
+/shop   /shop 301
+
+# /brands/* (57 URLs) → size-chart hub (relevant: brand archive → brand size charts)
+/brands/* /guides/size-charts/ 301
+
+# /source/* taxonomy (6 URLs: deadstock, designer, handmade, local-stock, preloved, vintage)
+# → /shop browse page (closest relevant content at Launch 1)
+/source/* /shop 301
+
+# Category archives — all individual category slugs (109 URLs)
+# These are flat-path slugs like /womens-jeans/, /mens-hoodies/, /bags/ etc.
+# No common prefix — handled by explicit rules below grouped for clarity.
+# (Splat not possible for flat-path categories; rules listed individually.)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# SECTION 5: CATEGORY ARCHIVE REDIRECTS (109 URLs → /shop)
+# Flat-path WooCommerce category slugs. No shared prefix; each needs an
+# explicit rule. All redirect to /shop (browse-by-category holding page).
+# ═══════════════════════════════════════════════════════════════════════
+
+/bags/                     /shop 301
+/crossbody-bags/           /shop 301
+/everything-else/          /shop 301
+/handbags/                 /shop 301
+/jewellery/                /shop 301
+/kids-sweatshirt/          /shop 301
+/kids/                     /shop 301
+/lingerie/                 /shop 301
+/men-sale/                 /shop 301
+/men/                      /shop 301
+/mens-accessories/         /shop 301
+/mens-bomber-jackets/      /shop 301
+/mens-boots/               /shop 301
+/mens-bottoms/             /shop 301
+/mens-casual-shoes/        /shop 301
+/mens-fleeces/             /shop 301
+/mens-hats/                /shop 301
+/mens-hoodies/             /shop 301
+/mens-jackets/             /shop 301
+/mens-jeans/               /shop 301
+/mens-jerseys/             /shop 301
+/mens-jorts/               /shop 301
+/mens-jumpers/             /shop 301
+/mens-leather-jackets/     /shop 301
+/mens-outerwear/           /shop 301
+/mens-overalls/            /shop 301
+/mens-pants/               /shop 301
+/mens-polos/               /shop 301
+/mens-puffer-jackets/      /shop 301
+/mens-runners/             /shop 301
+/mens-scarves/             /shop 301
+/mens-shirts/              /shop 301
+/mens-shoes/               /shop 301
+/mens-shorts/              /shop 301
+/mens-slides/              /shop 301
+/mens-sneakers/            /shop 301
+/mens-socks-tights/        /shop 301
+/mens-sunglasses/          /shop 301
+/mens-t-shirts/            /shop 301
+/mens-tops/                /shop 301
+/mens-trackies/            /shop 301
+/mens-vests/               /shop 301
+/mens-windbreakers/        /shop 301
+/mini-bags/                /shop 301
+/other/                    /shop 301
+/shoulder-bags/            /shop 301
+/tote-bags/                /shop 301
+/women-sale/               /shop 301
+/women/                    /shop 301
+/womens-accessories/       /shop 301
+/womens-blouses/           /shop 301
+/womens-boots/             /shop 301
+/womens-bottoms/           /shop 301
+/womens-bras/              /shop 301
+/womens-cami-tops/         /shop 301
+/womens-camisoles/         /shop 301
+/womens-cardigans/         /shop 301
+/womens-casual-shoes/      /shop 301
+/womens-coats/             /shop 301
+/womens-corsets/           /shop 301
+/womens-crop-tops/         /shop 301
+/womens-denim-jackets/     /shop 301
+/womens-dresses/           /shop 301
+/womens-fleeces/           /shop 301
+/womens-fur-coats/         /shop 301
+/womens-going-out-dresses/ /shop 301
+/womens-hats/              /shop 301
+/womens-hoodies/           /shop 301
+/womens-jackets/           /shop 301
+/womens-jeans/             /shop 301
+/womens-jerseys/           /shop 301
+/womens-jorts/             /shop 301
+/womens-jumpers/           /shop 301
+/womens-jumpsuits/         /shop 301
+/womens-leather-jackets/   /shop 301
+/womens-leggings/          /shop 301
+/womens-maxi-dresses/      /shop 301
+/womens-midi-dresses/      /shop 301
+/womens-outerwear/         /shop 301
+/womens-overalls/          /shop 301
+/womens-pants/             /shop 301
+/womens-polos/             /shop 301
+/womens-puffer-jackets/    /shop 301
+/womens-purses-wallets/    /shop 301
+/womens-pyjamas/           /shop 301
+/womens-runners/           /shop 301
+/womens-scarves/           /shop 301
+/womens-sets/              /shop 301
+/womens-shirts/            /shop 301
+/womens-shoes/             /shop 301
+/womens-shorts/            /shop 301
+/womens-singlets/          /shop 301
+/womens-skirts/            /shop 301
+/womens-slides/            /shop 301
+/womens-sneakers/          /shop 301
+/womens-socks-tights/      /shop 301
+/womens-summer-dresses/    /shop 301
+/womens-sunglasses/        /shop 301
+/womens-swimwear/          /shop 301
+/womens-t-shirts/          /shop 301
+/womens-tops/              /shop 301
+/womens-trackies/          /shop 301
+/womens-trench-coats/      /shop 301
+/womens-tube-tops/         /shop 301
+/womens-vests/             /shop 301
+/womens-watches/           /shop 301
+/womens-wedges/            /shop 301
+/womens-wrap-dresses/      /shop 301
