@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://bushpop.com.au"),
   title: {
     default: "Bushpop — Secondhand Fashion Australia",
     template: "%s | Bushpop",
@@ -17,7 +20,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en-AU">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased flex min-h-screen flex-col">
+        <SiteNav />
+        <div className="flex-1">{children}</div>
+        <SiteFooter />
+      </body>
     </html>
   );
 }
