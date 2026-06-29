@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /uncategorized/
+Disallow: /gone/
+
+Sitemap: https://bushpop.com.au/sitemap.xml
