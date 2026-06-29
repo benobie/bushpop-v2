@@ -45,6 +45,7 @@ The monorepo skeleton (pnpm workspaces + Turborepo) exists now even though only 
 - No `eslint` key in `NextConfig` (removed in Next 16) — ESLint lives in root `eslint.config.mjs`
 - Turbopack is default for both `next dev` and `next build`
 - `cacheComponents: true` is for the SSR/Launch-2 path — NOT set here (static export)
+- **MDX plugins must be passed to `createMDX` as serializable string names, NOT imported functions** — Turbopack rejects function refs with "does not have serializable options". Use `remarkPlugins: [["remark-gfm"]]` / `rehypePlugins: [["rehype-slug"]]`. Both are wired: `remark-gfm` is load-bearing for pipe tables (without it MDX tables render as literal `|` text), `rehype-slug` gives headings `id`s for in-page anchor links (e.g. `/guides/size-charts/#condition-guide`)
 
 ## Deploy
 
