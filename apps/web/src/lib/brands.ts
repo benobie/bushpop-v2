@@ -731,6 +731,205 @@ export const BRANDS: Brand[] = [
     ],
     lastVerified: "June 2026",
   },
+  {
+    slug: "princess-polly",
+    name: "Princess Polly",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Princess Polly uses AU numeric sizing (4–24) with an XXS–4X letter mapping. Its chart is centimetre-native.",
+    answer:
+      "Princess Polly is an Australian brand using AU numeric sizing from 4 to 24, with a letter mapping where a 6 is XS, 8 is Small, 10 is Medium and 12 is Large, and its chart is published natively in centimetres. A size 8 fits an 86cm bust, 68cm waist and 94cm hip. The single most useful thing to know about Princess Polly is that fit is category-dependent: tops and dresses run true to size, but pants and bottoms run small, so most shoppers size up one in denim and trousers. Skirts and mini lengths are cut for a standard height around 163cm, so they read shorter on taller frames. Princess Polly footwear runs large, so sizing down is common. Australian sizing follows UK numbers, and the brand publishes a full international conversion (AU 8 = US 4 = UK 8 = EU 36). When buying secondhand, the size tag is reliable for tops and dresses; check garment measurements on bottoms, where the cut runs smallest.",
+    sizeRows: [
+      { size: "4", letter: "XXS", bust: "78.5", waist: "60.5", hip: "86.5" },
+      { size: "6", letter: "XS", bust: "81", waist: "63", hip: "89" },
+      { size: "8", letter: "S", bust: "86", waist: "68", hip: "94" },
+      { size: "10", letter: "M", bust: "91", waist: "73", hip: "99" },
+      { size: "12", letter: "L", bust: "96", waist: "78", hip: "104" },
+      { size: "14", letter: "XL", bust: "101", waist: "83", hip: "109" },
+      { size: "16", letter: "2X", bust: "107", waist: "89", hip: "115" },
+      { size: "18", letter: "3X", bust: "118", waist: "100", hip: "129" },
+      { size: "20", letter: "4X", bust: "125", waist: "107", hip: "136" },
+      { size: "22", bust: "132", waist: "114", hip: "143" },
+      { size: "24", bust: "139", waist: "121", hip: "150" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "4", us: "0", uk: "4", eu: "32" },
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+      { au: "16", us: "12", uk: "16", eu: "44" },
+    ],
+    fitNote:
+      "Princess Polly tops and dresses run true to size, but pants and bottoms run small — size up one in denim and trousers. Minis are cut for around 163cm so read short on taller frames, and footwear runs large.",
+    faqs: [
+      {
+        q: "Does Princess Polly run big or small?",
+        a: "It is category-dependent. Princess Polly tops and dresses run true to size, but its pants, bottoms and denim run small, so most shoppers size up one in those. Footwear runs large, so size down. Skirts and minis are cut for a standard height of about 163cm, so they sit shorter on taller frames.",
+      },
+      {
+        q: "What is a Princess Polly size 8 in cm?",
+        a: "A Princess Polly size 8 (Small) fits an 86cm bust, 68cm waist and 94cm hip on the brand's centimetre-native chart. The brand also publishes a conversion where an AU 8 equals a US 4, UK 8 and EU 36.",
+      },
+      {
+        q: "Is Princess Polly reliable to buy secondhand?",
+        a: "Yes for tops and dresses, which run true to the size tag. For bottoms and denim, where the cut runs small, measure the garment flat against the chart above rather than trusting the label, since sizing up is common on those styles.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: [
+      "https://us.princesspolly.com/pages/sizing",
+      "https://www.princesspolly.com.au/pages/sizing",
+    ],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "decjuba",
+    name: "Decjuba",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Decjuba uses AU numeric sizing (6–20) with an XXS–XXXL letter mapping. Its chart is published in centimetres as ranges per size.",
+    answer:
+      "Decjuba is an Australian brand using AU numeric sizing from 6 to 20, with a letter mapping where a 10 is Small, 12 is Medium and 14 is Large, and its chart is published in centimetres as ranges. A size 12 fits a 94–98cm bust, 75–79cm waist and 102–106cm hip. The most important thing to know about Decjuba is that fit is inconsistent across styles — there is no single run-small or run-large rule, so the same size can fit differently between a knit, a shirt and a tailored piece. Denim is the most variable and the most commonly called out, so check individual garment measurements before buying jeans. Decjuba publishes a full international conversion (AU 12 = US 8 = UK 12 = EU 40), with Australian and UK numbers identical. Because the chart gives ranges, sitting at the top of a band often means the next size up suits better. When buying secondhand, measure the garment flat rather than relying on the tag.",
+    sizeRows: [
+      { size: "6", letter: "XXS", bust: "79–83", waist: "60–64", hip: "88–91" },
+      { size: "8", letter: "XS", bust: "84–88", waist: "65–69", hip: "92–96" },
+      { size: "10", letter: "S", bust: "89–93", waist: "70–74", hip: "97–101" },
+      { size: "12", letter: "M", bust: "94–98", waist: "75–79", hip: "102–106" },
+      { size: "14", letter: "L", bust: "99–103", waist: "80–84", hip: "107–111" },
+      { size: "16", letter: "XL", bust: "104–108", waist: "85–89", hip: "112–116" },
+      { size: "18", letter: "XXL", bust: "109–113", waist: "90–94", hip: "117–121" },
+      { size: "20", letter: "XXXL", bust: "114–119", waist: "95–100", hip: "122–127" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+      { au: "16", us: "12", uk: "16", eu: "44" },
+      { au: "18", us: "14", uk: "18", eu: "46" },
+      { au: "20", us: "16", uk: "20", eu: "48" },
+    ],
+    fitNote:
+      "Decjuba fit is inconsistent across styles — there is no universal run-small or run-large rule, so the same size fits differently between knits, shirts and tailored pieces. Denim is the most variable; check per-garment measurements.",
+    faqs: [
+      {
+        q: "Does Decjuba run true to size?",
+        a: "Not consistently. Decjuba fit varies across styles, with no single run-small or run-large rule, so the same labelled size can fit differently between a knit, a shirt and a tailored piece. Denim is the most variable and most commonly flagged, so check individual garment measurements before buying jeans.",
+      },
+      {
+        q: "What is a Decjuba size 12 in cm?",
+        a: "A Decjuba size 12 (Medium) fits a 94–98cm bust, 75–79cm waist and 102–106cm hip on the brand's centimetre chart, which is published as ranges. If you sit at the top of a band, the next size up may suit a tailored piece better.",
+      },
+      {
+        q: "Is Decjuba AU sizing the same as UK?",
+        a: "Yes — Decjuba maps Australian and UK women's numbers as identical, so an AU 12 is a UK 12. Its official conversion makes that a US 8 and an EU 40. When buying secondhand, measure the garment flat against the chart, since fit varies by style.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://www.decjuba.com.au/size-guide"],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "forever-new",
+    name: "Forever New",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Forever New uses AU/UK numeric sizing (4–18) with an XXS–XXXL letter mapping. Australian and UK numbers are identical, and its chart is centimetre-native.",
+    answer:
+      "Forever New is an Australian brand using AU/UK numeric sizing from 4 to 18, with a letter mapping where an 8 is Small, 10 is Medium and 12 is Large, and a centimetre-native chart. A size 10 fits a 91cm bust, 73cm waist and 100cm hip. The most useful thing to know about Forever New is that it can run small, particularly through the hips — many shoppers find the waist fits while the hip pulls tight, so sizing up one is common on fitted dresses and skirts. Fit is also inconsistent across styles, so check per-garment model measurements where the brand lists them. Forever New treats Australian and UK numbers as identical and publishes a full conversion (AU 10 = US 6 = UK 10 = EU 38). Because it specialises in occasion and tailored dressing, the size tag is reliable on structured pieces secondhand; just factor in the snug hip when choosing a fitted style.",
+    sizeRows: [
+      { size: "4", letter: "XXS", bust: "76", waist: "58", hip: "85" },
+      { size: "6", letter: "XS", bust: "81", waist: "63", hip: "90" },
+      { size: "8", letter: "S", bust: "86", waist: "68", hip: "95" },
+      { size: "10", letter: "M", bust: "91", waist: "73", hip: "100" },
+      { size: "12", letter: "L", bust: "96", waist: "78", hip: "105" },
+      { size: "14", letter: "XL", bust: "101", waist: "83", hip: "110" },
+      { size: "16", letter: "XXL", bust: "106", waist: "88", hip: "115" },
+      { size: "18", letter: "XXXL", bust: "111", waist: "93", hip: "120" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "4", us: "0", uk: "4", eu: "32" },
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+      { au: "16", us: "12", uk: "16", eu: "44" },
+      { au: "18", us: "14", uk: "18", eu: "46" },
+    ],
+    fitNote:
+      "Forever New can run small, especially through the hips — many find the waist fits while the hip pulls tight, so sizing up is common on fitted dresses and skirts. Fit is also inconsistent across styles; check per-garment measurements.",
+    faqs: [
+      {
+        q: "Does Forever New run small?",
+        a: "It can, particularly through the hips. Many shoppers find the waist fits while the hip pulls tight, so sizing up one is common on fitted dresses and skirts. Fit is also inconsistent across styles, so check the model or garment measurements the brand lists on individual products.",
+      },
+      {
+        q: "What is a Forever New size 10 in cm?",
+        a: "A Forever New size 10 (Medium) fits a 91cm bust, 73cm waist and 100cm hip on the brand's centimetre-native chart. Australian and UK numbers are identical, and the official conversion makes that a US 6 and an EU 38.",
+      },
+      {
+        q: "Is Forever New AU sizing the same as UK?",
+        a: "Yes — Forever New maps Australian and UK women's sizes as identical, so an AU 10 is a UK 10, with no offset. Its published conversion makes that a US 6 and an EU 38. When buying secondhand, match the centimetre measurements and allow for the brand's snug hip.",
+      },
+    ],
+    verified: "medium",
+    cmConverted: false,
+    sources: ["https://forevernew.co.za/pages/size-guide"],
+    lastVerified: "June 2026",
+  },
+  {
+    slug: "bardot",
+    name: "Bardot",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Bardot uses AU numeric sizing (6–14) with an XS–XL letter mapping. Australian and UK numbers are identical; US sizing runs four numbers lower. Its chart is centimetre-native.",
+    answer:
+      "Bardot is an Australian brand using AU numeric sizing with an XS to XL letter mapping, where an 8 is Small, 10 is Medium and 12 is Large, and a centimetre-native chart. A size 10 fits a 90cm bust, 72cm waist and 98cm hip. The key thing to know about Bardot is that it fits true to size to slightly small, running snug through the bust and shoulders, because the label's signature is a slim, fitted, often bodycon silhouette. If you are between two sizes or prefer a little ease, sizing up one is the safer choice. Bardot treats Australian and UK numbers as identical, while US sizing runs four numbers lower, so an AU 8 is a US 4 (EU 36). Because the cut is deliberately close-fitting, the size tag is a reliable guide secondhand for the intended fit — just expect a fitted shape rather than a relaxed one, and measure fitted bodices flat to be sure.",
+    sizeRows: [
+      { size: "6", letter: "XS", bust: "81", waist: "62", hip: "88" },
+      { size: "8", letter: "S", bust: "85", waist: "67", hip: "93" },
+      { size: "10", letter: "M", bust: "90", waist: "72", hip: "98" },
+      { size: "12", letter: "L", bust: "95", waist: "77", hip: "103" },
+      { size: "14", letter: "XL", bust: "100", waist: "82", hip: "108" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+    ],
+    fitNote:
+      "Bardot fits true to size to slightly small, running snug through the bust and shoulders, because its signature silhouette is slim, fitted and often bodycon. If between sizes or wanting ease, size up one.",
+    faqs: [
+      {
+        q: "Does Bardot run small?",
+        a: "Bardot fits true to size to slightly small, running snug through the bust and shoulders. Its signature is a slim, fitted, often bodycon silhouette, so if you are between two sizes or prefer a little ease, sizing up one is the safer choice.",
+      },
+      {
+        q: "What is a Bardot size 10 in cm?",
+        a: "A Bardot size 10 (Medium) fits a 90cm bust, 72cm waist and 98cm hip on the brand's centimetre chart. Australian and UK numbers are identical, while US sizing runs four lower, so an AU 10 is a US 6 and an EU 38.",
+      },
+      {
+        q: "Is Bardot AU sizing the same as UK?",
+        a: "Yes — Bardot maps Australian and UK women's numbers as identical, so an AU 8 is a UK 8, while US sizing runs four numbers lower, making it a US 4 (EU 36). Because the cut is close-fitting, measure fitted bodices flat against the chart when buying secondhand.",
+      },
+    ],
+    verified: "medium",
+    cmConverted: false,
+    sources: ["https://help.bardot.com/hc/en-us/articles/360000176736"],
+    lastVerified: "June 2026",
+  },
 ];
 
 export function getBrand(slug: string): Brand | undefined {
