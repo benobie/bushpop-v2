@@ -1,9 +1,10 @@
 // Static sitemap (generated at build under output:'export' → out/sitemap.xml).
 // Includes only launch-ready, content-complete pages + the brand size-chart
 // pages. TODO-scaffold and decision-pending pages (help, blog, terms/*,
-// privacy, verification, giveaway-terms, zine, the /shop holding page, and the
-// soon-redirected how-does-bushpop-work) are intentionally EXCLUDED so thin
-// content stays out of the index until real copy lands.
+// privacy, verification, giveaway-terms, zine, and the soon-redirected
+// how-does-bushpop-work) are intentionally EXCLUDED so thin content stays out of
+// the index until real copy lands. The /shop browse holding page is now a
+// substantive 301 target (1,666 product URLs redirect to it) so it is included.
 import type { MetadataRoute } from "next";
 import { BRAND_SLUGS } from "@/lib/brands";
 
@@ -20,6 +21,7 @@ const READY_PATHS: { path: string; priority: number }[] = [
   { path: "/about/how-it-works/", priority: 0.7 },
   { path: "/about/buying/", priority: 0.6 },
   { path: "/about/selling/", priority: 0.7 },
+  { path: "/shop/", priority: 0.6 },
   { path: "/guides/size-charts/", priority: 0.9 },
   { path: "/guides/op-shops-sydney/", priority: 0.7 },
   { path: "/guides/op-shops-melbourne/", priority: 0.7 },
