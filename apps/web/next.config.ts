@@ -2,8 +2,13 @@ import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
 
 const withMDX = createMDX({
-  // MDX options: can add remark/rehype plugins here later
-  options: {},
+  options: {
+    // rehype-slug adds id attributes to headings so in-page anchor links
+    // (e.g. /guides/size-charts/#condition-guide) resolve to the section.
+    // Turbopack requires plugins as serializable string names, not imported
+    // functions, so reference the module by name.
+    rehypePlugins: [["rehype-slug"]],
+  },
 });
 
 const nextConfig: NextConfig = {
