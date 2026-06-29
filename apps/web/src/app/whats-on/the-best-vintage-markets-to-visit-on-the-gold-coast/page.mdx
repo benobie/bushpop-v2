@@ -1,8 +1,21 @@
-export const metadata = {
+import { pageMeta } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { ArticleJsonLd } from "@/components/json-ld";
+
+export const metadata = pageMeta({
   title: "Best Vintage Markets on the Gold Coast",
   description:
     "Guide to the best vintage and secondhand markets to visit on the Gold Coast.",
-};
+  path: "/whats-on/the-best-vintage-markets-to-visit-on-the-gold-coast/",
+});
+
+<ArticleJsonLd
+  headline="Best Vintage Markets on the Gold Coast"
+  description="Guide to the best vintage and secondhand markets to visit on the Gold Coast."
+  path="/whats-on/the-best-vintage-markets-to-visit-on-the-gold-coast/"
+/>
+
+<Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "Gold Coast vintage markets", href: "/whats-on/the-best-vintage-markets-to-visit-on-the-gold-coast/" }]} />
 
 # Best Vintage Markets on the Gold Coast
 

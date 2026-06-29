@@ -1,8 +1,21 @@
-export const metadata = {
+import { pageMeta } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { ArticleJsonLd } from "@/components/json-ld";
+
+export const metadata = pageMeta({
   title: "Vinted Australia — How It Works and How It Compares to Bushpop (2026)",
   description:
     "Vinted launches in Australia on 1 July 2026. Here's how it works, how it compares to Bushpop, and the best ways to buy and sell secondhand fashion in Australia.",
-};
+  path: "/guides/vinted-australia/",
+});
+
+<ArticleJsonLd
+  headline="Vinted Australia — How It Works and How It Compares to Bushpop (2026)"
+  description="Vinted launches in Australia on 1 July 2026. How it works and how it compares to Bushpop."
+  path="/guides/vinted-australia/"
+/>
+
+<Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "Vinted Australia", href: "/guides/vinted-australia/" }]} />
 
 # Vinted Australia
 

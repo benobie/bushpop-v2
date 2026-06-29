@@ -1,8 +1,15 @@
-export const metadata = {
+import { pageMeta } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+
+export const metadata = pageMeta({
   title: "How Bushpop Works — Buying and Selling Secondhand Fashion",
   description:
     "How the Bushpop marketplace works. Peer-to-peer secondhand fashion for Australian buyers and sellers.",
-};
+  path: "/about/how-it-works/",
+  type: "website",
+});
+
+<Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "About", href: "/about/" }, { name: "How it works", href: "/about/how-it-works/" }]} />
 
 # How Bushpop Works
 

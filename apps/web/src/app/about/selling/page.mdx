@@ -1,8 +1,15 @@
-export const metadata = {
+import { pageMeta } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+
+export const metadata = pageMeta({
   title: "Sell Clothes Online Free — List on Bushpop",
   description:
     "How to sell secondhand clothes on Bushpop. Free listings, Australian buyers, easy shipping.",
-};
+  path: "/about/selling/",
+  type: "website",
+});
+
+<Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "About", href: "/about/" }, { name: "Selling", href: "/about/selling/" }]} />
 
 # Sell Clothes Online Free
 

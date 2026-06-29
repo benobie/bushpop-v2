@@ -1,8 +1,21 @@
-export const metadata = {
+import { pageMeta } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { ArticleJsonLd } from "@/components/json-ld";
+
+export const metadata = pageMeta({
   title: "Best Op Shops in Sydney — 2026 Guide",
   description:
     "The best op shops and secondhand stores in Sydney, updated for 2026. Inner West, Eastern Suburbs, CBD, and more.",
-};
+  path: "/guides/op-shops-sydney/",
+});
+
+<ArticleJsonLd
+  headline="Best Op Shops in Sydney — 2026 Guide"
+  description="The best op shops and secondhand stores in Sydney, updated for 2026."
+  path="/guides/op-shops-sydney/"
+/>
+
+<Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "Best op shops in Sydney", href: "/guides/op-shops-sydney/" }]} />
 
 # Best Op Shops in Sydney
 
