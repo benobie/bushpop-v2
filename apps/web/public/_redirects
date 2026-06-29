@@ -45,6 +45,11 @@
 /buying/vinted-australia/ /guides/vinted-australia/ 301
 /buying/vinted-australia  /guides/vinted-australia/ 301
 
+# /guides/how-does-bushpop-work/ → /about/how-it-works/ (dedup: legacy path, canonical
+# content lives at /about/how-it-works/; the in-repo shell page was removed 2026-06-29)
+/guides/how-does-bushpop-work/ /about/how-it-works/ 301
+/guides/how-does-bushpop-work  /about/how-it-works/ 301
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # SECTION 2: SPAM — 410 GONE (casino content, backdoor-injected)
@@ -111,9 +116,15 @@
 /brand/the-north-face/ /guides/size-charts/ 301
 /brand/tommy-hilfiger/ /guides/size-charts/ 301
 
-# /guides/mastering-the-art-of-authenticating-designer-clothes/ (tagged redirect in CSV,
-# not a product page — redirect to the most relevant guide)
-/guides/mastering-the-art-of-authenticating-designer-clothes/ /guides/how-to-detect-fake-nike-dunk-highs/ 301
+# Authentication guides — both live as published WordPress posts but are NOT yet
+# rebuilt in this repo. Content archived to ~/projects/Bushpop/docs/archived-content/
+# (REBUILD CANDIDATES, esp. the Nike-dunk guide which has real-vs-fake images).
+# Per "keep all content / no 410s": INTERIM 301 to the guides hub so neither URL
+# 404s. (Previously /mastering-...-designer-clothes/ 301'd to /how-to-detect-fake-
+# nike-dunk-highs/, which itself was never built — a redirect-to-404. Fixed here.)
+# When either guide is rebuilt at its original slug, remove its interim rule below.
+/guides/mastering-the-art-of-authenticating-designer-clothes/ /guides/size-charts/ 301
+/guides/how-to-detect-fake-nike-dunk-highs/ /guides/size-charts/ 301
 
 # Topic taxonomy archives → relevant content sections
 /topics/guides/   /guides/size-charts/ 301
