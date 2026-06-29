@@ -1,8 +1,21 @@
-export const metadata = {
+import { pageMeta } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { ArticleJsonLd } from "@/components/json-ld";
+
+export const metadata = pageMeta({
   title: "Best Op Shops in Melbourne — 2026 Guide",
   description:
     "The best op shops and secondhand stores in Melbourne, updated for 2026. Fitzroy, Brunswick, Collingwood, CBD and more.",
-};
+  path: "/guides/op-shops-melbourne/",
+});
+
+<ArticleJsonLd
+  headline="Best Op Shops in Melbourne — 2026 Guide"
+  description="The best op shops and secondhand stores in Melbourne, updated for 2026."
+  path="/guides/op-shops-melbourne/"
+/>
+
+<Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "Best op shops in Melbourne", href: "/guides/op-shops-melbourne/" }]} />
 
 # Best Op Shops in Melbourne
 

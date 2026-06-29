@@ -1,8 +1,21 @@
-export const metadata = {
+import { pageMeta } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { ArticleJsonLd } from "@/components/json-ld";
+
+export const metadata = pageMeta({
   title: "How to Sell on Bushpop — The Complete Guide",
   description:
     "Everything you need to know about selling secondhand clothes on Bushpop. Listing, pricing, shipping, and getting paid.",
-};
+  path: "/selling/how-to-sell-on-bushpop-the-complete-guide/",
+});
+
+<ArticleJsonLd
+  headline="How to Sell on Bushpop — The Complete Guide"
+  description="Everything you need to know about selling secondhand clothes on Bushpop."
+  path="/selling/how-to-sell-on-bushpop-the-complete-guide/"
+/>
+
+<Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "Selling", href: "/about/selling/" }, { name: "Complete guide", href: "/selling/how-to-sell-on-bushpop-the-complete-guide/" }]} />
 
 # How to Sell on Bushpop — The Complete Guide
 

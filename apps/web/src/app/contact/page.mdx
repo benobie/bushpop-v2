@@ -1,8 +1,15 @@
-export const metadata = {
+import { pageMeta } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+
+export const metadata = pageMeta({
   title: "Contact Bushpop",
   description:
     "Get in touch with the Bushpop team. Support for buyers and sellers.",
-};
+  path: "/contact/",
+  type: "website",
+});
+
+<Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "Contact", href: "/contact/" }]} />
 
 # Contact Bushpop
 

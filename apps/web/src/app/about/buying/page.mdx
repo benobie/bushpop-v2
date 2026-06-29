@@ -1,8 +1,15 @@
-export const metadata = {
+import { pageMeta } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+
+export const metadata = pageMeta({
   title: "Australia's Online Op Shop — Buy Secondhand Fashion on Bushpop",
   description:
     "How to buy secondhand clothes on Bushpop. Browse thousands of pre-loved items from Australian sellers.",
-};
+  path: "/about/buying/",
+  type: "website",
+});
+
+<Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "About", href: "/about/" }, { name: "Buying", href: "/about/buying/" }]} />
 
 # Australia's Online Op Shop
 

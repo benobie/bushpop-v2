@@ -1,8 +1,21 @@
-export const metadata = {
+import { pageMeta } from "@/lib/seo";
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { ArticleJsonLd } from "@/components/json-ld";
+
+export const metadata = pageMeta({
   title: "Size Charts — Australian Brand Clothing Sizes",
   description:
     "Comprehensive size charts for Australian and international clothing brands. Find your perfect fit for men, women, and kids.",
-};
+  path: "/guides/size-charts/",
+});
+
+<ArticleJsonLd
+  headline="Size Charts — Australian Brand Clothing Sizes"
+  description="Comprehensive size charts for Australian and international clothing brands."
+  path="/guides/size-charts/"
+/>
+
+<Breadcrumbs items={[{ name: "Home", href: "/" }, { name: "Size charts", href: "/guides/size-charts/" }]} />
 
 # Size Charts
 
