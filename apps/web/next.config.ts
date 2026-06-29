@@ -3,10 +3,13 @@ import createMDX from "@next/mdx";
 
 const withMDX = createMDX({
   options: {
+    // remark-gfm enables GitHub-flavoured markdown (pipe tables, strikethrough,
+    // task lists, autolinks). Without it, MDX pipe tables render as literal text.
     // rehype-slug adds id attributes to headings so in-page anchor links
     // (e.g. /guides/size-charts/#condition-guide) resolve to the section.
     // Turbopack requires plugins as serializable string names, not imported
-    // functions, so reference the module by name.
+    // functions, so reference each module by name.
+    remarkPlugins: [["remark-gfm"]],
     rehypePlugins: [["rehype-slug"]],
   },
 });
