@@ -53,26 +53,18 @@ GitHub Actions (`.github/workflows/deploy.yml`) builds the static export and run
 `wrangler pages deploy` on every push to `main`. `build` and `deploy` are separate jobs so
 build stays green independently.
 
-### ⚠️ Deploy blocker (16/06/2026): Cloudflare token scope
+### Deploy status: working (verified 30/06/2026)
 
-The deploy job is wired and ready but **cannot run yet**. The current
-`~/.claude/.secrets/cloudflare-bushpop-token` has **Zone scope only** (it can read the
-`bushpop.com.au` zone) but **not `Cloudflare Pages:Edit`** — so `wrangler pages deploy`
-fails with an authentication error, and the Pages project can't be created.
+The `deploy` job is live. The `CLOUDFLARE_API_TOKEN` repo secret has `Cloudflare Pages:Edit`
+scope and `CLOUDFLARE_ACCOUNT_ID` is set, so every push to `main` builds `apps/web/out` and
+publishes it to the `bushpop-v2` Pages project at **https://bushpop-v2.pages.dev** (staging).
 
-**To unblock (Ben action):** mint a new Cloudflare API token with:
+Production wiring (`bushpop.com.au` → Pages) is a separate cutover step, not this pipeline.
 
-- **Permissions:** `Account` → `Cloudflare Pages` → **Edit**
-- **Account Resources:** Include → `Ben@bushpop.com.au's Account`
-  (id `5be04ea84f417fdc80bfcd40b9919fc2`)
-
-Then either drop it into `~/.claude/.secrets/cloudflare-bushpop-token` (and tell Claude to
-finish), or set it directly:
+If the token ever needs reminting, create one with `Account` → `Cloudflare Pages` → **Edit**
+scoped to `Ben@bushpop.com.au's Account` (id `5be04ea84f417fdc80bfcd40b9919fc2`) and update
+the secret:
 
 ```bash
 gh secret set CLOUDFLARE_API_TOKEN --repo benobie/bushpop-v2 < /path/to/new-token
 ```
-
-Once the token is in place, the Pages project gets created and the next push (or a re-run of
-the `deploy` job) publishes to a `*.pages.dev` staging URL. `CLOUDFLARE_ACCOUNT_ID` is
-already set as a repo secret.
