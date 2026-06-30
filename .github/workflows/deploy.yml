@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Build is independent of deploy so it gives a clean green CI signal even
-  # while the Cloudflare token is being sorted. The static export (out/) is the
+  # Build is independent of deploy so it gives a clean green CI signal even if a
+  # deploy step is ever re-run or reconfigured. The static export (out/) is the
   # build output Cloudflare Pages serves.
   build:
     name: Build
@@ -42,13 +42,12 @@ jobs:
         run: pnpm --filter @bushpop/web build
 
   # Deploy is isolated and only runs on push to main, so it can be re-run
-  # independently once a Pages-scoped Cloudflare token is in the
-  # CLOUDFLARE_API_TOKEN secret.
+  # independently if needed.
   #
-  # BLOCKER (16/06/2026): the current bushpop CF token has Zone scope only, not
-  # Cloudflare Pages:Edit — so this job fails at the deploy step until Ben mints
-  # a Pages-scoped token and updates the CLOUDFLARE_API_TOKEN secret. The
-  # CLOUDFLARE_ACCOUNT_ID secret is already set. See bushpop-v2 README +
+  # STATUS (working, verified 30/06/2026): the CLOUDFLARE_API_TOKEN secret has
+  # Cloudflare Pages:Edit scope, so this job deploys apps/web/out to the
+  # bushpop-v2 Pages project on every push to main (staging: bushpop-v2.pages.dev).
+  # The CLOUDFLARE_ACCOUNT_ID secret is also set. See bushpop-v2 README +
   # ~/projects/Bushpop/docs/architecture-decisions.md.
   deploy:
     name: Deploy to Cloudflare Pages
