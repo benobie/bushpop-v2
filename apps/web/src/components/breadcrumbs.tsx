@@ -27,22 +27,22 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <nav aria-label="Breadcrumb" className="mb-6 text-sm text-gray-500">
-        <ol className="flex flex-wrap items-center gap-1">
+      <nav aria-label="Breadcrumb" className="crumb mb-4">
+        <ol className="flex flex-wrap items-center">
           {items.map((c, i) => {
             const last = i === items.length - 1;
             return (
-              <li key={c.href} className="flex items-center gap-1">
+              <li key={c.href} className="flex items-center">
                 {last ? (
-                  <span aria-current="page" className="text-gray-700">
+                  <span aria-current="page" className="cur">
                     {c.name}
                   </span>
                 ) : (
                   <>
-                    <Link href={c.href} className="text-blue-600 underline">
-                      {c.name}
-                    </Link>
-                    <span aria-hidden="true">/</span>
+                    <Link href={c.href}>{c.name}</Link>
+                    <span aria-hidden="true" className="sep">
+                      /
+                    </span>
                   </>
                 )}
               </li>

@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
   // Enable .mdx file routing
   pageExtensions: ["ts", "tsx", "mdx"],
 
+  // Static export has no image-optimisation server, so next/image must serve
+  // the original files. Required whenever <Image> is used under output:'export'.
+  images: {
+    unoptimized: true,
+  },
+
   // Silence the workspace-root detection warning — Next 16 Turbopack picks up
   // the wrong root when a parent directory has a lockfile. Point it at the
   // monorepo root (two levels up from apps/web).

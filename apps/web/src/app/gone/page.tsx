@@ -6,13 +6,13 @@ export const metadata = {
 
 export default function GonePage() {
   return (
-    <main className="min-h-screen p-8">
-      <h1 className="text-4xl font-bold mb-4">Page Removed</h1>
-      <p className="text-lg text-gray-600 mb-4">
+    <main className="shell max-w-3xl py-20">
+      <h1 className="page mb-4">Page removed</h1>
+      <p className="muted mb-4 text-lg">
         This page has been permanently removed from Bushpop.
       </p>
-      <p className="text-gray-500">
-        <a href="/" className="text-blue-600 underline">
+      <p>
+        <a href="/" className="font-medium text-green-ink underline">
           Return to Bushpop home
         </a>
       </p>

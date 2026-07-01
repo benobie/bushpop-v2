@@ -100,26 +100,26 @@ export default async function BrandSizeChartPage({
         />
       ))}
 
-      <nav className="text-sm text-gray-500 mb-6" aria-label="Breadcrumb">
-        <Link href="/guides/size-charts/" className="text-blue-600 underline">
+      <nav className="text-sm text-ink-3 mb-6" aria-label="Breadcrumb">
+        <Link href="/guides/size-charts/" className="text-green-ink font-medium underline">
           Size Charts
         </Link>
         <span> / {brand.name}</span>
       </nav>
 
-      <h1 className="text-4xl font-bold mb-2">{brand.name} Size Chart</h1>
-      <p className="text-sm text-gray-500 mb-6">{brand.category}</p>
+      <h1 className="font-head text-4xl font-extrabold tracking-tight mb-2">{brand.name} Size Chart</h1>
+      <p className="text-sm text-ink-3 mb-6">{brand.category}</p>
 
       {/* AIO answer block — the citation magnet */}
       <p className="text-lg leading-relaxed mb-8">{brand.answer}</p>
 
-      <p className="text-sm text-gray-600 mb-6">{brand.unitNote}</p>
+      <p className="text-sm text-ink-2 mb-6">{brand.unitNote}</p>
 
-      <h2 className="text-2xl font-semibold mb-4">{brand.name} body measurements</h2>
+      <h2 className="font-head text-2xl font-bold mb-4">{brand.name} body measurements</h2>
       <div className="overflow-x-auto mb-8">
         <table className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b-2 border-gray-300">
+            <tr className="border-b-2 border-line-2">
               <th className="py-2 pr-4">Size</th>
               {brand.hasLetters && <th className="py-2 pr-4">Letter</th>}
               <th className="py-2 pr-4">Bust (cm)</th>
@@ -129,7 +129,7 @@ export default async function BrandSizeChartPage({
           </thead>
           <tbody>
             {brand.sizeRows.map((r) => (
-              <tr key={r.size} className="border-b border-gray-200">
+              <tr key={r.size} className="border-b border-line">
                 <td className="py-2 pr-4 font-medium">{r.size}</td>
                 {brand.hasLetters && <td className="py-2 pr-4">{r.letter ?? "—"}</td>}
                 <td className="py-2 pr-4">{r.bust}</td>
@@ -142,7 +142,7 @@ export default async function BrandSizeChartPage({
       </div>
 
       {brand.cmConverted && (
-        <p className="text-xs text-gray-500 mb-8">
+        <p className="text-xs text-ink-3 mb-8">
           Note: {brand.name} publishes its size chart in inches. The centimetre
           values above are converted from {brand.name}&apos;s official figures.
         </p>
@@ -150,13 +150,13 @@ export default async function BrandSizeChartPage({
 
       {brand.intl && (
         <>
-          <h2 className="text-2xl font-semibold mb-4">
+          <h2 className="font-head text-2xl font-bold mb-4">
             {brand.name} international size conversion
           </h2>
           <div className="overflow-x-auto mb-8">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b-2 border-gray-300">
+                <tr className="border-b-2 border-line-2">
                   <th className="py-2 pr-4">AU</th>
                   <th className="py-2 pr-4">US</th>
                   <th className="py-2 pr-4">UK</th>
@@ -165,7 +165,7 @@ export default async function BrandSizeChartPage({
               </thead>
               <tbody>
                 {brand.intl.map((r) => (
-                  <tr key={r.au} className="border-b border-gray-200">
+                  <tr key={r.au} className="border-b border-line">
                     <td className="py-2 pr-4 font-medium">{r.au}</td>
                     <td className="py-2 pr-4">{r.us}</td>
                     <td className="py-2 pr-4">{r.uk}</td>
@@ -178,31 +178,31 @@ export default async function BrandSizeChartPage({
         </>
       )}
 
-      <h2 className="text-2xl font-semibold mb-4">How {brand.name} fits</h2>
+      <h2 className="font-head text-2xl font-bold mb-4">How {brand.name} fits</h2>
       <p className="text-lg leading-relaxed mb-8">{brand.fitNote}</p>
 
-      <h2 className="text-2xl font-semibold mb-4">
+      <h2 className="font-head text-2xl font-bold mb-4">
         {brand.name} sizing — frequently asked questions
       </h2>
       <div className="mb-8 space-y-6">
         {brand.faqs.map((f) => (
           <div key={f.q}>
-            <h3 className="text-lg font-semibold mb-1">{f.q}</h3>
+            <h3 className="font-head text-lg font-bold mb-1">{f.q}</h3>
             <p className="leading-relaxed">{f.a}</p>
           </div>
         ))}
       </div>
 
-      <div className="rounded-lg bg-gray-50 p-6 mb-8">
+      <div className="rounded-[18px] bg-surface p-6 mb-8">
         <p className="text-lg font-medium mb-2">
           Found your size? Shop {brand.name} secondhand on Bushpop.
         </p>
-        <Link href="/shop/" className="text-blue-600 underline">
+        <Link href="/shop/" className="text-green-ink font-medium underline">
           Browse the shop →
         </Link>
       </div>
 
-      <p className="text-xs text-gray-400 mb-8">
+      <p className="text-xs text-ink-3 mb-8">
         Last verified: {brand.lastVerified}. Source
         {brand.sources.length > 1 ? "s" : ""}:{" "}
         {brand.sources.map((s, i) => (
@@ -216,14 +216,14 @@ export default async function BrandSizeChartPage({
         .
       </p>
 
-      <section className="border-t border-gray-200 pt-6">
-        <h2 className="text-xl font-semibold mb-3">Other brand size charts</h2>
+      <section className="border-t border-line pt-6">
+        <h2 className="font-head text-xl font-bold mb-3">Other brand size charts</h2>
         <ul className="space-y-1">
           {siblings.map((b) => (
             <li key={b.slug}>
               <Link
                 href={`/guides/size-charts/${b.slug}/`}
-                className="text-blue-600 underline"
+                className="text-green-ink font-medium underline"
               >
                 {b.name} size chart
               </Link>
