@@ -1,8 +1,24 @@
 import type { Metadata } from "next";
+import { Hanken_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { Analytics } from "@/components/analytics";
+
+// Headings/buttons/prices. Stand-in for licensed Roc Grotesk (swap later).
+const hanken = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-hanken",
+  display: "swap",
+});
+// Body / UI text.
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 const ORG_JSONLD = {
   "@context": "https://schema.org",
@@ -30,7 +46,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en-AU">
+    <html lang="en-AU" className={`${hanken.variable} ${inter.variable}`}>
       <body className="antialiased flex min-h-screen flex-col">
         <script
           type="application/ld+json"

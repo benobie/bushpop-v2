@@ -8,9 +8,12 @@
 // Launch-1 guide or about page (fit guides, op-shop guides, how buying works)
 // rather than to product listings.
 import Link from "next/link";
+import { ArrowRight, Clock } from "lucide-react";
 import { pageMeta } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ArticleJsonLd } from "@/components/json-ld";
+import { Button } from "@/components/button";
+import { WaitlistForm } from "@/components/waitlist-form";
 
 const TITLE = "Shop Secondhand Fashion in Australia";
 const DESCRIPTION =
@@ -124,7 +127,7 @@ const GUIDES: { label: string; href: string }[] = [
 
 export default function ShopPage() {
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
+    <main className="shell py-10">
       <ArticleJsonLd headline={TITLE} description={DESCRIPTION} path={PATH} />
       <Breadcrumbs
         items={[
@@ -133,71 +136,78 @@ export default function ShopPage() {
         ]}
       />
 
-      <h1 className="mb-4 text-4xl font-bold">Shop secondhand fashion</h1>
-
-      <p className="mb-4 max-w-3xl text-lg text-gray-600">
-        Bushpop is Australia's peer-to-peer marketplace for preloved fashion.
-        Sellers list straight from their own wardrobes, so you find quality
-        brands, vintage and one-off pieces at a fraction of retail, and good
-        clothes stay out of landfill.
-      </p>
-      <p className="mb-10 max-w-3xl text-gray-600">
-        Listing is completely free for sellers. Buyers pay a 7% Buyer Protection
-        fee at checkout that holds your payment securely until your order arrives
-        as described. There is no swapping and no separate verification step, just
-        a simple, safe way to buy and sell secondhand. Questions? Email{" "}
-        <a href="mailto:support@bushpop.com.au" className="text-blue-600 underline">
-          support@bushpop.com.au
-        </a>
-        .
-      </p>
-
-      <section className="mb-12">
-        <h2 className="mb-2 text-2xl font-semibold">Browse by category</h2>
-        <p className="mb-6 max-w-3xl text-gray-600">
-          The full catalogue arrives with the marketplace relaunch. In the
-          meantime, here is what Bushpop stocks, with a guide to help you shop each
-          category secondhand.
+      {/* Launching-soon hero */}
+      <section className="rounded-[26px] border border-line bg-surface p-8 sm:p-10">
+        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-green-ink">
+          <Clock size={14} strokeWidth={2.4} /> Launching soon
+        </span>
+        <h1 className="page mt-4">Shop secondhand fashion</h1>
+        <p className="muted mt-3 max-w-2xl text-[17px]">
+          Bushpop is Australia&apos;s peer-to-peer marketplace for preloved fashion —
+          quality brands, vintage and one-off pieces at a fraction of retail, straight
+          from real Australian wardrobes. The storefront is being built now.
         </p>
-        <ul className="grid gap-5 sm:grid-cols-2">
+        <p className="muted mt-3 max-w-2xl">
+          Listing will be free for sellers, and buyers get Buyer Protection on every
+          order that holds payment securely until it arrives as described. Want to know
+          the moment the first drops land?
+        </p>
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <WaitlistForm cta="Notify me" />
+          <Button href="/about/selling/" variant="ghost">Learn how selling works</Button>
+        </div>
+      </section>
+
+      <section className="mt-12">
+        <h2 className="sec mb-2">Browse by category</h2>
+        <p className="muted mb-6 max-w-2xl">
+          The full catalogue arrives with the marketplace relaunch. In the meantime,
+          here is what Bushpop stocks, with a guide to help you shop each category
+          secondhand.
+        </p>
+        <ul className="grid gap-4 sm:grid-cols-2">
           {DEPARTMENTS.map((d) => (
             <li
               key={d.name}
-              className="rounded-lg border border-gray-200 p-5 transition-colors hover:border-gray-300 hover:bg-gray-50"
+              className="rounded-[18px] border border-line bg-white p-5 transition-colors hover:border-line-2"
             >
-              <h3 className="mb-1 text-xl font-semibold">{d.name}</h3>
-              <p className="mb-2 text-sm text-gray-500">{d.examples}</p>
-              <p className="mb-3 text-gray-600">{d.blurb}</p>
-              <Link href={d.href} className="font-medium text-blue-600 underline">
-                {d.cta}
+              <h3 className="font-head text-lg font-bold">{d.name}</h3>
+              <p className="mt-1 text-sm text-ink-3">{d.examples}</p>
+              <p className="mt-2 text-ink-2">{d.blurb}</p>
+              <Link
+                href={d.href}
+                className="mt-3 inline-flex items-center gap-1.5 font-semibold text-green-ink"
+              >
+                {d.cta} <ArrowRight size={15} strokeWidth={2.4} />
               </Link>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="mb-12">
-        <h2 className="mb-4 text-2xl font-semibold">Guides to shop secondhand</h2>
-        <ul className="space-y-2">
+      <section className="mt-12">
+        <h2 className="sec mb-4">Guides to shop secondhand</h2>
+        <ul className="grid gap-2 sm:grid-cols-2">
           {GUIDES.map((g) => (
             <li key={g.href}>
-              <Link href={g.href} className="text-blue-600 underline">
-                {g.label}
+              <Link
+                href={g.href}
+                className="inline-flex items-center gap-1.5 font-medium text-green-ink"
+              >
+                {g.label} <ArrowRight size={14} strokeWidth={2.4} />
               </Link>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="rounded-lg bg-gray-50 p-6">
-        <h2 className="mb-2 text-2xl font-semibold">Want to sell instead?</h2>
-        <p className="mb-3 max-w-3xl text-gray-600">
-          Turn the clothes you no longer wear into cash. Listing on Bushpop is
-          free, your buyers are local, and you post sold items straight to them.
+      <section className="mt-12 rounded-[18px] bg-surface p-6">
+        <h2 className="sec mb-2">Want to sell instead?</h2>
+        <p className="muted mb-4 max-w-2xl">
+          Turn the clothes you no longer wear into cash. Listing on Bushpop is free,
+          your buyers are local, and you post sold items straight to them.
         </p>
-        <Link href="/about/selling/" className="font-medium text-blue-600 underline">
-          Learn how selling works
-        </Link>
+        <Button href="/about/selling/" variant="dark">Learn how selling works</Button>
       </section>
     </main>
   );

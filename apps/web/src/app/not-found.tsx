@@ -18,17 +18,17 @@ const SUGGESTIONS: { href: string; label: string }[] = [
 
 export default function NotFound() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-20">
-      <p className="mb-2 text-sm font-medium text-gray-500">404</p>
-      <h1 className="mb-4 text-4xl font-bold">This page has wandered off</h1>
-      <p className="mb-8 text-lg text-gray-600">
+    <main className="shell max-w-3xl py-20">
+      <p className="eyebrow mb-2">404</p>
+      <h1 className="page mb-4">This page has wandered off</h1>
+      <p className="muted mb-8 text-lg">
         We couldn&apos;t find the page you were after. It may have moved, or the
         link might be out of date. Try one of these instead:
       </p>
       <ul className="space-y-2">
         {SUGGESTIONS.map((s) => (
           <li key={s.href}>
-            <Link href={s.href} className="text-blue-600 underline">
+            <Link href={s.href} className="font-medium text-green-ink underline">
               {s.label}
             </Link>
           </li>
