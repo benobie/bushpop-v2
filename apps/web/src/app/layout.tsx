@@ -1,8 +1,18 @@
 import type { Metadata } from "next";
+import { Fraunces } from "next/font/google";
 import "./globals.css";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { Analytics } from "@/components/analytics";
+
+// Display face — self-hosted at build time (works under output: 'export').
+// Exposed as --font-fraunces, consumed by --font-display in globals.css.
+// Swap this one import to change the display font at brand-lock.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  display: "swap",
+});
 
 const ORG_JSONLD = {
   "@context": "https://schema.org",
@@ -30,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en-AU">
+    <html lang="en-AU" className={fraunces.variable}>
       <body className="antialiased flex min-h-screen flex-col">
         <script
           type="application/ld+json"
