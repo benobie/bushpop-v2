@@ -1,0 +1,14 @@
+{
+  "name": "support-order-context",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Thin Chatwoot Dashboard App: shows a buyer's WooCommerce order history in the support conversation sidebar.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {}
+}
