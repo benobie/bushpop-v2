@@ -32,6 +32,8 @@ const READY_PATHS: { path: string; priority: number }[] = [
   { path: "/guides/washing-symbols/", priority: 0.6 },
   { path: "/guides/fabric-care-guide/", priority: 0.6 },
   { path: "/guides/clothing-repair-basics/", priority: 0.6 },
+  { path: "/guides/how-to-buy-secondhand-clothes-online/", priority: 0.6 },
+  { path: "/guides/fit-without-trying-on/", priority: 0.6 },
   { path: "/selling/how-to-sell-on-bushpop-the-complete-guide/", priority: 0.6 },
   { path: "/whats-on/the-best-vintage-markets-to-visit-on-the-gold-coast/", priority: 0.5 },
   { path: "/contact/", priority: 0.4 },
