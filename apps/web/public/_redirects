@@ -12,26 +12,28 @@
 # CF Pages silently drops _redirects rules past an effective ceiling (the prior 186-rule file
 # lost rules #131–186 → 56 women's category URLs 404'd live instead of 301→/shop). This file is
 # now collapsed to well under 100 rules: the 26 explicit /uncategorized/* spam rules were dropped
-# (covered by the /uncategorized/* wildcard + the Pages Function), and the flat women's/men's
-# category slugs are collapsed into /womens-* and /mens-* splats. Keep this file under ~80 rules.
+# (covered by the Pages Function alone — see the 410 handling note below), and the flat
+# women's/men's category slugs are collapsed into /womens-* and /mens-* splats. Keep this file
+# under ~80 rules.
 # ─────────────────────────────────────────────────────────────────────────────────────────────
 #
 # ── 410 SPAM HANDLING NOTE ──────────────────────────────────────────────────────────────────
-# CF Pages _redirects cannot return 410 directly. The casino-spam /uncategorized/* URLs and
-# /topics/uncategorized/ are handled via two mechanisms:
-#   1. A Pages Function at functions/uncategorized/[[path]].js returns a true 410 response.
-#   2. As a fallback, the /uncategorized/* wildcard rule below 301s to /gone (a static
-#      "permanently removed" page). Suboptimal (Google sees 301 not 410) but no broken UX.
-# STATUS: Pages Function is the primary 410 path; the wildcard 301→/gone is the fallback.
+# CF Pages _redirects cannot return 410 directly, so /uncategorized/* is handled by a Pages
+# Function at functions/uncategorized/[[path]].js, which returns a true 410 response.
+# CF Pages precedence is _redirects > _headers > Functions > static assets, so _redirects
+# must NOT contain a rule matching /uncategorized/* — that would shadow the Function and the
+# spam band would 301 instead of 410 (this happened until Batch 33 Workstream B2 removed it).
+# /topics/uncategorized/ (the empty spam-category archive, not part of the /uncategorized/*
+# band) still legitimately 301s to /gone/ below.
 # ─────────────────────────────────────────────────────────────────────────────────────────────
 #
 # Rule count breakdown (actual rules in this file):
 #   Section 1 slug-history:    4
-#   Section 2 spam fallback:   3  (was 29 — 26 explicit /uncategorized/* dropped, wildcard kept)
+#   Section 2 spam fallback:   2  (/topics/uncategorized/ + non-slash variant → /gone/)
 #   Section 3 exact targets:  41  (brand 13 + auth 2 + topics 4 + app 19 + giveaways 3)
 #   Section 4 splats:          6  (/shop/ guard + /shop/* + /brands/* + /source/* + 2 category)
 #   Section 5 category exact:  16 (flat slugs with no shared prefix)
-#   Total rules:              ~70  (well under the CF Pages effective limit)
+#   Total rules:              ~69  (well under the CF Pages effective limit)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -53,18 +55,15 @@
 # ═══════════════════════════════════════════════════════════════════════
 # SECTION 2: SPAM — 410 GONE (casino content, backdoor-injected)
 # Per architecture-decisions §6: never migrate, signal dead to Google.
-# CF Pages can't return 410 natively — the Pages Function at
-# functions/uncategorized/[[path]].js returns the true 410; the wildcard
-# below is the 301→/gone fallback. The 26 explicit per-slug rules were
-# REMOVED (P0-2): the wildcard + Function already cover every /uncategorized/*.
+# CF Pages can't return 410 natively. /uncategorized/* is handled entirely
+# by the Pages Function at functions/uncategorized/[[path]].js, which
+# returns a true 410 — there must be NO /uncategorized/* rule here, or it
+# would shadow the Function (CF Pages precedence: _redirects > Functions).
 # ═══════════════════════════════════════════════════════════════════════
 
-# Wildcard catch-all for every /uncategorized/* spam slug (fallback to the Function's 410)
-/uncategorized/* /gone 301
-
-# Empty spam category archive
-/topics/uncategorized/ /gone 301
-/topics/uncategorized /gone 301
+# Empty spam category archive (not part of the /uncategorized/* band — stays a 301)
+/topics/uncategorized/ /gone/ 301
+/topics/uncategorized /gone/ 301
 
 
 # ═══════════════════════════════════════════════════════════════════════

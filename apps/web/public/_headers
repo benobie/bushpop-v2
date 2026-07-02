@@ -1,17 +1,32 @@
 # Cloudflare Pages _headers
 # Reference: https://developers.cloudflare.com/pages/configuration/headers/
 #
-# Security and caching headers — filled in when content site goes to production.
-# Template (uncomment and tune before cutover):
+# Security and caching headers. Enabled pre-cutover (Batch 33 Workstream B1).
 #
-# /*
-#   X-Frame-Options: DENY
-#   X-Content-Type-Options: nosniff
-#   Referrer-Policy: strict-origin-when-cross-origin
-#   Permissions-Policy: camera=(), microphone=(), geolocation=()
-#
-# /guides/*
-#   Cache-Control: public, max-age=3600, s-maxage=86400
-#
-# /_next/static/*
-#   Cache-Control: public, max-age=31536000, immutable
+# CSP notes:
+# - script-src needs 'unsafe-inline' because (a) Next.js App Router's own
+#   hydration payload ships as un-nonced inline <script> tags under static
+#   export (no server to mint per-request nonces), and (b) the GTM/GA4
+#   snippets in src/components/analytics.tsx are inline <script> bodies.
+#   Dropping 'unsafe-inline' breaks the app shell, not just analytics. The
+#   domain allowlist still blocks loading arbitrary external script src from
+#   anywhere but self + googletagmanager.
+# - connect-src/img-src include google-analytics.com (+ wildcard subdomains
+#   for region-sharded collect endpoints) and googletagmanager.com so GA4/GTM
+#   beacons and config fetches don't throw CSP violations once analytics.tsx
+#   goes live on the production hostname (bushpop.com.au). Analytics is
+#   hostname-gated and does not fire on this staging host, so GA/GTM network
+#   calls can't be observed pre-cutover — verify the directive values instead.
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com; img-src 'self' data: https://www.google-analytics.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'
+
+/guides/*
+  Cache-Control: public, max-age=3600, s-maxage=86400
+
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
