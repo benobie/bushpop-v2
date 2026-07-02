@@ -89,4 +89,10 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy apps/web/out --project-name bushpop-v2 --commit-dirty=true
+          # `wrangler pages deploy` resolves the Pages Functions directory
+          # relative to its OWN cwd, not relative to the output dir passed as
+          # an argument. functions/ lives at apps/web/functions/, so
+          # workingDirectory must point there (Batch 33 Workstream B2 fix —
+          # the Function was silently never deployed before this).
+          workingDirectory: apps/web
+          command: pages deploy out --project-name bushpop-v2 --commit-dirty=true
