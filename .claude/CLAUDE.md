@@ -24,18 +24,23 @@ Full rationale: `~/projects/Bushpop/docs/architecture-decisions.md` (all six con
 ## Monorepo structure
 
 ```
-apps/web/       - Next.js 16 static content app (Launch 1)
-                  Launch 2 adds packages/* forked from piklo-v2
+apps/web/       - Next.js 16 static content app (Launch 1 — CF Pages, static export)
+apps/market/    - Marketplace SSR app (Launch 2 — piklo-v2 fork, flat routes, dev :3002)
+packages/       - Engine: api (Fastify + workers), db (Drizzle), config, types, ui, api-client
+infra/          - Engine compose: docker-compose.dev.yml (pg 5435 / redis 6380 / meili 7701),
+                  docker-compose.engine.prod.yml (Coolify on homelab; web :3210, api :3334)
+docs/engine/    - Curated upstream engine docs + FORK.md (provenance, pick recipe)
 ```
 
-The monorepo skeleton (pnpm workspaces + Turborepo) exists now even though only `apps/web` is populated. At Launch 2, `packages/api`, `packages/db`, etc. are forked from `piklo-v2` into this repo. Content MDX routes survive the graduation untouched.
+The engine was forked from `benobie/piklo-v2` @ `2419a38` (02/07/2026), renamed `@piklo/*` → `@bushpop/*`, single-tenant (only the `bushpop` channel exists; `CHANNEL_SLUG=bushpop`). **Read `docs/engine/FORK.md` before touching engine code** — notably the Stripe metadata keys (`piklo_payment_op_id` etc.) are deliberately NOT renamed (money-safety byte-parity with upstream) and must stay that way.
 
 ## Key constraints
 
 - **Pure RSC** — no `"use client"` on content pages. Interactivity = isolated leaf client components only.
 - **Trailing-slash parity** with WordPress (`trailingSlash: true`). This is load-bearing for SEO.
-- **No marketplace machinery** at Launch 1. Resist: API, DB, Stripe, auth, workers, `packages/api`.
-- **No `[channel]` routing** — Bushpop is single-tenant. Flat routes: `app/guides/`, `app/shop/`, etc.
+- **Content site stays static** — `apps/web` keeps `output: 'export'` + CF Pages; the engine (API, DB, Stripe, auth, workers) lives in `packages/*` + `apps/market` and deploys separately (Coolify). Never import engine packages from `apps/web`.
+- **No `[channel]` routing** — Bushpop is single-tenant. Flat routes in both apps. The engine keeps channel *tables* (one seeded `bushpop` row) but no channel URL segments or hostname rewrites.
+- **CI split** — `deploy.yml` = content site only (its typecheck is `--filter @bushpop/web`); `engine-ci.yml` = path-filtered engine gates (build/lint/typecheck/integration tests/webpack build/cache audit/security). An engine failure must never block a content deploy.
 
 ## Next.js 16 gotchas (from piklo-v2 AGENTS.md)
 

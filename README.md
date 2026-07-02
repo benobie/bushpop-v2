@@ -10,12 +10,13 @@ lives here yet — no API, DB, Stripe, auth, or workers.
 
 ## Two-launch shape
 
-- **Launch 1 (this repo, now):** ~20 MDX guide pages at their exact WordPress URLs +
+- **Launch 1 (live):** ~20 MDX guide pages at their exact WordPress URLs +
   Cloudflare Pages redirects. Kills the WordPress attack surface.
-- **Launch 2 (later):** this repo *graduates* to the full Turborepo monorepo by forking
-  piklo-v2's engine into `packages/*`. The current `apps/web` stays as `apps/web` and the
-  MDX content carries over as routes — a **move, not a rewrite**. That's why this is already
-  a pnpm + Turborepo workspace with a single `apps/web`, shaped like piklo-v2's `apps/web`.
+- **Launch 2 (in progress, this repo):** the piklo-v2 engine is now forked in as
+  `packages/*` + `apps/market` (marketplace SSR app) + `infra/` — pinned at upstream
+  `2419a38`, fresh history. The content site stays `apps/web` on its own Pages deploy;
+  the engine ships to the homelab via Coolify. See [`docs/engine/FORK.md`](docs/engine/FORK.md)
+  for provenance, the not-renamed money keys, the port map, and the upstream-pick recipe.
 
 Decision record: `~/projects/Bushpop/docs/architecture-decisions.md` (all six decisions
 confirmed by Ben, 16/06/2026). Repo context for agents: [`.claude/CLAUDE.md`](.claude/CLAUDE.md).
@@ -30,10 +31,20 @@ confirmed by Ben, 16/06/2026). Repo context for agents: [`.claude/CLAUDE.md`](.c
 ## Commands
 
 ```bash
-pnpm install                      # install deps
+pnpm install                      # install deps (whole workspace)
+
+# Content site (Launch 1)
 pnpm --filter @bushpop/web build  # static export → apps/web/out/
-pnpm --filter @bushpop/web dev    # local dev server
-pnpm typecheck
+pnpm --filter @bushpop/web dev    # local dev server (:3000)
+
+# Engine (Launch 2)
+docker compose -p bushpop-engine -f infra/docker-compose.dev.yml up -d  # pg 5435 / redis 6380 / meili 7701
+pnpm --filter @bushpop/db db:migrate && pnpm --filter @bushpop/db db:seed && pnpm --filter @bushpop/db db:seed:categories
+pnpm --filter @bushpop/api dev    # Fastify API (:3333)
+pnpm --filter @bushpop/market dev # marketplace app (:3002)
+pnpm --filter @bushpop/api test   # integration suite (needs the compose stack + bushpop_test DB)
+
+pnpm typecheck                    # whole workspace
 ```
 
 The build emits `apps/web/out/` with trailing-slash paths (e.g.

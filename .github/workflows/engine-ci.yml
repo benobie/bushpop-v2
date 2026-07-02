@@ -1,0 +1,227 @@
+# Engine CI — the piklo-v2-fork marketplace engine (packages/*, apps/market).
+# Path-filtered so content-site-only changes (apps/web) never run these jobs;
+# the content site keeps its own CI + deploy in deploy.yml.
+# Forked from piklo-v2 .github/workflows/ci.yml @ 2419a38 (see docs/engine/FORK.md).
+name: Engine CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/**"
+      - "apps/market/**"
+      - "infra/**"
+      - "scripts/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "turbo.json"
+      - "tsconfig.base.json"
+      - "eslint.config.mjs"
+      - ".github/workflows/engine-ci.yml"
+  pull_request:
+    branches: [main]
+    # Keep in sync with the push paths above (GH Actions YAML has no anchors).
+    paths:
+      - "packages/**"
+      - "apps/market/**"
+      - "infra/**"
+      - "scripts/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "turbo.json"
+      - "tsconfig.base.json"
+      - "eslint.config.mjs"
+      - ".github/workflows/engine-ci.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: ".node-version"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      # Builds the whole workspace, including the apps/web static export —
+      # doubling as proof that engine changes leave the content build green.
+      - run: pnpm build
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: ".node-version"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: ".node-version"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm typecheck
+
+  test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: bushpop
+          POSTGRES_USER: bushpop
+          POSTGRES_PASSWORD: bushpop_dev
+        # Map host 5435 → container 5432 to match vitest.config.ts DATABASE_URL
+        # (5435 locally clears life-dashboard on 5433 and piklo on 5434).
+        ports:
+          - 5435:5432
+        options: >-
+          --health-cmd "pg_isready -U bushpop -d bushpop"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      meilisearch:
+        image: getmeili/meilisearch:v1.40
+        env:
+          MEILI_MASTER_KEY: dev_master_key_change_in_production
+          MEILI_NO_ANALYTICS: "true"
+        ports:
+          - 7701:7700
+    env:
+      # Mirror packages/api/vitest.config.ts so the migrate/seed steps and the
+      # test runner all hit the same bushpop_test database.
+      DATABASE_URL: postgres://bushpop:bushpop_dev@localhost:5435/bushpop_test
+      REDIS_URL: redis://localhost:6380
+      MEILISEARCH_HOST: http://localhost:7701
+      MEILI_MASTER_KEY: dev_master_key_change_in_production
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: ".node-version"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      # Create the bushpop_test database (the compose flow assumes it exists).
+      - name: Create bushpop_test database
+        run: |
+          PGPASSWORD=bushpop_dev psql -h localhost -p 5435 -U bushpop -d bushpop \
+            -c "CREATE DATABASE bushpop_test;" || true
+
+      # Apply Drizzle migrations to bushpop_test.
+      - name: Apply migrations
+        run: pnpm --filter @bushpop/db db:migrate
+
+      # Seed the bushpop channel + categories (idempotent; tests assume the
+      # bushpop channel + a category exist and never truncate categories).
+      - name: Seed reference data
+        run: |
+          pnpm --filter @bushpop/db db:seed
+          pnpm --filter @bushpop/db db:seed:categories
+
+      - run: pnpm --filter @bushpop/api test
+
+  market-webpack-build:
+    name: Market Build (webpack)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: ".node-version"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      # Turbopack build is already covered by the `build` job above.
+      # This job pins the webpack builder so a Next.js upgrade can't silently
+      # regress the non-default build path.
+      - run: pnpm --filter @bushpop/market exec next build --webpack
+
+  cache-audit:
+    name: Cache Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # Pure shell/grep script — no pnpm install needed.
+      # Asserts every `'use cache'` function under apps/market/src/ has at
+      # least one matching revalidateTag() invalidation site.
+      - run: scripts/cache-audit.sh
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: ".node-version"
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      # Critical CVEs block the merge. Transitive criticals are pinned to patched
+      # versions via pnpm `overrides` in the root package.json — keep that list
+      # current rather than re-adding continue-on-error when a new critical lands.
+      - run: pnpm audit --audit-level=critical
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

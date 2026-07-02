@@ -36,7 +36,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck
-        run: pnpm typecheck
+        # Content-site scope only: an engine (packages/*, apps/market) type
+        # error must never block the content deploy through the DNS-cut
+        # window. Engine typechecking lives in engine-ci.yml.
+        run: pnpm --filter @bushpop/web typecheck
 
       - name: Build (static export)
         run: pnpm --filter @bushpop/web build
