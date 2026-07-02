@@ -67,6 +67,8 @@ export const listingScoreResponseSchema = z.object({
   descriptionScore: z.number().int(),
   completenessScore: z.number().int(),
   categoryScore: z.number().int(),
+  breakdown: z.record(z.string(), z.number()).nullable(),
+  scoreVersion: z.string().nullable(),
   qualityTier: z.enum(["bronze", "silver", "gold"]),
   nudgeKey: z.string().nullable(),
   nudgeMessage: z.string().nullable(),
