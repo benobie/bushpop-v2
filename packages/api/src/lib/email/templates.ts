@@ -228,3 +228,44 @@ export function trackingExceptionAdminTemplate(params: TrackingExceptionAdminPar
     ].join("\n"),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Sell-flow templates (Phase 1 task 8)
+// ---------------------------------------------------------------------------
+
+export interface ListingPublishedSellerParams {
+  listingTitle: string;
+  handle: string;
+  strengthScore?: number | null;
+  channelName: string;
+}
+
+export function listingPublishedSellerTemplate(params: ListingPublishedSellerParams): {
+  subject: string;
+  text: string;
+} {
+  const scoreLine =
+    typeof params.strengthScore === "number"
+      ? `Listing strength: ${params.strengthScore}/100`
+      : null;
+
+  return {
+    subject: `Your listing is live on ${params.channelName} — ${params.listingTitle}`,
+    text: [
+      `Your listing "${params.listingTitle}" is now live on ${params.channelName}.`,
+      "",
+      ...(scoreLine ? [scoreLine, ""] : []),
+      "What happens next:",
+      "  1. Buyers can find your item in search right now.",
+      "  2. When it sells, the buyer pays securely through the platform.",
+      "  3. We email you a prepaid shipping label (if you chose one).",
+      "  4. You get paid once the item is delivered.",
+      "",
+      "Want to sell more? Listing another similar item takes under a minute",
+      "with \"List another like this\" from your listings page.",
+      "",
+      "Thanks,",
+      `The ${params.channelName} Team`,
+    ].join("\n"),
+  };
+}

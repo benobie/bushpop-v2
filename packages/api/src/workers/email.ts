@@ -7,6 +7,7 @@ import {
   getEmailSender,
   orderConfirmationBuyerTemplate,
   orderNotificationSellerTemplate,
+  listingPublishedSellerTemplate,
   reportActionedTemplate,
   reportReinstatedTemplate,
   scoreNudgeTemplate,
@@ -36,7 +37,8 @@ export type EmailJobType =
   | "tracking_exception_admin"
   | "score_nudge"
   | "report_actioned"
-  | "report_reinstated";
+  | "report_reinstated"
+  | "listing_published_seller";
 
 export interface EmailJobData {
   type: EmailJobType;
@@ -235,9 +237,18 @@ async function processNotificationEmail(job: Job<EmailJobData>): Promise<void> {
           nudgeKey: typeof payload["nudgeKey"] === "string" ? payload["nudgeKey"] : undefined,
           channelName,
         })
-      : type === "report_actioned"
-        ? reportActionedTemplate({ entityId, channelName })
-        : reportReinstatedTemplate({ entityId, channelName });
+      : type === "listing_published_seller"
+        ? listingPublishedSellerTemplate({
+            listingTitle:
+              typeof payload["listingTitle"] === "string" ? payload["listingTitle"] : "Your item",
+            handle: typeof payload["handle"] === "string" ? payload["handle"] : "",
+            strengthScore:
+              typeof payload["strengthScore"] === "number" ? payload["strengthScore"] : null,
+            channelName,
+          })
+        : type === "report_actioned"
+          ? reportActionedTemplate({ entityId, channelName })
+          : reportReinstatedTemplate({ entityId, channelName });
 
   const result = await send({
     to: recipientEmail,
@@ -265,7 +276,12 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
   }
 
   try {
-    if (type === "score_nudge" || type === "report_actioned" || type === "report_reinstated") {
+    if (
+      type === "score_nudge" ||
+      type === "report_actioned" ||
+      type === "report_reinstated" ||
+      type === "listing_published_seller"
+    ) {
       await processNotificationEmail(job);
       return;
     }

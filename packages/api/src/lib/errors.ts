@@ -44,6 +44,17 @@ export class ValidationError extends AppError {
   }
 }
 
+/**
+ * Publish gate failure (Phase 1 task 8): 422 with the machine-readable
+ * list of missing requirements so the wizard can jump to the right step.
+ */
+export class PublishNotReadyError extends AppError {
+  constructor(public missing: string[]) {
+    super("Listing is not ready to publish", 422, "PUBLISH_NOT_READY");
+    this.name = "PublishNotReadyError";
+  }
+}
+
 export class TooManyRequestsError extends AppError {
   constructor(message = "Too many requests") {
     super(message, 429, "TOO_MANY_REQUESTS");

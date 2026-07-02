@@ -28,6 +28,7 @@ import {
 } from "../images/schemas.js";
 import { requestUploadUrl, confirmUpload } from "../images/service.js";
 import { getAiDraftStatus, requestAiDraft } from "./ai-service.js";
+import { duplicateDraft, publishDraft } from "./publish-service.js";
 
 const sellerPreHandlers = [requireAuth, requireRole("seller")];
 const idParam = z.object({ id: z.string().length(26) });
@@ -165,6 +166,52 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
     const { id, imageId } = request.params as { id: string; imageId: string };
     const body = request.body as z.infer<typeof confirmUploadSchema>;
     return confirmUpload(id, imageId, request.user!.id, body);
+  });
+
+  // ── Publish + duplicate (task 8) ──
+
+  app.post("/api/v1/seller/drafts/:id/publish", {
+    preHandler: sellerPreHandlers,
+    schema: {
+      tags: ["Seller - Drafts"],
+      summary: "Publish a draft — server-side gate, 422 with missing[] when not ready",
+      params: idParam,
+      body: z.object({
+        version: z.number().int().min(1),
+        legalAgree: z.boolean(),
+      }),
+      response: {
+        200: z.object({
+          listingId: z.string(),
+          handle: z.string(),
+          itemId: z.string(),
+          strength: z.object({
+            score: z.number(),
+            band: z.string(),
+            breakdown: z.record(z.string(), z.number()),
+            version: z.string(),
+          }),
+        }),
+      },
+    },
+  }, async (request) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { version: number; legalAgree: boolean };
+    return publishDraft(id, request.user!.id, request.channel.id, body);
+  });
+
+  app.post("/api/v1/seller/drafts/:id/duplicate", {
+    preHandler: sellerPreHandlers,
+    schema: {
+      tags: ["Seller - Drafts"],
+      summary: "List another like this — new draft keeping brand/category/colour/shipping",
+      params: idParam,
+      response: { 201: draftResponseSchema },
+    },
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const draft = await duplicateDraft(id, request.user!.id);
+    return reply.status(201).send(draft);
   });
 
   // ── AI draft generation (202 + poll — D11/D12) ──

@@ -41,7 +41,7 @@ import { storeOrderRoutes } from "./routes/v1/store/orders/routes";
 import { sellerOrderRoutes } from "./routes/v1/seller/orders/routes";
 import { adminOrderRoutes } from "./routes/v1/admin/orders/routes";
 import { adminPayoutRoutes } from "./routes/v1/admin/payouts/routes";
-import { AppError } from "./lib/errors";
+import { AppError, PublishNotReadyError } from "./lib/errors";
 import { InvalidTransitionError } from "./lib/state-machine";
 import { registerIdempotencyHook } from "./middleware/idempotency";
 import { setupListingsIndex, purgeStaleQueueEventsIfNeeded } from "./lib/search-index";
@@ -113,6 +113,14 @@ export async function buildServer() {
 
   // Global error handler
   app.setErrorHandler((error, _request, reply) => {
+    if (error instanceof PublishNotReadyError) {
+      return reply.status(422).send({
+        error: error.code,
+        message: error.message,
+        missing: error.missing,
+      });
+    }
+
     if (error instanceof AppError) {
       return reply.status(error.statusCode).send({
         error: error.code || error.name,
