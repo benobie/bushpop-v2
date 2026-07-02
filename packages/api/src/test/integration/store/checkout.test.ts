@@ -172,8 +172,8 @@ describe("Checkout API", () => {
 
       expect(res.statusCode).toBe(200);
       const body = res.json();
-      // m = 1525, + 300 surcharge = 1825
-      expect(body.totals.shippingCents).toBe(1825);
+      // m = 1095 (parcel-aligned, Phase 1 task 1), + 300 surcharge = 1395
+      expect(body.totals.shippingCents).toBe(1395);
       expect(body.totals.subtotalCents).toBe(5000);
     });
   });

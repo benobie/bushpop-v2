@@ -21,8 +21,11 @@ const envSchema = z.object({
   R2_BUCKET_NAME: z.string().min(1).optional(),
   R2_PUBLIC_URL: z.string().url().optional(),
 
-  // AI Enrichment
+  // AI Enrichment / draft generation
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  // Gemini is the default AI-draft provider (D12); Anthropic is the
+  // escalation path. Either key alone enables the ai-draft worker.
+  GEMINI_API_KEY: z.string().min(1).optional(),
 
   // Email (Resend)
   RESEND_API_KEY: z.string().optional(),
