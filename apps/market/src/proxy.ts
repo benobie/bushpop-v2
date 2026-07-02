@@ -1,13 +1,11 @@
 /**
- * Next.js proxy (formerly middleware.ts — renamed in Next.js 16) — handles four concerns:
- * 1. Channel rewrite: hostname → [channel] dynamic route segment (LB-1)
- * 2. CSRF protection: X-Requested-With check on /api/* state-changing requests (FM-17)
+ * Next.js proxy (formerly middleware.ts — renamed in Next.js 16) — handles three concerns:
+ * 1. CSRF protection: X-Requested-With check on /api/* state-changing requests (FM-17)
+ * 2. Proxy header forwarding: X-Forwarded-For for backend rate limiting (FM-19)
  * 3. Optimistic auth guard: redirect to /sign-in if no session cookie (FM-1 — guard only, not trust boundary)
- * 4. Proxy header forwarding: X-Forwarded-For for backend rate limiting (FM-19)
  */
 
 import { NextResponse, type NextRequest } from "next/server";
-import { resolveChannelFromHost } from "@bushpop/config";
 
 /** Routes that require authentication (optimistic check only) */
 const PROTECTED_PREFIXES = ["/account", "/dashboard", "/sell", "/checkout", "/bag", "/orders"];
@@ -36,28 +34,19 @@ export function proxy(request: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  // ── 3. Channel rewrite (LB-1) ──
-  const channel = resolveChannelFromHost(request.headers.get("host") ?? "");
-  const url = request.nextUrl.clone();
-
-  // Don't double-rewrite if already prefixed
-  if (!url.pathname.startsWith(`/${channel}`)) {
-    // ── 4. Optimistic auth guard (FM-1 — NOT a trust boundary) ──
-    const isProtected = PROTECTED_PREFIXES.some((prefix) =>
-      pathname.startsWith(prefix),
-    );
-    if (isProtected) {
-      const hasSession =
-        request.cookies.has("better-auth.session_token") ||
-        request.cookies.has("__Secure-better-auth.session_token");
-      if (!hasSession) {
-        url.pathname = `/${channel}/sign-in`;
-        return NextResponse.redirect(url);
-      }
+  // ── 3. Optimistic auth guard (FM-1 — NOT a trust boundary) ──
+  const isProtected = PROTECTED_PREFIXES.some((prefix) =>
+    pathname.startsWith(prefix),
+  );
+  if (isProtected) {
+    const hasSession =
+      request.cookies.has("better-auth.session_token") ||
+      request.cookies.has("__Secure-better-auth.session_token");
+    if (!hasSession) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/sign-in";
+      return NextResponse.redirect(url);
     }
-
-    url.pathname = `/${channel}${url.pathname}`;
-    return NextResponse.rewrite(url);
   }
 
   return NextResponse.next();

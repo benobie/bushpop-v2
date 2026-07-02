@@ -17,10 +17,9 @@
  *   - getListing       → 'listing-detail'
  *   - searchListings   → 'search'
  *
- * The channel parameter is carried through the tag for multi-tenant
- * isolation per FM-9 — `channel:piklo:listings` and
- * `channel:bushpop:listings` invalidate independently even though the
- * underlying API currently returns channel-agnostic data.
+ * The channel parameter is still carried through shared cache tags for
+ * compatibility with the marketplace API helpers. In this single-tenant fork
+ * the app always passes the Bushpop channel.
  *
  * See AGENTS.md → "Cache Components model (Next.js 16.2.3+)".
  */
@@ -111,27 +110,27 @@ export async function getListing(handle: string, channel: string) {
  * Shorter lifetime: rapid filter churn, always-fresh expectations.
  * Invalidated by Sprint 1a Server Actions on listing publish/pause/archive.
  */
-export async function searchListings(params: SearchFilters) {
+export async function searchListings(filters: SearchFilters) {
   "use cache";
   cacheLife("search");
-  const tag = channelListingsTag(params.channel);
+  const tag = channelListingsTag(filters.channel);
   cacheTag(tag);
 
   const api = createPublicApiClient({ tags: [tag] });
   const { data, error } = await api.GET("/api/v1/store/search", {
     params: {
       query: {
-        q: params.q,
-        limit: params.limit,
-        offset: params.offset,
-        categorySlug: params.categorySlug,
-        size: params.size,
-        colour: params.colour,
-        brand: params.brand,
-        condition: params.condition,
-        minPrice: params.minPrice,
-        maxPrice: params.maxPrice,
-        sort: params.sort,
+        q: filters.q,
+        limit: filters.limit,
+        offset: filters.offset,
+        categorySlug: filters.categorySlug,
+        size: filters.size,
+        colour: filters.colour,
+        brand: filters.brand,
+        condition: filters.condition,
+        minPrice: filters.minPrice,
+        maxPrice: filters.maxPrice,
+        sort: filters.sort,
       },
     },
   });

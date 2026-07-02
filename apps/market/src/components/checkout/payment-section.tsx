@@ -34,7 +34,7 @@ export function PaymentSection({ sessionId, totalCents, currency }: PaymentSecti
     setLoading(true);
     setError(null);
 
-    // return_url is channel-less — proxy adds /piklo
+    // return_url is the public flat route used by the single-tenant app.
     const returnUrl = `${window.location.origin}/checkout/confirmation?session=${sessionId}`;
 
     const result = await stripe.confirmPayment({

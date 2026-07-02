@@ -6,11 +6,14 @@
  *
  * PII scrubbing: the `track()` helper strips email, name, phone, and address
  * fields from all event properties automatically.
+ *
+ * The shared event taxonomy still includes `channel`; in this fork it always
+ * resolves to the single Bushpop channel.
  */
 
 import posthog from "posthog-js";
 
-export type PikloEvent =
+export type BushpopEvent =
   | { event: "wizard.started"; props: { channel: string } }
   | {
       event: "wizard.photos_uploaded";
@@ -51,8 +54,8 @@ function scrubPii<T extends Record<string, unknown>>(props: T): Partial<T> {
 
 /**
  * Emit a typed PostHog event. The event name and payload shape are enforced
- * by the PikloEvent union.
+ * by the BushpopEvent union.
  */
-export function track({ event, props }: PikloEvent): void {
+export function track({ event, props }: BushpopEvent): void {
   posthog.capture(event, scrubPii(props as Record<string, unknown>));
 }

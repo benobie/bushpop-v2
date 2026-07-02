@@ -1,12 +1,13 @@
 "use client";
 
 import { createContext, useContext, useCallback, useMemo } from "react";
+import { DEFAULT_CHANNEL, getChannelConfig } from "@bushpop/config";
 
 /**
- * Channel context + namespaced localStorage hook. (LB-1)
+ * Channel context + namespaced localStorage hook.
  *
- * All client-side storage keys must be prefixed with the channel slug to
- * prevent cross-channel bleed (e.g. piklo:bag vs bushpop:bag).
+ * The market app is now single-tenant, but storage keys stay prefixed with
+ * the channel slug for compatibility with existing client state.
  */
 
 interface ChannelContextValue {
@@ -14,15 +15,15 @@ interface ChannelContextValue {
 }
 
 const ChannelContext = createContext<ChannelContextValue | null>(null);
+const channelConfig = getChannelConfig(DEFAULT_CHANNEL);
 
 export function ChannelProvider({
-  channel,
   children,
 }: {
-  channel: string;
+  channel?: string;
   children: React.ReactNode;
 }) {
-  const value = useMemo(() => ({ channel }), [channel]);
+  const value = useMemo(() => ({ channel: channelConfig.slug }), []);
   return (
     <ChannelContext.Provider value={value}>{children}</ChannelContext.Provider>
   );
@@ -39,12 +40,14 @@ export function useChannel(): string {
 /**
  * Wraps localStorage with channel-prefixed keys.
  * Usage: const storage = useChannelStorage(); storage.setItem("bag", JSON.stringify(items))
- * → stores as "piklo:bag" or "bushpop:bag"
+ * → stores as "bushpop:bag"
  */
 export function useChannelStorage() {
   const channel = useChannel();
 
-  const prefix = useCallback((key: string) => `${channel}:${key}`, [channel]);
+  function prefix(key: string): string {
+    return channel + ":" + key;
+  }
 
   const getItem = useCallback(
     (key: string): string | null => {

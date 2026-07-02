@@ -1,14 +1,9 @@
 /**
- * Strips the internal [channel] segment from paths. (FM-13)
+ * Returns the public path shown to users.
  *
- * The [channel] rewrite is an internal implementation detail — it must never
- * leak into user-facing URLs. All <Link> and router.push() calls must use
- * publicHref() or static paths.
- *
- * Input:  /piklo/search?q=dress   → /search?q=dress
- * Input:  /bushpop/listing/abc    → /listing/abc
- * Input:  /search                 → /search (no-op)
+ * In the single-tenant app there is no internal channel prefix to strip, so
+ * this is now an identity helper kept for call-site compatibility.
  */
-export function publicHref(internalPath: string, channel: string): string {
-  return internalPath.replace(new RegExp(`^/${channel}`), "") || "/";
+export function publicHref(internalPath: string, _channel?: string): string {
+  return internalPath || "/";
 }
