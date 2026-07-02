@@ -1,12 +1,14 @@
 import { Worker, Queue } from "bullmq";
-import { lt, and, eq, sql } from "drizzle-orm";
+import { and, eq, lt, notExists, sql } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
-import { inventoryItemImages } from "@bushpop/db/schema";
+import { channelListings, inventoryItems, inventoryItemImages } from "@bushpop/db/schema";
 import { deleteObject } from "../lib/r2.js";
+import { extractImageId, IMAGE_VARIANT_NAMES } from "../lib/image-url.js";
 import { getRedis } from "../lib/redis.js";
 
 const QUEUE_NAME = "image-cleanup";
 const ONE_HOUR_MS = 60 * 60 * 1000;
+const STALE_DRAFT_DAYS = 30;
 
 /**
  * Clean up orphaned image uploads:
@@ -49,6 +51,73 @@ async function cleanupOrphanImages() {
 }
 
 /**
+ * Clean up stale sell-flow drafts (Phase 1 task 11): inventory items still
+ * in lifecycle 'owned' with NO channel listing, untouched for 30+ days.
+ * Their photos (originals + derived variants) are deleted from R2, image
+ * rows removed, and the item archived — sellers start fresh past 30 days
+ * (the wizard's resume banner ages out well before that).
+ */
+export async function cleanupStaleDrafts() {
+  const cutoff = new Date(Date.now() - STALE_DRAFT_DAYS * 24 * 60 * 60 * 1000);
+
+  const staleDrafts = await db
+    .select({ id: inventoryItems.id })
+    .from(inventoryItems)
+    .where(
+      and(
+        eq(inventoryItems.lifecycleState, "owned"),
+        lt(inventoryItems.updatedAt, cutoff),
+        notExists(
+          db
+            .select({ one: sql`1` })
+            .from(channelListings)
+            .where(eq(channelListings.inventoryItemId, inventoryItems.id)),
+        ),
+      ),
+    );
+
+  let archived = 0;
+  for (const draft of staleDrafts) {
+    const images = await db
+      .select({ id: inventoryItemImages.id, storageKey: inventoryItemImages.storageKey })
+      .from(inventoryItemImages)
+      .where(eq(inventoryItemImages.inventoryItemId, draft.id));
+
+    for (const image of images) {
+      // Original + derived variants — all best-effort.
+      try {
+        await deleteObject(image.storageKey);
+      } catch {
+        // Orphaned objects are caught on a later sweep
+      }
+      const imageId = extractImageId(image.storageKey);
+      if (imageId) {
+        for (const variant of IMAGE_VARIANT_NAMES) {
+          try {
+            await deleteObject(`items/${draft.id}/${variant}/${imageId}.webp`);
+          } catch {
+            // Variant may never have been generated
+          }
+        }
+      }
+      await db.delete(inventoryItemImages).where(eq(inventoryItemImages.id, image.id));
+    }
+
+    await db
+      .update(inventoryItems)
+      .set({
+        lifecycleState: "archived",
+        version: sql`${inventoryItems.version} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(eq(inventoryItems.id, draft.id));
+    archived++;
+  }
+
+  return { archived };
+}
+
+/**
  * Start the image cleanup worker.
  * Runs as a BullMQ repeating job every hour.
  */
@@ -71,7 +140,11 @@ export async function startImageCleanupWorker() {
       if (result.cleaned > 0) {
         console.log(`[image-cleanup] Cleaned ${result.cleaned} orphan images`);
       }
-      return result;
+      const drafts = await cleanupStaleDrafts();
+      if (drafts.archived > 0) {
+        console.log(`[image-cleanup] Archived ${drafts.archived} stale drafts (>${STALE_DRAFT_DAYS}d)`);
+      }
+      return { ...result, ...drafts };
     },
     { connection },
   );
