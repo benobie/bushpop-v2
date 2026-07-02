@@ -1,0 +1,35 @@
+/**
+ * Bushpop channel theme overrides.
+ *
+ * Selected via [data-channel="bushpop"] on the channel layout wrapper.
+ * Only component-state tokens (primary + secondary) are overridden in Sprint 0.5b
+ * per FM-14/FM-16. Full variant coverage lands in Sprint 1.
+ *
+ * Bushpop uses a darker neutral-led palette vs Piklo's coral.
+ */
+
+[data-channel="bushpop"] {
+  /* Brand — darker neutral with coral accent */
+  --color-brand: #2d2d2d;
+  --color-brand-hover: #1a1a1a;
+  --color-brand-subtle: #f5f5f5;
+  --color-brand-muted: #e5e5e5;
+  --color-interactive: #2d2d2d;
+  --color-interactive-hover: #1a1a1a;
+
+  /* Component-state tokens — primary */
+  --color-button-primary-bg: #2d2d2d;
+  --color-button-primary-bg-hover: #1a1a1a;
+  --color-button-primary-bg-active: #000000;
+  --color-button-primary-text: #ffffff;
+
+  /* Component-state tokens — secondary */
+  --color-button-secondary-bg: #f5f5f5;
+  --color-button-secondary-bg-hover: #e5e5e5;
+  --color-button-secondary-bg-active: #d4d4d4;
+  --color-button-secondary-text: #2d2d2d;
+
+  /* Badge — active state */
+  --color-badge-active-bg: #e5e5e5;
+  --color-badge-active-text: #2d2d2d;
+}

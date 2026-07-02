@@ -1,0 +1,1 @@
+ALTER TABLE "payout_holds" ADD COLUMN "release_attempts" integer DEFAULT 0 NOT NULL;

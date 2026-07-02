@@ -1,0 +1,47 @@
+# Build context = repo root (used by packages/api/Dockerfile + apps/market/Dockerfile).
+# Keep this lean: deps are installed fresh inside the image; only source + manifests
+# need to enter the context.
+
+# Dependencies — reinstalled in-image via pnpm install --frozen-lockfile
+node_modules
+**/node_modules
+
+# Build outputs — regenerated in-image (web) or unused (api runs tsx, not dist)
+**/.next
+**/dist
+**/.turbo
+**/build
+
+# VCS + worktrees
+.git
+.gitignore
+**/.worktrees
+*.worktrees
+
+# Secrets — must NEVER enter the build context
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Docs / local tooling not needed at runtime
+docs
+**/*.md
+.claude
+.vscode
+.github
+
+# OS / editor cruft + local logs
+.DS_Store
+*.log
+coverage
+**/coverage
+
+# Bushpop Launch-1 content site + support services — not part of engine images.
+# apps/web/package.json must still enter the context: the workspace lockfile
+# lists @bushpop/web as an importer, so frozen installs inside the image need
+# its manifest present.
+apps/web/*
+!apps/web/package.json
+services
+**/out

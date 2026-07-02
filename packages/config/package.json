@@ -1,0 +1,26 @@
+{
+  "name": "@bushpop/config",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./channel": "./src/channel.ts",
+    "./env": "./src/env.ts",
+    "./listing-scores": "./src/listing-scores.ts",
+    "./taxonomy": "./src/taxonomy.ts",
+    "./shipping": "./src/shipping.ts",
+    "./tailwind/tokens": "./tailwind/tokens.css",
+    "./tailwind/bushpop-overrides": "./tailwind/bushpop-overrides.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.7"
+  }
+}

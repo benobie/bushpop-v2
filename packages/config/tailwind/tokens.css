@@ -1,0 +1,79 @@
+@theme {
+  /* Strip Tailwind's default colour palette (FM-4, per Gemini R1 + ChatGPT R1).
+     Token drift is invisible without enforcement; Tailwind's defaults conflict with
+     channel theming. Only semantic aliases below are exposed to components. */
+  --color-*: initial;
+
+  /* Keep essential greyscale for raw layout utilities (borders, shadows, off states) */
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Red — kept only for destructive state primitives (Button variant="destructive") */
+  --color-red-50: #fef2f2;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+
+  /* Brand — Coral Terracotta */
+  /* WCAG AA note: brand-500 (#e85d3a) has a 3.47:1 contrast ratio on white — below the 4.5:1
+     minimum for normal text. Do NOT use text-brand-500 for text or icons on white/light
+     backgrounds. Use text-brand-600 (#c94a2a, ~4.7:1) or darker for WCAG AA compliance.
+     Background uses (bg-brand-500) are fine — white text on top meets contrast requirements. */
+  --color-brand-50: #fef3ef;
+  --color-brand-100: #fde8dd;
+  --color-brand-200: #faceba;
+  --color-brand-300: #f5a98a;
+  --color-brand-400: #ed7e62;
+  --color-brand-500: #e85d3a;
+  --color-brand-600: #c94a2a;
+  --color-brand-700: #a53b22;
+  --color-brand-800: #82301c;
+  --color-brand-900: #6b2918;
+
+  /* Semantic aliases — map intent to validated shades */
+  --color-brand: var(--color-brand-500);
+  --color-brand-hover: var(--color-brand-600);
+  --color-brand-subtle: var(--color-brand-100);
+  --color-brand-muted: var(--color-brand-200);
+  --color-interactive: var(--color-brand-600);
+  --color-interactive-hover: var(--color-brand-700);
+
+  /* Trust — Teal (buyer protection, security messaging) */
+  --color-trust-50: #e6f5f5;
+  --color-trust-100: #b3e0e0;
+  --color-trust-200: #80cccc;
+  --color-trust-500: #007780;
+  --color-trust-700: #005c63;
+  --color-trust-800: #004a4f;
+  --color-trust-bg: var(--color-trust-50);
+  --color-trust-text: var(--color-trust-800);
+
+  /* Component-state tokens (FM-14, scoped to primary + secondary per FM-16)
+     Full variant coverage (outline, ghost, destructive) lands in Sprint 1. */
+  --color-button-primary-bg: var(--color-brand-500);
+  --color-button-primary-bg-hover: var(--color-brand-600);
+  --color-button-primary-bg-active: var(--color-brand-700);
+  --color-button-primary-text: #ffffff;
+  --color-button-secondary-bg: var(--color-brand-100);
+  --color-button-secondary-bg-hover: var(--color-brand-200);
+  --color-button-secondary-bg-active: var(--color-brand-300);
+  --color-button-secondary-text: var(--color-brand-800);
+  --color-badge-active-bg: var(--color-trust-100);
+  --color-badge-active-text: var(--color-trust-800);
+
+  /* Fonts */
+  --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  /* Border Radius */
+  --radius-card: 0.75rem;
+  --radius-button: 0.5rem;
+  --radius-input: 0.5rem;
+  --radius-badge: 9999px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}

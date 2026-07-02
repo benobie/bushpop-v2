@@ -1,0 +1,7 @@
+f6a743db28b756f5a0aaf6664195454d9b3d091d:packages/api/src/test/setup.ts:stripe-access-token:7
+f6a743db28b756f5a0aaf6664195454d9b3d091d:.env.example:stripe-access-token:38
+bf9d1c0b77e9b0db9c8616a1c22a627b9b9fc741:packages/api/vitest.config.ts:generic-api-key:19
+02926a4b362b8577d0d42d0fc076dc2afbc79205:docs/handoffs/test-fix-step-0.handoff.md:generic-api-key:51
+02926a4b362b8577d0d42d0fc076dc2afbc79205:docs/handoffs/test-fix-step-1.handoff.md:generic-api-key:56
+4745b73aae3b60ad31b8e312f8e98f78185dc931:docs/handoffs/test-fix-step-2.handoff.md:generic-api-key:60
+90d4950c10b79048a245772624f46a9a90034af7:docs/handoffs/master-merge-and-cleanup.handoff.md:curl-auth-header:566

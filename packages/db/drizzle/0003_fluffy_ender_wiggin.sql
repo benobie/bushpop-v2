@@ -1,0 +1,2 @@
+ALTER TABLE "seller_profiles" ADD COLUMN "default_shipping_address_id" varchar(26);--> statement-breakpoint
+ALTER TABLE "seller_profiles" ADD CONSTRAINT "seller_profiles_default_shipping_address_id_addresses_id_fk" FOREIGN KEY ("default_shipping_address_id") REFERENCES "public"."addresses"("id") ON DELETE set null ON UPDATE no action;

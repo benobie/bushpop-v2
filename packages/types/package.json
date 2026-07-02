@@ -1,0 +1,24 @@
+{
+  "name": "@bushpop/types",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./common": "./src/common.ts",
+    "./user": "./src/user.ts",
+    "./auth": "./src/auth.ts",
+    "./channel": "./src/channel.ts",
+    "./roles": "./src/roles.ts",
+    "./events": "./src/marketplace-events.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24"
+  },
+  "devDependencies": {
+    "typescript": "^5.7"
+  }
+}

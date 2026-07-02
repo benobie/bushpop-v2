@@ -1,0 +1,32 @@
+{
+  "name": "@bushpop/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:seed": "tsx src/seed.ts",
+    "db:seed:categories": "tsx src/seeds/categories.ts",
+    "db:studio": "drizzle-kit studio",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bushpop/config": "workspace:^",
+    "drizzle-orm": "~0.45",
+    "postgres": "^3.4",
+    "ulid": "^2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "drizzle-kit": "~0.30",
+    "tsx": "^4",
+    "typescript": "^5.7"
+  }
+}

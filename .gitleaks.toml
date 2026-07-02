@@ -1,0 +1,31 @@
+[extend]
+useDefault = true
+
+# Custom rules for secrets the default ruleset doesn't catch.
+# Added 2026-04-09 after a Vikunja PAT leaked to public history.
+[[rules]]
+id = "vikunja-pat"
+description = "Vikunja personal access token (tk_ prefix + 40 hex chars)"
+regex = '''tk_[a-f0-9]{40}'''
+keywords = ["tk_"]
+tags = ["vikunja", "pat"]
+
+# Test placeholder values intentionally checked into the repo. These are local-
+# dev / CI defaults, never real secrets. Centralised here so we don't have to
+# add a fingerprint to .gitleaksignore for every commit that mentions them.
+[allowlist]
+description = "Local test placeholder values (not real secrets)"
+regexes = [
+  "testsecret12345678901234567890ab",
+  "dev_master_key_change_in_production",
+  "sk_test_placeholder",
+  "whsec_test_placeholder",
+  "test_api_key",
+  "test_webhook_secret",
+]
+paths = [
+  '''packages/api/src/test/setup\.ts''',
+  '''packages/api/vitest\.config\.ts''',
+  '''docs/handoffs/test-fix-step-2\.handoff\.md''',
+  '''docs/handoffs/from-codex/.*\.md''',
+]

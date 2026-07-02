@@ -22,3 +22,7 @@ coverage/
 
 # Multi-agent review artifacts
 .review-*.md
+
+# Engine (piklo-v2 fork) additions
+*.db
+drizzle-out/

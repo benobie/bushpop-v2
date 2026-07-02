@@ -1,0 +1,65 @@
+services:
+  bushpop-db:
+    image: postgres:16-alpine
+    container_name: bushpop-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bushpop
+      POSTGRES_USER: bushpop
+      POSTGRES_PASSWORD: ${BUSHPOP_DB_PASSWORD:-bushpop_dev}
+    ports:
+      - "5435:5432"
+    volumes:
+      - bushpop-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bushpop -d bushpop"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bushpop-net
+
+  bushpop-redis:
+    image: redis:7-alpine
+    container_name: bushpop-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6380:6379"
+    volumes:
+      - bushpop-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bushpop-net
+
+  bushpop-meilisearch:
+    image: getmeili/meilisearch:v1.40
+    container_name: bushpop-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev_master_key_change_in_production}
+      MEILI_NO_ANALYTICS: "true"
+    ports:
+      - "7701:7700"
+    volumes:
+      - bushpop-meili-data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bushpop-net
+
+volumes:
+  bushpop-pg-data:
+  bushpop-redis-data:
+  bushpop-meili-data:
+
+networks:
+  bushpop-net:
+    driver: bridge
