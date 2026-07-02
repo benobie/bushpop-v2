@@ -1,9 +1,13 @@
 import { and, desc, eq } from "drizzle-orm";
 import {
+  calcFeeCents,
   computeListingStrength,
+  FLAT_RATE_SHIPPING_CENTS,
   isSizeExempt,
   LISTING_STRENGTH_VERSION,
+  PARCELS,
   strengthBand,
+  type ParcelSize,
 } from "@bushpop/config";
 import { db } from "@bushpop/db/client";
 import { aiGenerations, channelListings, inventoryItems } from "@bushpop/db/schema";
@@ -73,6 +77,21 @@ export function publishGateMissing(
   if (!item.shippingOption) missing.push("shipping");
   if (item.shippingOption && item.shippingOption !== "pickup" && !item.parcelSize) {
     missing.push("parcel");
+  }
+  // Prepaid economics: the price must cover commission + label with a
+  // positive payout, or the order can never settle (cross-model review
+  // finding, task 9). Wizard jumps to the price step on "price_too_low".
+  if (
+    item.shippingOption === "prepaid" &&
+    item.askingPriceCents &&
+    item.askingPriceCents > 0
+  ) {
+    const labelCents =
+      item.parcelSize && item.parcelSize in PARCELS
+        ? PARCELS[item.parcelSize as ParcelSize].costCents
+        : FLAT_RATE_SHIPPING_CENTS[item.shippingClass ?? "m"]!;
+    const payout = item.askingPriceCents - calcFeeCents(item.askingPriceCents) - labelCents;
+    if (payout <= 0) missing.push("price_too_low");
   }
   if (!legalAgree) missing.push("legal_agree");
 

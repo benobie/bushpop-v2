@@ -14,7 +14,7 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ulid } from "ulid";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
 import {
   user,
@@ -307,6 +307,38 @@ describe("createQuoteAndPaymentIntent", () => {
     });
     expect(piCallArgs).toHaveProperty("application_fee_amount");
     expect(piCallArgs).not.toHaveProperty("transfer_group");
+  });
+
+  // ── Test 4b: destination charge withholds the FULL platform take ─────────
+
+  it("destination charge: application_fee_amount includes prepaid label deduction", async () => {
+    // $200 medium prepaid — the accepted money case (task 9)
+    const fixture = await createCartFixture({ sellerCount: 1, priceCents: 20000 });
+    await db.execute(sql`
+      UPDATE inventory_items
+      SET shipping_option = 'prepaid', parcel_size = 'medium', shipping_class = 'm'
+      WHERE id = ${fixture.sellers[0]!.inventoryItemId}
+    `);
+    const { piCreate } = buildStripeMock();
+
+    const result = await createQuoteAndPaymentIntent(
+      fixture.buyerId,
+      fixture.channelId,
+      fixture.addressId,
+    );
+    expect(result.chargeType).toBe("destination");
+
+    const piCallArgs = piCreate.mock.calls[0]![0] as Record<string, unknown>;
+    // Buyer pays 20000 (no shipping on prepaid); platform withholds fee 380
+    // + label 1095 = 1475 so the seller's auto-transfer nets exactly 18525.
+    expect(piCallArgs["amount"]).toBe(20000);
+    expect(piCallArgs["application_fee_amount"]).toBe(1475);
+
+    const allocs = await db
+      .select()
+      .from(orderGroupSellerAllocations)
+      .where(eq(orderGroupSellerAllocations.orderGroupId, result.orderGroupId));
+    expect(allocs[0]!.sellerProceedsCents).toBe(18525);
   });
 
   // ── Test 5: Happy path SC&T ──────────────────────────────────────────────

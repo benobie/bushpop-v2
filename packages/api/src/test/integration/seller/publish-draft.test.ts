@@ -138,6 +138,18 @@ describe("Publish + duplicate", () => {
       expect(res.statusCode).toBe(200);
     });
 
+    it("prepaid price that cannot cover fee + label is blocked (price_too_low)", async () => {
+      const { id, version } = await buildCompleteDraft();
+      // $10 asking price: fee 48 + medium label 1095 > 1000
+      const priceRes = await authedRequest(sessionToken, "PATCH", `/api/v1/seller/drafts/${id}/price`, {
+        version,
+        askingPriceCents: 1000,
+      });
+      const res = await publish(id, priceRes.json().version);
+      expect(res.statusCode).toBe(422);
+      expect(res.json().missing).toEqual(["price_too_low"]);
+    });
+
     it("prepaid without a parcel is blocked; pickup without a parcel is fine", async () => {
       const { id, version } = await buildCompleteDraft();
       const shipRes = await authedRequest(sessionToken, "PATCH", `/api/v1/seller/drafts/${id}/shipping`, {

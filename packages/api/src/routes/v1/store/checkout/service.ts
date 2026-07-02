@@ -218,6 +218,12 @@ export async function initiateCheckout(
     parcelSize: r.parcelSize,
   }));
   const totals = calculateTotals(itemsForCalc, currency);
+  if (totals.sellerProceedsCents < 0) {
+    // Prepaid label costs exceed the seller's take — unsettleable order.
+    throw new ValidationError(
+      "An item's price does not cover its shipping label costs. The seller needs to raise the price or change the shipping option.",
+    );
+  }
 
   const expiresAt = new Date(Date.now() + CHECKOUT_EXPIRY_MINUTES * 60 * 1_000);
 

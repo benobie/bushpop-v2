@@ -170,6 +170,23 @@ describe("Checkout API", () => {
       expect(totals.sellerProceedsCents).toBe(18_525); // exactly $185.25
     });
 
+    it("rejects checkout when prepaid label costs exceed the seller's take", async () => {
+      // $11 item on a Medium prepaid label: fee 49 + label 1095 > 1100
+      const listing = await createActiveTestListing(sellerId, { priceCents: 1100 });
+      await db.execute(
+        `UPDATE inventory_items SET shipping_option = 'prepaid', parcel_size = 'medium', shipping_class = 'm'
+         WHERE id = '${listing.inventoryItemId}'`,
+      );
+      await addListingToCart(buyerToken, listing.id);
+
+      const addressId = await createBuyerAddress(buyerId);
+      const res = await authedRequest(buyerToken, "POST", "/api/v1/store/checkout", {
+        shippingAddressId: addressId,
+      });
+      expect(res.statusCode).toBe(422);
+      expect(res.json().message).toMatch(/does not cover/i);
+    });
+
     it("charges the config commission (175bps + 30c), not the old channel bps", async () => {
       const listing = await createActiveTestListing(sellerId, { priceCents: 5000 });
       await addListingToCart(buyerToken, listing.id);

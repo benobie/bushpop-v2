@@ -304,10 +304,14 @@ export async function createQuoteAndPaymentIntent(
     ReturnType<typeof computeSellerTotals>
   >();
   for (const [sellerId, sellerData] of sellerMap) {
-    sellerTotals.set(
-      sellerId,
-      computeSellerTotals(sellerData.items, currency),
-    );
+    const totals = computeSellerTotals(sellerData.items, currency);
+    if (totals.sellerProceedsCents < 0) {
+      // Prepaid label costs exceed the seller's take — unsettleable order.
+      throw new ValidationError(
+        "An item's price does not cover its shipping label costs. The seller needs to raise the price or change the shipping option.",
+      );
+    }
+    sellerTotals.set(sellerId, totals);
   }
 
   // Group-level totals
@@ -424,10 +428,15 @@ export async function createQuoteAndPaymentIntent(
 
   try {
     const singleSeller = chargeType === "destination" ? sellerMap.get(sellerIds[0]!) : undefined;
-    const singleAllocationPlatformFee =
-      chargeType === "destination"
-        ? sellerTotals.get(sellerIds[0]!)!.platformFeeCents
-        : undefined;
+    // application_fee_amount is everything the platform withholds from the
+    // destination transfer: commission PLUS prepaid label deductions
+    // (total - proceeds). Withholding only the commission would leak the
+    // label cost to the seller (cross-model review finding, task 9).
+    const singleAllocationPlatformFee = (() => {
+      if (chargeType !== "destination") return undefined;
+      const totals = sellerTotals.get(sellerIds[0]!)!;
+      return totals.totalCents - totals.sellerProceedsCents;
+    })();
 
     const paymentIntent = await stripe.paymentIntents.create(
       {
