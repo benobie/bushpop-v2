@@ -20,9 +20,10 @@ export function getAiDraftQueue(): Queue {
   if (!aiDraftQueue) {
     aiDraftQueue = new Queue(AI_DRAFT_QUEUE, {
       connection: getRedis(),
+      // Single attempt: escalation happens INSIDE the worker run and every
+      // outcome is finalised in Postgres — a BullMQ retry would double-bill.
       defaultJobOptions: {
-        attempts: 3,
-        backoff: { type: "exponential", delay: 3_000 },
+        attempts: 1,
         removeOnComplete: true,
         removeOnFail: { count: 50 },
       },

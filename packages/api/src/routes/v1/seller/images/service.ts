@@ -208,12 +208,11 @@ export async function confirmUpload(
     console.error(`[images] Failed to enqueue image-variants for ${imageId}:`, err);
   });
 
-  // Fire-and-forget enrichment — worker owns all status transitions.
-  // Skip enqueue entirely if no API key — avoids dead queue backlog.
-  if (process.env.ANTHROPIC_API_KEY) {
-    const { enqueueEnrichment } = await import("../../../../lib/enrichment-queue.js");
-    enqueueEnrichment(itemId, ownerId);
-  }
+  // Auto-enrichment enqueue DISABLED (Phase 1 task 6): the sell flow's
+  // ai-draft pipeline replaces it — drafts are generated on demand from the
+  // Details step (POST .../ai-draft), confirm-not-commit, never COALESCEd
+  // into canonical fields. The enrichment worker remains registered for any
+  // manually-enqueued legacy jobs.
 
   // Dispatch content_changed for all channel listings of this item
   await dispatchContentChangedForItem(itemId, ownerId);

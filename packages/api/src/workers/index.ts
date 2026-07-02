@@ -1,6 +1,7 @@
 import { startImageCleanupWorker } from "./image-cleanup.js";
 import { startImageVariantsWorker } from "./image-variants.js";
 import { startEnrichmentWorker } from "./enrichment.js";
+import { startAiDraftWorker } from "./ai-draft.js";
 import { startBackfillAspectRatiosWorker, scheduleBackfillAspectRatios } from "./backfill-aspect-ratios.js";
 import { startCheckoutExpiryWorker } from "./checkout-expiry.js";
 import { startShippingLabelWorker } from "./shipping-label.js";
@@ -38,6 +39,14 @@ export async function startWorkers() {
     console.log("[workers] AI enrichment worker started");
   } else {
     console.log("[workers] ANTHROPIC_API_KEY not set — enrichment worker disabled");
+  }
+
+  // Sell-flow AI drafts — Gemini primary, Anthropic escalation (D12).
+  if (process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY) {
+    startAiDraftWorker();
+    console.log("[workers] AI draft worker started");
+  } else {
+    console.log("[workers] No AI key set — ai-draft worker disabled");
   }
 
   startCheckoutExpiryWorker();

@@ -27,6 +27,7 @@ import {
   imageResponseSchema,
 } from "../images/schemas.js";
 import { requestUploadUrl, confirmUpload } from "../images/service.js";
+import { getAiDraftStatus, requestAiDraft } from "./ai-service.js";
 
 const sellerPreHandlers = [requireAuth, requireRole("seller")];
 const idParam = z.object({ id: z.string().length(26) });
@@ -164,5 +165,60 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
     const { id, imageId } = request.params as { id: string; imageId: string };
     const body = request.body as z.infer<typeof confirmUploadSchema>;
     return confirmUpload(id, imageId, request.user!.id, body);
+  });
+
+  // ── AI draft generation (202 + poll — D11/D12) ──
+
+  app.post("/api/v1/seller/drafts/:id/ai-draft", {
+    preHandler: sellerPreHandlers,
+    schema: {
+      tags: ["Seller - Drafts"],
+      summary: "Request an AI listing draft (202; poll the returned jobId)",
+      params: idParam,
+      body: z.object({ trigger: z.enum(["auto", "regenerate"]) }),
+      response: {
+        202: z.object({ jobId: z.string(), status: z.literal("pending") }),
+      },
+    },
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { trigger } = request.body as { trigger: "auto" | "regenerate" };
+    const result = await requestAiDraft(id, request.user!.id, trigger);
+    return reply.status(202).send(result);
+  });
+
+  app.get("/api/v1/seller/drafts/:id/ai-draft/:jobId", {
+    preHandler: sellerPreHandlers,
+    schema: {
+      tags: ["Seller - Drafts"],
+      summary: "Poll an AI draft generation job",
+      params: z.object({
+        id: z.string().length(26),
+        jobId: z.string().length(26),
+      }),
+      response: {
+        200: z.object({
+          jobId: z.string(),
+          status: z.enum(["pending", "completed", "failed"]),
+          trigger: z.string(),
+          suggestions: z
+            .object({
+              title: z.string(),
+              brand: z.string(),
+              categoryLeaf: z.string(),
+              colour: z.string(),
+              description: z.string(),
+              confidence: z.number(),
+            })
+            .nullable(),
+          confidence: z.number().nullable(),
+          createdAt: z.coerce.date(),
+          completedAt: z.coerce.date().nullable(),
+        }),
+      },
+    },
+  }, async (request) => {
+    const { id, jobId } = request.params as { id: string; jobId: string };
+    return getAiDraftStatus(id, request.user!.id, jobId);
   });
 }
