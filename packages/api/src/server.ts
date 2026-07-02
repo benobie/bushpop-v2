@@ -23,6 +23,7 @@ import { storeListingReportRoutes } from "./routes/v1/store/listing-reports";
 import { adminUserRoutes } from "./routes/v1/admin/users";
 import { sellerInventoryRoutes } from "./routes/v1/seller/inventory/routes";
 import { sellerImageRoutes } from "./routes/v1/seller/images/routes";
+import { sellerDraftRoutes } from "./routes/v1/seller/drafts/routes";
 import { sellerListingRoutes } from "./routes/v1/seller/listings/routes";
 import { storeCategoryRoutes } from "./routes/v1/store/categories";
 import { storeListingRoutes } from "./routes/v1/store/listings";
@@ -156,6 +157,7 @@ export async function buildServer() {
   await app.register(adminUserRoutes);
   await app.register(sellerInventoryRoutes);
   await app.register(sellerImageRoutes);
+  await app.register(sellerDraftRoutes);
   await app.register(sellerListingRoutes);
   await app.register(storeCategoryRoutes);
   await app.register(storeListingRoutes);
