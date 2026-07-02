@@ -42,10 +42,12 @@ The monorepo skeleton (pnpm workspaces + Turborepo) exists now even though only 
 - `proxy.ts` not `middleware.ts` for channel/proxy logic (N/A at Launch 1, but carry it forward)
 - `next-env.d.ts` is gitignored — Next rewrites it between build/dev modes
 - `tsconfig.json` `jsx` flips between `react-jsx` (build) and `preserve` (dev) — committed as `preserve`
-- No `eslint` key in `NextConfig` (removed in Next 16) — ESLint lives in root `eslint.config.mjs`
+- No `eslint` key in `NextConfig` (removed in Next 16). **NOTE: there is currently NO wired ESLint config** (no `eslint.config.*` at repo root or in `apps/web`; the `apps/web` `lint` script `eslint src` fails). CI gates are `pnpm typecheck` + `pnpm build`, NOT lint — rely on those.
 - Turbopack is default for both `next dev` and `next build`
 - `cacheComponents: true` is for the SSR/Launch-2 path — NOT set here (static export)
 - **MDX plugins must be passed to `createMDX` as serializable string names, NOT imported functions** — Turbopack rejects function refs with "does not have serializable options". Use `remarkPlugins: [["remark-gfm"]]` / `rehypePlugins: [["rehype-slug"]]`. Both are wired: `remark-gfm` is load-bearing for pipe tables (without it MDX tables render as literal `|` text), `rehype-slug` gives headings `id`s for in-page anchor links (e.g. `/guides/size-charts/#condition-guide`)
+- **`next/image` needs `images.unoptimized: true`** under `output: 'export'` (no optimisation server). Set in `next.config.ts`.
+- **`lucide-react` is v1.x** — brand icons (Instagram/Facebook/YouTube/Twitter) were REMOVED. Inline minimal brand SVGs where needed (see `site-footer.tsx`).
 
 ## Deploy
 
@@ -54,14 +56,24 @@ GitHub Actions → `wrangler pages deploy apps/web/out --project-name bushpop-v2
 CF Pages project: `bushpop-v2`
 Staging URL: `bushpop-v2.pages.dev`
 
-Production wiring (`bushpop.com.au` → Pages) is NOT this step — it's the cutover in MASTER-PLAN Phase 2.
+Production wiring (`bushpop.com.au` → Pages) is NOT this step — it's the cutover in MASTER-PLAN Phase 2. Pushing `main` deploys to **staging only**; production stays WordPress until the DNS cut (~9 Jul).
 
 ## Content authoring
 
 Ben writes prose → Claude commits MDX → auto-deploy via CF Pages.
 
 Content lives at: `apps/web/src/app/guides/`, `apps/web/src/app/shop/` etc.
-MDX components: `apps/web/mdx-components.tsx`
+MDX components: `apps/web/mdx-components.tsx` (wraps every page in `.prose-bushpop`).
+
+## Design system (Launch-1)
+
+The approved prototype (`~/projects/Bushpop/design/home/`) is ported and live on staging (#18, squash `b7f7160`).
+
+- **Tokens** — `apps/web/src/app/globals.css` `@theme` block (ink/surface/green/red, radii, fonts) + component classes: glossy `.btn.green` Signature CTA, frosted `.nav`, `.pcard`, footer, marquee, `.prose-bushpop`. Green = accent only; red = sale only.
+- **Fonts** — Hanken Grotesk + Inter via `next/font` in `layout.tsx` (licensed Roc Grotesk swap later).
+- **Components** — `apps/web/src/components/`: wordmark, button, chip, product-card, site-nav, site-footer (RSC) + client leaves: fav-button, fresh-drops, waitlist-form, mobile-bottom-bar. Icons = `lucide-react`.
+- **Coming-soon framing** — no marketplace yet, so every marketplace CTA routes to the `/shop` "Launching soon" storefront via `src/lib/links.ts` (`COMING_SOON`); homepage demo products (`src/lib/demo-products.ts`) are illustrative. Shop/product/sell/checkout are Launch-2.
+- **Waitlist** — `waitlist-form.tsx` POSTs to `NEXT_PUBLIC_WAITLIST_ENDPOINT` (UNSET → optimistic success). Wire a real endpoint (CF Pages Function or form service) to actually capture emails.
 
 ## Git workflow
 
