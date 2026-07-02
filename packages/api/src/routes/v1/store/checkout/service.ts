@@ -9,7 +9,6 @@ import {
   addresses,
   channels,
 } from "@bushpop/db/schema";
-import { calculateShipping } from "@bushpop/config/shipping";
 import { AppError, ConflictError, NotFoundError, ValidationError } from "../../../../lib/errors.js";
 import { assertCheckoutReady } from "../../../../lib/seller-readiness.js";
 import { assertSingleSellerCart } from "../../../../lib/cart-sellers.js";
@@ -18,11 +17,11 @@ import { getStripe } from "../../../../lib/stripe.js";
 import { dispatchEvent } from "../../../../lib/events.js";
 import { CHECKOUT_ACTIVE_STATUSES } from "../../../../lib/commerce-machines.js";
 import { scheduleCheckoutExpiry } from "../../../../workers/checkout-expiry.js";
+import { calculateOrderTotals, type OrderTotalsItem } from "../../../../lib/order-totals.js";
 
 // ── Constants ──
 
 const CHECKOUT_EXPIRY_MINUTES = 30;
-const PLATFORM_FEE_DEFAULT_BPS = 800; // 8% fallback
 
 // ── Types ──
 
@@ -46,30 +45,22 @@ export interface CheckoutResult {
 // ── Helpers ──
 
 /**
- * Calculate totals for a cart.
- * Uses multi-item shipping: highest class rate + $3.00 per additional item.
+ * Calculate totals for a cart — delegates to the shared money-math module
+ * (commission from @bushpop/config COMMISSION_SCHEDULE, buyer-side shipping
+ * for buyer_pays items only, prepaid label deduction). Task 9.
  */
 function calculateTotals(
-  items: Array<{ priceCents: number; shippingClass: string | null }>,
-  platformFeeBps: number,
+  items: OrderTotalsItem[],
   currency: string,
 ): CheckoutTotals {
-  const subtotalCents = items.reduce((sum, item) => sum + item.priceCents, 0);
-
-  const shippingClasses = items.map((i) => i.shippingClass ?? "m");
-  const shippingCents = calculateShipping(shippingClasses);
-
-  const platformFeeCents = Math.round((subtotalCents * platformFeeBps) / 10_000);
-  const totalCents = subtotalCents + shippingCents;
-  const sellerProceedsCents = totalCents - platformFeeCents;
-
+  const totals = calculateOrderTotals(items, currency);
   return {
-    subtotalCents,
-    shippingCents,
-    platformFeeCents,
-    sellerProceedsCents,
-    totalCents,
-    currency: currency.toUpperCase(),
+    subtotalCents: totals.subtotalCents,
+    shippingCents: totals.shippingCents,
+    platformFeeCents: totals.platformFeeCents,
+    sellerProceedsCents: totals.sellerProceedsCents,
+    totalCents: totals.totalCents,
+    currency: totals.currency,
   };
 }
 
@@ -159,6 +150,8 @@ export async function initiateCheckout(
       inventoryVersion: inventoryItems.version,
       availabilityStatus: inventoryItems.availabilityStatus,
       shippingClass: inventoryItems.shippingClass,
+      shippingOption: inventoryItems.shippingOption,
+      parcelSize: inventoryItems.parcelSize,
       ownerId: inventoryItems.ownerId,
     })
     .from(cartItems)
@@ -212,18 +205,19 @@ export async function initiateCheckout(
 
   // 7. Calculate totals
   const [channelRow] = await db
-    .select({ platformFeeBps: channels.platformFeeBps, currency: channels.currency })
+    .select({ currency: channels.currency })
     .from(channels)
     .where(eq(channels.id, channelId));
 
-  const platformFeeBps = channelRow?.platformFeeBps ?? PLATFORM_FEE_DEFAULT_BPS;
   const currency = channelRow?.currency ?? "AUD";
 
   const itemsForCalc = listingRows.map((r) => ({
     priceCents: r.listingPriceCents,
     shippingClass: r.shippingClass,
+    shippingOption: r.shippingOption,
+    parcelSize: r.parcelSize,
   }));
-  const totals = calculateTotals(itemsForCalc, platformFeeBps, currency);
+  const totals = calculateTotals(itemsForCalc, currency);
 
   const expiresAt = new Date(Date.now() + CHECKOUT_EXPIRY_MINUTES * 60 * 1_000);
 
