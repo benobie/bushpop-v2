@@ -86,7 +86,7 @@ describe("Stripe Connect — Seller Onboarding", () => {
       const res = await app.inject({
         method: "POST",
         url: "/api/v1/seller/stripe/onboard",
-        headers: { "x-channel": "piklo" },
+        headers: { "x-channel": "bushpop" },
       });
       expect(res.statusCode).toBe(401);
     });
@@ -199,7 +199,7 @@ describe("Stripe Webhooks", () => {
       const res = await app.inject({
         method: "POST",
         url: "/api/v1/webhooks/stripe",
-        headers: { "content-type": "application/json", "x-channel": "piklo" },
+        headers: { "content-type": "application/json", "x-channel": "bushpop" },
         payload: JSON.stringify({ id: "evt_1", type: "account.updated" }),
       });
       expect(res.statusCode).toBe(400);
@@ -220,7 +220,7 @@ describe("Stripe Webhooks", () => {
         url: "/api/v1/webhooks/stripe",
         headers: {
           "content-type": "application/json",
-          "x-channel": "piklo",
+          "x-channel": "bushpop",
           "stripe-signature": "t=12345,v1=badsignature",
         },
         payload: JSON.stringify({ id: "evt_tampered", type: "account.updated" }),
@@ -269,7 +269,7 @@ describe("Stripe Webhooks", () => {
         url: "/api/v1/webhooks/stripe",
         headers: {
           "content-type": "application/json",
-          "x-channel": "piklo",
+          "x-channel": "bushpop",
           "stripe-signature": "t=1,v1=mockedsig",
         },
         payload: JSON.stringify(event),
@@ -323,7 +323,7 @@ describe("Stripe Webhooks", () => {
         url: "/api/v1/webhooks/stripe",
         headers: {
           "content-type": "application/json",
-          "x-channel": "piklo",
+          "x-channel": "bushpop",
           "stripe-signature": "t=1,v1=mockedsig",
         },
         payload: JSON.stringify(event),
@@ -337,7 +337,7 @@ describe("Stripe Webhooks", () => {
         url: "/api/v1/webhooks/stripe",
         headers: {
           "content-type": "application/json",
-          "x-channel": "piklo",
+          "x-channel": "bushpop",
           "stripe-signature": "t=1,v1=mockedsig",
         },
         payload: JSON.stringify(event),

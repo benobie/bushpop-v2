@@ -10,7 +10,6 @@
     "./listing-scores": "./src/listing-scores.ts",
     "./taxonomy": "./src/taxonomy.ts",
     "./shipping": "./src/shipping.ts",
-    "./tailwind": "./tailwind/piklo.css",
     "./tailwind/tokens": "./tailwind/tokens.css",
     "./tailwind/bushpop-overrides": "./tailwind/bushpop-overrides.css"
   },

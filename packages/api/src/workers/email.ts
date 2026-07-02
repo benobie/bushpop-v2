@@ -211,7 +211,7 @@ async function processNotificationEmail(job: Job<EmailJobData>): Promise<void> {
   const { type, orderId: entityId, notificationId } = job.data;
   const send = getEmailSender();
 
-  let recipientEmail = "noreply@piklo.com.au";
+  let recipientEmail = "noreply@bushpop.com.au";
   let payload: Record<string, unknown> = { entityId };
 
   if (notificationId) {
@@ -354,7 +354,7 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         await markNotificationSent(notificationId, result.providerMessageId);
       }
     } else if (type === "tracking_exception_admin") {
-      const adminEmail = process.env.ADMIN_EMAIL ?? "admin@piklo.com.au";
+      const adminEmail = process.env.ADMIN_EMAIL ?? "admin@bushpop.com.au";
       const { subject, text } = trackingExceptionAdminTemplate({
         orderId,
         trackingNumber: order.trackingNumber,

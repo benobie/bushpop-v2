@@ -11,7 +11,7 @@ import { createTestSeller } from "../../helpers/create-seller.js";
 import { createActiveTestListing } from "../../helpers/create-listing.js";
 import { clearListingsIndex, indexTestListing } from "../../helpers/index-listing.js";
 
-const CHANNEL_SLUG = "piklo";
+const CHANNEL_SLUG = "bushpop";
 
 function makeJob(data: {
   eventId?: string;

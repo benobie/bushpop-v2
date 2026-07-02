@@ -21,7 +21,7 @@ import {
 } from "../../../lib/email/templates.js";
 import { getSentEmails, clearMockEmails, _resetEmailSender } from "../../../lib/email/index.js";
 import { createTestUser } from "../../helpers/create-user.js";
-import { getPikloChannel } from "../../helpers/get-channel.js";
+import { getBushpopChannel } from "../../helpers/get-channel.js";
 
 // ── Mock BullMQ (don't connect to Redis in tests) ────────────────────────────
 
@@ -64,7 +64,7 @@ vi.mock("../../../lib/stripe.js", () => ({
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function createMinimalOrder(overrides: { status?: string; trackingNumber?: string | null; trackingCarrier?: string | null } = {}) {
-  const channel = await getPikloChannel();
+  const channel = await getBushpopChannel();
   const buyer = await createTestUser();
   const seller = await createTestUser();
 
@@ -147,7 +147,7 @@ describe("Email templates", () => {
       totalCents: 6000,
       currency: "AUD",
       items: [{ title: "Vintage Jacket", priceCents: 5000 }],
-      channelName: "Piklo",
+      channelName: "Bushpop",
     });
 
     expect(subject).toContain("00000001");
@@ -158,19 +158,19 @@ describe("Email templates", () => {
     expect(text).toContain("AUD 50.00");
   });
 
-  it("orderConfirmationBuyer — channelName is a no-op for Piklo (word-for-word match)", () => {
+  it("orderConfirmationBuyer — channelName is a no-op for Bushpop (word-for-word match)", () => {
     const { subject, text } = orderConfirmationBuyerTemplate({
       orderId: "01JTEST0000000000000000001",
       buyerName: "Jane Buyer",
       totalCents: 6000,
       currency: "AUD",
       items: [{ title: "Vintage Jacket", priceCents: 5000 }],
-      channelName: "Piklo",
+      channelName: "Bushpop",
     });
 
-    expect(subject).toBe("Your Piklo order #00000001 is confirmed");
-    expect(text).toContain("Thank you for your purchase on Piklo! Your order has been confirmed.");
-    expect(text).toContain("The Piklo Team");
+    expect(subject).toBe("Your Bushpop order #00000001 is confirmed");
+    expect(text).toContain("Thank you for your purchase on Bushpop! Your order has been confirmed.");
+    expect(text).toContain("The Bushpop Team");
   });
 
   it("orderNotificationSeller — contains order ID, seller name, shipping address", () => {
@@ -185,7 +185,7 @@ describe("Email templates", () => {
       shippingSuburb: "Sydney",
       shippingState: "NSW",
       shippingPostcode: "2000",
-      channelName: "Piklo",
+      channelName: "Bushpop",
     });
 
     expect(subject).toContain("00000002");
@@ -198,7 +198,7 @@ describe("Email templates", () => {
     expect(text).toContain("Sydney NSW 2000");
   });
 
-  it("orderNotificationSeller — channelName is a no-op for Piklo (word-for-word match)", () => {
+  it("orderNotificationSeller — channelName is a no-op for Bushpop (word-for-word match)", () => {
     const { subject, text } = orderNotificationSellerTemplate({
       orderId: "01JTEST0000000000000000002",
       sellerName: "John Seller",
@@ -210,12 +210,12 @@ describe("Email templates", () => {
       shippingSuburb: "Sydney",
       shippingState: "NSW",
       shippingPostcode: "2000",
-      channelName: "Piklo",
+      channelName: "Bushpop",
     });
 
-    expect(subject).toBe("New order on Piklo — #00000002");
-    expect(text).toContain("You have a new order on Piklo!");
-    expect(text).toContain("The Piklo Team");
+    expect(subject).toBe("New order on Bushpop — #00000002");
+    expect(text).toContain("You have a new order on Bushpop!");
+    expect(text).toContain("The Bushpop Team");
   });
 
   it("shippingConfirmationBuyer — contains order ID, buyer name, tracking info", () => {
@@ -224,7 +224,7 @@ describe("Email templates", () => {
       buyerName: "Jane Buyer",
       trackingNumber: "AUSPOST-123456",
       trackingCarrier: "Australia Post",
-      channelName: "Piklo",
+      channelName: "Bushpop",
     });
 
     expect(subject).toContain("00000003");
@@ -234,18 +234,18 @@ describe("Email templates", () => {
     expect(text).toContain("Australia Post");
   });
 
-  it("shippingConfirmationBuyer — channelName is a no-op for Piklo (word-for-word match)", () => {
+  it("shippingConfirmationBuyer — channelName is a no-op for Bushpop (word-for-word match)", () => {
     const { subject, text } = shippingConfirmationBuyerTemplate({
       orderId: "01JTEST0000000000000000003",
       buyerName: "Jane Buyer",
       trackingNumber: "AUSPOST-123456",
       trackingCarrier: "Australia Post",
-      channelName: "Piklo",
+      channelName: "Bushpop",
     });
 
-    expect(subject).toBe("Your Piklo order #00000003 has shipped");
-    expect(text).toContain("Great news — your Piklo order is on its way!");
-    expect(text).toContain("The Piklo Team");
+    expect(subject).toBe("Your Bushpop order #00000003 has shipped");
+    expect(text).toContain("Great news — your Bushpop order is on its way!");
+    expect(text).toContain("The Bushpop Team");
   });
 });
 

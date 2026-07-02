@@ -14,7 +14,7 @@ import {
   orderItems,
   user,
 } from "@bushpop/db/schema";
-import { getPikloChannel } from "../test/helpers/get-channel.js";
+import { getBushpopChannel } from "../test/helpers/get-channel.js";
 import { ConflictError, ForbiddenError } from "./errors.js";
 import {
   processRefund,
@@ -84,7 +84,7 @@ async function createOrderFixture(
     stripeTransferId?: string | null;
   } = {},
 ): Promise<TestFixture> {
-  const channel = await getPikloChannel();
+  const channel = await getBushpopChannel();
   const buyerId = ulid();
   const sellerId = ulid();
   const cartId = ulid();
@@ -271,7 +271,7 @@ describe("processRefund — invalid state", () => {
 describe("processRefund — inventory restore", () => {
   it("resets sold channel listings to paused, leaves non-sold listings intact", async () => {
     const { orderId, sellerId } = await createOrderFixture({ holdStatus: "held" });
-    const channel = await getPikloChannel();
+    const channel = await getBushpopChannel();
 
     const soldItemId = ulid();
     const activeItemId = ulid();

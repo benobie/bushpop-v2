@@ -32,7 +32,7 @@ import {
   channelListings,
   categories,
 } from "@bushpop/db/schema";
-import { getPikloChannel } from "../../helpers/get-channel.js";
+import { getBushpopChannel } from "../../helpers/get-channel.js";
 
 // ── Stripe mock ──────────────────────────────────────────────────────────────
 // A controllable mock so individual tests can stub transfers.create /
@@ -116,7 +116,7 @@ async function getCategoryId(): Promise<string> {
 async function makeRecoveryFixture(opts?: {
   stripeReady?: boolean;
 }): Promise<Fixture> {
-  const channel = await getPikloChannel();
+  const channel = await getBushpopChannel();
   const buyerId = ulid();
   const sellerId = ulid();
   const cartId = ulid();
@@ -986,7 +986,7 @@ describe("Codex review #3 — successful release finalises on the reserved conne
 
 describe("admin-alerts", () => {
   it("sends an email to ADMIN_EMAIL", async () => {
-    process.env.ADMIN_EMAIL = "ops@piklo.com.au";
+    process.env.ADMIN_EMAIL = "ops@bushpop.com.au";
     // Force the mock sender path.
     delete process.env.RESEND_API_KEY;
     _resetEmailSender();
@@ -996,7 +996,7 @@ describe("admin-alerts", () => {
 
     const sent = getSentEmails();
     expect(sent.length).toBe(1);
-    expect(sent[0]!.to).toBe("ops@piklo.com.au");
+    expect(sent[0]!.to).toBe("ops@bushpop.com.au");
     expect(sent[0]!.subject).toContain("payout_release_failed_manual");
   });
 

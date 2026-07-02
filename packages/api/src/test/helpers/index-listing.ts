@@ -11,7 +11,7 @@ import {
  */
 export async function indexTestListing(
   listingId: string,
-  channelSlug: string = "piklo",
+  channelSlug: string = "bushpop",
 ): Promise<void> {
   const row = await fetchFullListing(listingId);
   if (!row) {
@@ -31,7 +31,7 @@ export async function indexTestListing(
  * Prevents stale docs from contaminating subsequent tests.
  */
 export async function clearListingsIndex(
-  channelSlug: string = "piklo",
+  channelSlug: string = "bushpop",
 ): Promise<void> {
   const client = getMeiliClient();
   const indexName = getListingIndexName(channelSlug);

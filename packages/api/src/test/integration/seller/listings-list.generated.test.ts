@@ -5,7 +5,7 @@ describe("Seller Listings API — list coverage skeleton", () => {
   // Suggested helpers:
   // - signUpTestUser / grantSellerRole
   // - createTestInventoryItem
-  // - getPikloChannel
+  // - getBushpopChannel
   // - authedRequest
 
   it.todo("GET /api/v1/seller/listings happy path with cursor pagination");

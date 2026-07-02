@@ -8,15 +8,15 @@ process.env.STRIPE_SECRET_KEY ??= "sk_test_placeholder";
 process.env.STRIPE_WEBHOOK_SECRET ??= "whsec_test_placeholder";
 process.env.STARSHIPIT_API_KEY ??= "test_api_key";
 process.env.STARSHIPIT_WEBHOOK_SECRET ??= "test_webhook_secret";
-process.env.CHANNEL_SLUG ??= "piklo";
-process.env.R2_PUBLIC_URL ??= "https://media.piklo.com.au";
+process.env.CHANNEL_SLUG ??= "bushpop";
+process.env.R2_PUBLIC_URL ??= "https://media.bushpop.com.au";
 
-// Safety guard: only run against piklo_test
+// Safety guard: only run against bushpop_test
 beforeAll(() => {
   const url = process.env.DATABASE_URL;
-  if (!url?.includes("piklo_test")) {
+  if (!url?.includes("bushpop_test")) {
     throw new Error(
-      "Integration tests MUST run against piklo_test database. " +
+      "Integration tests MUST run against bushpop_test database. " +
       `Got: ${url}`,
     );
   }

@@ -16,7 +16,7 @@ import { clearListingsIndex, indexTestListing } from "../helpers/index-listing.j
 import { publicRequest } from "../helpers/http.js";
 import type { Job } from "bullmq";
 
-const CHANNEL_SLUG = "piklo";
+const CHANNEL_SLUG = "bushpop";
 
 function makeJob(data: {
   eventName: string;

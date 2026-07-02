@@ -25,38 +25,15 @@ export interface ChannelConfig {
 }
 
 export const CHANNELS = {
-  piklo: {
-    slug: "piklo",
-    name: "Piklo",
-    domain: "piklo.com.au",
-    platformFeeBps: 800,
-    currency: "aud" as const,
-    supportEmail: "hello@piklo.com.au",
-    tagline: "Your collection, your way.",
-    shortTagline: "Preloved, personally.",
-    logoUrl: null,
-    faviconUrl: null,
-    url: {
-      web: "https://piklo.com.au",
-      marketing: "https://piklo.co",
-    },
-    social: {
-      instagram: "https://instagram.com/pikloapp",
-      tiktok: "https://tiktok.com/@pikloapp",
-    },
-    theme: {
-      primaryColor: "#e85d3a",
-      accentColor: "#007780",
-    },
-    isActive: true,
-  },
   bushpop: {
     slug: "bushpop",
     name: "Bushpop",
     domain: "bushpop.com.au",
-    platformFeeBps: 1000,
+    // 1.75% headline rate. The +$0.30 fixed component lands with the
+    // effective-dated fees config (Phase 1) — bps-only until then.
+    platformFeeBps: 175,
     currency: "aud" as const,
-    supportEmail: "hello@bushpop.com.au",
+    supportEmail: "support@bushpop.com.au",
     tagline: "Secondhand fashion, your way.",
     shortTagline: "Preloved fashion.",
     logoUrl: null,
@@ -69,18 +46,18 @@ export const CHANNELS = {
       primaryColor: "#2d2d2d",
       accentColor: "#e85d3a",
     },
-    isActive: false,
+    isActive: true,
   },
 } as const satisfies Record<string, ChannelConfig>;
 
 export type ChannelSlug = keyof typeof CHANNELS;
 
-export const DEFAULT_CHANNEL: ChannelSlug = "piklo";
+export const DEFAULT_CHANNEL: ChannelSlug = "bushpop";
 
 export const FOUNDING_SELLER_LIMIT = 50;
 
 export const COMPETITOR_FEES = {
-  piklo: 0.08,
+  bushpop: 0.0175,
   depop: 0.1,
   ebay: 0.1377,
 } as const;

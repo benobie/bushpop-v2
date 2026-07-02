@@ -140,7 +140,7 @@ describe("Cart API", () => {
       const res = await app.inject({
         method: "POST",
         url: "/api/v1/store/cart/items",
-        headers: { "content-type": "application/json", "x-channel": "piklo" },
+        headers: { "content-type": "application/json", "x-channel": "bushpop" },
         payload: { listingId: listing.id },
       });
 
@@ -234,8 +234,8 @@ describe("Seller Readiness — listing activation", () => {
     sessionToken = token;
     await grantSellerRole(userId);
 
-    const { getPikloChannel } = await import("../../helpers/get-channel.js");
-    const channel = await getPikloChannel();
+    const { getBushpopChannel } = await import("../../helpers/get-channel.js");
+    const channel = await getBushpopChannel();
     channelId = channel.id;
   });
 

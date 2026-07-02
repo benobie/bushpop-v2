@@ -3,7 +3,7 @@ import type { MessageCreateParamsNonStreaming } from "@anthropic-ai/sdk/resource
 export const PROMPT_VERSION = "1.0.0";
 export const ENRICHMENT_MODEL = "claude-haiku-4-5-20251001";
 
-const SYSTEM_PROMPT = `You are a fashion item cataloguing assistant for Piklo, an Australian secondhand fashion marketplace.
+const SYSTEM_PROMPT = `You are a fashion item cataloguing assistant for Bushpop, an Australian secondhand fashion marketplace.
 Analyse the product photo(s) and produce structured listing data.
 
 Respond with ONLY valid JSON matching this exact schema — no markdown fences, no commentary:

@@ -12,7 +12,7 @@ const envSchema = z.object({
   API_URL: z.string().url(),
   API_HOST: z.string().min(1).default("0.0.0.0"),
   API_PORT: z.coerce.number().int().min(1).max(65535).default(3333),
-  CHANNEL_SLUG: z.string().min(1).default("piklo"),
+  CHANNEL_SLUG: z.string().min(1).default("bushpop"),
 
   // Cloudflare R2
   R2_ACCOUNT_ID: z.string().min(1).optional(),
@@ -29,7 +29,7 @@ const envSchema = z.object({
   RESEND_FROM_EMAIL: z.string().email().optional(),
   // Destination for operator-critical alerts (stuck ops, payout/migration
   // failures). Optional — admin-alerts.ts / email.ts fall back to
-  // admin@piklo.com.au. Set in prod so alerts reach a real inbox without a
+  // admin@bushpop.com.au. Set in prod so alerts reach a real inbox without a
   // redeploy. See INF-H2.
   ADMIN_EMAIL: z.string().email().optional(),
 

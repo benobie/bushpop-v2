@@ -97,7 +97,7 @@ interface TransactionScope {
 }
 
 const transactionScopeStorage = new AsyncLocalStorage<TransactionScope>();
-const transactionWrappedSymbol = Symbol.for("piklo.db.transactionWrapped");
+const transactionWrappedSymbol = Symbol.for("bushpop.db.transactionWrapped");
 
 type TransactionCapable = {
   transaction: Database["transaction"];

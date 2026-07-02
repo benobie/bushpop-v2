@@ -29,7 +29,7 @@ export interface SendEmailResult {
 export async function sendEmailViaResend(input: SendEmailInput): Promise<SendEmailResult> {
   const client = getResendClient();
   const displayName = getChannelConfig(process.env.CHANNEL_SLUG ?? DEFAULT_CHANNEL).name;
-  const address = process.env.RESEND_FROM_EMAIL ?? "noreply@piklo.com.au";
+  const address = process.env.RESEND_FROM_EMAIL ?? "noreply@bushpop.com.au";
   const { data, error } = await client.emails.send({
     from: `${displayName} <${address}>`,
     to: input.to,

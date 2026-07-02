@@ -27,7 +27,7 @@ import {
   paymentOperations,
   inventoryItems,
 } from "@bushpop/db/schema";
-import { getPikloChannel } from "../../../../test/helpers/get-channel.js";
+import { getBushpopChannel } from "../../../../test/helpers/get-channel.js";
 import { createTestUser } from "../../../../test/helpers/create-user.js";
 import { createTestSeller } from "../../../../test/helpers/create-seller.js";
 import { createActiveTestListing } from "../../../../test/helpers/create-listing.js";
@@ -110,7 +110,7 @@ async function createCartFixture(opts: {
   sellerCount?: number;
   priceCents?: number;
 }): Promise<CartFixture> {
-  const channel = await getPikloChannel();
+  const channel = await getBushpopChannel();
   const buyer = await createTestUser();
 
   const [addr] = await db

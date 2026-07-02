@@ -13,7 +13,7 @@ import {
 } from "@bushpop/db/schema";
 import { signUpTestUser } from "../../helpers/auth.js";
 import { authedRequest } from "../../helpers/http.js";
-import { getPikloChannel } from "../../helpers/get-channel.js";
+import { getBushpopChannel } from "../../helpers/get-channel.js";
 
 // AUDIT-009: Route-level test for admin cancel.
 //
@@ -57,7 +57,7 @@ interface CancelFixture {
 }
 
 async function setupCancelFixture(): Promise<CancelFixture> {
-  const channel = await getPikloChannel();
+  const channel = await getBushpopChannel();
 
   // Buyer
   const buyer = await signUpTestUser();

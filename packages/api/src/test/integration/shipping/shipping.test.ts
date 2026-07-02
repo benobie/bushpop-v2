@@ -28,7 +28,7 @@ import { orders, checkoutSessions, carts, payoutHolds, sellerProfiles, marketpla
 import { MockShippingProvider } from "../../../lib/shipping/mock.js";
 import { getTestApp } from "../../helpers/http.js";
 import { createTestUser } from "../../helpers/create-user.js";
-import { getPikloChannel } from "../../helpers/get-channel.js";
+import { getBushpopChannel } from "../../helpers/get-channel.js";
 import { handleTrackingEventForTest } from "../../../routes/v1/webhooks/starshipit.js";
 
 function starshipitSig(body: string): string {
@@ -93,7 +93,7 @@ async function createMinimalOrder(
     sellerId?: string;
   } = {},
 ) {
-  const channel = await getPikloChannel();
+  const channel = await getBushpopChannel();
   const buyer = await createTestUser();
   const seller = overrides.sellerId
     ? { id: overrides.sellerId }

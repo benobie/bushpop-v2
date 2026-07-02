@@ -83,9 +83,9 @@ export async function buildServer() {
     openapi: {
       openapi: "3.1.0",
       info: {
-        title: "Piklo API",
+        title: "Bushpop API",
         version: "0.1.0",
-        description: "Piklo P2P fashion marketplace API",
+        description: "Bushpop P2P fashion marketplace API",
       },
       servers: [
         {
@@ -180,7 +180,7 @@ export async function buildServer() {
   // Skipped in test environment (tests manage their own index lifecycle)
   if (process.env.NODE_ENV !== "test") {
     app.addHook("onReady", async () => {
-      const channelSlug = process.env.CHANNEL_SLUG ?? "piklo";
+      const channelSlug = process.env.CHANNEL_SLUG ?? "bushpop";
       try {
         const bootstrapped = await purgeStaleQueueEventsIfNeeded(channelSlug);
         if (!bootstrapped) {

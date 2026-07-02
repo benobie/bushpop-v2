@@ -1,6 +1,6 @@
 import { db } from "@bushpop/db/client";
 import { inventoryItems, inventoryItemImages, channelListings } from "@bushpop/db/schema";
-import { getPikloChannel } from "./get-channel.js";
+import { getBushpopChannel } from "./get-channel.js";
 
 /**
  * Creates an inventory item + active channel listing in one call.
@@ -16,7 +16,7 @@ export async function createActiveTestListing(
     channelId?: string;
   },
 ) {
-  const channel = await getPikloChannel();
+  const channel = await getBushpopChannel();
   const channelId = overrides?.channelId ?? channel.id;
 
   const [item] = await db

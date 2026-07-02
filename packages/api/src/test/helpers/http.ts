@@ -24,7 +24,7 @@ export async function authedRequest(
   const server = await getTestApp();
   const headers: Record<string, string> = {
     cookie: `better-auth.session_token=${sessionToken}`,
-    "x-channel": "piklo",
+    "x-channel": "bushpop",
   };
   if (body !== undefined) {
     headers["content-type"] = "application/json";
@@ -49,7 +49,7 @@ export async function publicRequest(
     method,
     url,
     headers: {
-      "x-channel": "piklo",
+      "x-channel": "bushpop",
     },
   });
 }

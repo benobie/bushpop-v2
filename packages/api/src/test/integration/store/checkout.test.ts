@@ -503,7 +503,7 @@ describe("Checkout API", () => {
       const res = await app.inject({
         method: "POST",
         url: "/api/v1/store/checkout/01JFAKE0000000000000000000/cancel",
-        headers: { "x-channel": "piklo" },
+        headers: { "x-channel": "bushpop" },
       });
       expect(res.statusCode).toBe(401);
     });

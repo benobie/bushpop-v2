@@ -6,7 +6,7 @@ import { indexTestListing, clearListingsIndex } from "../../helpers/index-listin
 import { publicRequest } from "../../helpers/http.js";
 import { setupListingsIndex } from "../../../lib/search-index.js";
 
-const CHANNEL_SLUG = "piklo";
+const CHANNEL_SLUG = "bushpop";
 
 describe("Store Browse API", () => {
   let userId: string;

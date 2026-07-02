@@ -10,28 +10,20 @@ import { ulid } from "ulid";
 async function seed() {
   console.log("Seeding database...");
 
-  // Seed channels
+  // Seed the single bushpop channel — the engine runs env-single-tenant (D3).
+  // 175 bps = 1.75% headline rate; the +$0.30 fixed component arrives with the
+  // effective-dated fees config in Phase 1.
   await db.insert(channels).values([
-    {
-      slug: "piklo",
-      name: "Piklo",
-      domain: "piklo.com.au",
-      platformFeeBps: 800,
-      currency: "aud",
-      shippingProvider: "starshipit",
-      supportEmail: "hello@piklo.com.au",
-      theme: { primaryColor: "#e85d3a", accentColor: "#007780" },
-      isActive: true,
-    },
     {
       slug: "bushpop",
       name: "Bushpop",
       domain: "bushpop.com.au",
-      platformFeeBps: 1000,
+      platformFeeBps: 175,
       currency: "aud",
-      supportEmail: "hello@bushpop.com.au",
+      shippingProvider: "starshipit",
+      supportEmail: "support@bushpop.com.au",
       theme: { primaryColor: "#2d2d2d", accentColor: "#e85d3a" },
-      isActive: false,
+      isActive: true,
     },
   ]).onConflictDoNothing();
 
@@ -40,7 +32,7 @@ async function seed() {
   await db.insert(user).values({
     id: adminId,
     name: "Admin",
-    email: "admin@piklo.com.au",
+    email: "admin@bushpop.com.au",
     emailVerified: true,
   }).onConflictDoNothing();
 
@@ -59,7 +51,7 @@ async function seed() {
  * Dev-only storefront fixtures so a fresh local stack has something to
  * browse → add to bag → checkout. Creates one Stripe-ready test seller
  * (charges + payouts enabled, default ship-from address) and a handful of
- * active channel listings on the `piklo` channel, each with a ready primary
+ * active channel listings on the `bushpop` channel, each with a ready primary
  * image so listing/browse cards render.
  *
  * Stripe-readiness here is DB-state only — `stripeAccountId` is a placeholder
@@ -68,7 +60,7 @@ async function seed() {
  * keys + onboard the seller). Idempotent: skipped if the seller already exists.
  */
 async function seedDevListings() {
-  const SELLER_EMAIL = "seller@piklo.com.au";
+  const SELLER_EMAIL = "seller@bushpop.com.au";
 
   const existing = await db
     .select({ id: user.id })
@@ -80,13 +72,13 @@ async function seedDevListings() {
     return;
   }
 
-  const [piklo] = await db
+  const [bushpop] = await db
     .select({ id: channels.id })
     .from(channels)
-    .where(eq(channels.slug, "piklo"))
+    .where(eq(channels.slug, "bushpop"))
     .limit(1);
-  if (!piklo) {
-    console.warn("piklo channel missing — skipping dev listings.");
+  if (!bushpop) {
+    console.warn("bushpop channel missing — skipping dev listings.");
     return;
   }
 
@@ -167,7 +159,7 @@ async function seedDevListings() {
 
     await db.insert(channelListings).values({
       inventoryItemId: item!.id,
-      channelId: piklo.id,
+      channelId: bushpop.id,
       title: f.title,
       description: `${f.condition} condition ${f.brand} — dev seed listing.`,
       priceCents: f.priceCents,

@@ -31,7 +31,7 @@ vi.mock("../../../lib/r2.js", () => ({
   deleteObject: vi.fn(async () => {}),
 }));
 
-const CHANNEL_SLUG = "piklo";
+const CHANNEL_SLUG = "bushpop";
 
 describe("Seller Profile API", () => {
   let sessionToken: string;
@@ -60,7 +60,7 @@ describe("Seller Profile API", () => {
       const res = await app.inject({
         method: "GET",
         url: "/api/v1/seller/profile",
-        headers: { "x-channel": "piklo" },
+        headers: { "x-channel": "bushpop" },
       });
       expect(res.statusCode).toBe(401);
     });

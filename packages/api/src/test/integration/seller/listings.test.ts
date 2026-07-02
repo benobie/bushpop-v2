@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { signUpTestUser, grantSellerRole } from "../../helpers/auth.js";
 import { createTestInventoryItem } from "../../helpers/create-inventory-item.js";
 import { createActiveTestListing } from "../../helpers/create-listing.js";
-import { getPikloChannel } from "../../helpers/get-channel.js";
+import { getBushpopChannel } from "../../helpers/get-channel.js";
 import { authedRequest } from "../../helpers/http.js";
 import { eq } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
@@ -21,7 +21,7 @@ describe("Seller Listings API", () => {
     // so activation tests pass. Individual tests that check readiness failures
     // override this in their own setup.
     await grantSellerRole(userId, { withDefaultAddress: true });
-    const channel = await getPikloChannel();
+    const channel = await getBushpopChannel();
     channelId = channel.id;
   });
 

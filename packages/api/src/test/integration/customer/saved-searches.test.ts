@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { signUpTestUser } from "../../helpers/auth.js";
 import { authedRequest } from "../../helpers/http.js";
-import { getPikloChannel } from "../../helpers/get-channel.js";
+import { getBushpopChannel } from "../../helpers/get-channel.js";
 
 describe("Customer Saved Searches API", () => {
   let channelId: string;
@@ -10,7 +10,7 @@ describe("Customer Saved Searches API", () => {
   beforeEach(async () => {
     const [{ sessionToken: token }, channel] = await Promise.all([
       signUpTestUser(),
-      getPikloChannel(),
+      getBushpopChannel(),
     ]);
 
     sessionToken = token;

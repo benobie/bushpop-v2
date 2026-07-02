@@ -22,11 +22,9 @@ export interface ResolvedChannel {
 
 /** Map of hostname → channel slug for middleware resolution */
 const HOST_MAP: Record<string, ChannelSlug> = {
-  "piklo.com.au": "piklo",
-  "www.piklo.com.au": "piklo",
   "bushpop.com.au": "bushpop",
   "www.bushpop.com.au": "bushpop",
-  "piklo.local": "piklo",
+  "market.bushpop.xyz": "bushpop",
   "bushpop.local": "bushpop",
 };
 

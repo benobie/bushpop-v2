@@ -244,7 +244,7 @@ describe("Orders — buyer order endpoints", () => {
     const res = await app.inject({
       method: "GET",
       url: "/api/v1/store/orders",
-      headers: { "x-channel": "piklo" },
+      headers: { "x-channel": "bushpop" },
     });
     expect(res.statusCode).toBe(401);
   });
@@ -283,7 +283,7 @@ describe("Orders — seller order endpoints", () => {
     const res = await app.inject({
       method: "GET",
       url: "/api/v1/seller/orders",
-      headers: { "x-channel": "piklo" },
+      headers: { "x-channel": "bushpop" },
     });
     expect(res.statusCode).toBe(401);
   });

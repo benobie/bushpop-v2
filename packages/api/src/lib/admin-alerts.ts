@@ -19,7 +19,7 @@ export interface AdminAlert {
   [key: string]: unknown;
 }
 
-const DEFAULT_ADMIN_EMAIL = "admin@piklo.com.au";
+const DEFAULT_ADMIN_EMAIL = "admin@bushpop.com.au";
 const ALERT_EMAIL_TIMEOUT_MS = 5_000;
 
 /**

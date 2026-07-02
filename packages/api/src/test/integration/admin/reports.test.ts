@@ -19,7 +19,7 @@ import { createActiveTestListing } from "../../helpers/create-listing.js";
 import { authedRequest } from "../../helpers/http.js";
 import { clearListingsIndex, indexTestListing } from "../../helpers/index-listing.js";
 
-const CHANNEL_SLUG = "piklo";
+const CHANNEL_SLUG = "bushpop";
 
 const { dispatchEventMock, enqueueEmailMock } = vi.hoisted(() => ({
   dispatchEventMock: vi.fn().mockResolvedValue("evt-report-test"),

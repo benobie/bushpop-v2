@@ -22,12 +22,12 @@
  *   }
  *
  * Taxonomy:
- *   channel:piklo:listings          — all Piklo listings
- *   channel:piklo:listing:abc123    — single listing
- *   channel:piklo:seller:def456     — single seller
- *   channel:bushpop:listings        — all Bushpop listings (isolated from Piklo)
- *   channel:piklo:categories        — categories for Piklo
- *   channel:piklo:cart              — cart for Piklo
+ *   channel:bushpop:listings          — all Bushpop listings
+ *   channel:bushpop:listing:abc123    — single listing
+ *   channel:bushpop:seller:def456     — single seller
+ *   channel:bushpop:listings        — all Bushpop listings (isolated from other channels — Piklo)
+ *   channel:bushpop:categories        — categories for the channel
+ *   channel:bushpop:cart              — cart for the channel
  */
 export function channelTag(
   channel: string,

@@ -27,7 +27,7 @@ describe("Auth API rate limiting", () => {
           url: "/api/auth/sign-in/email",
           headers: {
             "content-type": "application/json",
-            "x-channel": "piklo",
+            "x-channel": "bushpop",
           },
           payload: {
             email,

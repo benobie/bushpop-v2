@@ -2,7 +2,7 @@
   "name": "@bushpop/ui",
   "version": "0.0.1",
   "private": true,
-  "description": "Piklo design system — Radix + CVA + Tailwind v4",
+  "description": "Bushpop design system — Radix + CVA + Tailwind v4",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

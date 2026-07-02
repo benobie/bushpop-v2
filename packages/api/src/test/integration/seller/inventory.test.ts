@@ -42,7 +42,7 @@ describe("Seller Inventory API", () => {
       const res = await app.inject({
         method: "POST",
         url: "/api/v1/seller/inventory",
-        headers: { "content-type": "application/json", "x-channel": "piklo" },
+        headers: { "content-type": "application/json", "x-channel": "bushpop" },
         payload: { condition: "good" },
       });
       expect(res.statusCode).toBe(401);

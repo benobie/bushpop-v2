@@ -21,7 +21,7 @@ export async function signUpTestUser(overrides?: {
   const res = await app.inject({
     method: "POST",
     url: "/api/auth/sign-up/email",
-    headers: { "content-type": "application/json", "x-channel": "piklo" },
+    headers: { "content-type": "application/json", "x-channel": "bushpop" },
     payload: { email, password, name },
   });
 

@@ -24,7 +24,7 @@ import {
   paymentOperations,
   user,
 } from "@bushpop/db/schema";
-import { getPikloChannel } from "../../helpers/get-channel.js";
+import { getBushpopChannel } from "../../helpers/get-channel.js";
 
 // ── Mock Stripe so the reconciler doesn't make real API calls ───────────────
 
@@ -54,7 +54,7 @@ import {
 // ── Fixture helpers ─────────────────────────────────────────────────────────
 
 async function createStuckOp(type: "refund" | "reversal"): Promise<string> {
-  const channel = await getPikloChannel();
+  const channel = await getBushpopChannel();
   const buyerId = ulid();
   const sellerId = ulid();
   const cartId = ulid();

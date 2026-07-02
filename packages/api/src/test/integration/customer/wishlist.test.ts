@@ -5,7 +5,7 @@ import { db } from "@bushpop/db/client";
 import { channelListings, inventoryItemImages } from "@bushpop/db/schema";
 import { grantSellerRole, signUpTestUser } from "../../helpers/auth.js";
 import { createTestInventoryItem } from "../../helpers/create-inventory-item.js";
-import { getPikloChannel } from "../../helpers/get-channel.js";
+import { getBushpopChannel } from "../../helpers/get-channel.js";
 import { authedRequest } from "../../helpers/http.js";
 
 describe("Customer Wishlist API", () => {
@@ -21,7 +21,7 @@ describe("Customer Wishlist API", () => {
     sellerId = seller.user.id;
     await grantSellerRole(sellerId, { storeName: "Wishlist Seller" });
 
-    const channel = await getPikloChannel();
+    const channel = await getBushpopChannel();
     channelId = channel.id;
   });
 

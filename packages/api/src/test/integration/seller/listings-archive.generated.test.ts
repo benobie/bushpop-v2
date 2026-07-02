@@ -5,7 +5,7 @@ describe("Seller Listings API — archive coverage skeleton", () => {
   // Suggested helpers:
   // - signUpTestUser / grantSellerRole
   // - createTestInventoryItem
-  // - getPikloChannel
+  // - getBushpopChannel
   // - authedRequest
 
   it.todo("PATCH /api/v1/seller/listings/:id/archive happy path");

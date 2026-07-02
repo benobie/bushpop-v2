@@ -88,7 +88,7 @@ async function channelPluginFn(app: FastifyInstance) {
     request.channel = {
       id: "unknown",
       slug: DEFAULT_CHANNEL,
-      name: "Piklo",
+      name: "Bushpop",
       domain: null,
       platformFeeBps: 800,
       currency: "aud",

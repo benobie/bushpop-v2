@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { signUpTestUser, grantSellerRole } from "../../helpers/auth.js";
 import { createTestInventoryItem } from "../../helpers/create-inventory-item.js";
-import { getPikloChannel } from "../../helpers/get-channel.js";
+import { getBushpopChannel } from "../../helpers/get-channel.js";
 import { publicRequest } from "../../helpers/http.js";
 import { db } from "@bushpop/db/client";
 import { channelListings } from "@bushpop/db/schema";
@@ -14,7 +14,7 @@ describe("Store Listings API (by ID)", () => {
     const { user } = await signUpTestUser();
     userId = user.id;
     await grantSellerRole(userId);
-    const channel = await getPikloChannel();
+    const channel = await getBushpopChannel();
     channelId = channel.id;
   });
 

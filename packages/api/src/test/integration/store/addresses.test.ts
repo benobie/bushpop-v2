@@ -38,7 +38,7 @@ describe("Addresses API", () => {
       const res = await app.inject({
         method: "POST",
         url: "/api/v1/addresses",
-        headers: { "content-type": "application/json", "x-channel": "piklo" },
+        headers: { "content-type": "application/json", "x-channel": "bushpop" },
         payload: TEST_ADDRESS,
       });
       expect(res.statusCode).toBe(401);

@@ -7,7 +7,7 @@ import {
   checkoutSessions,
   user,
 } from "@bushpop/db/schema";
-import { getPikloChannel } from "../../../../test/helpers/get-channel.js";
+import { getBushpopChannel } from "../../../../test/helpers/get-channel.js";
 
 // ---------------------------------------------------------------------------
 // Mocks — must be declared before imports to allow vi.mock hoisting
@@ -83,7 +83,7 @@ function buildStripeMock(options: StripeMockOptions = {}) {
 // ---------------------------------------------------------------------------
 
 async function createExpiredSession(): Promise<{ sessionId: string; pi: string }> {
-  const channel = await getPikloChannel();
+  const channel = await getBushpopChannel();
   const buyerId = ulid();
   const sellerId = ulid();
   const cartId = ulid();

@@ -4,7 +4,7 @@ import { db } from "@bushpop/db/client";
 import { eq, sql } from "drizzle-orm";
 import { paymentOperations, orders, checkoutSessions, carts } from "@bushpop/db/schema";
 import { createTestUser } from "../test/helpers/create-user.js";
-import { getPikloChannel } from "../test/helpers/get-channel.js";
+import { getBushpopChannel } from "../test/helpers/get-channel.js";
 import {
   createPaymentOp,
   succeedPaymentOp,
@@ -18,7 +18,7 @@ import {
 // ---------------------------------------------------------------------------
 
 async function createTestOrder(): Promise<string> {
-  const channel = await getPikloChannel();
+  const channel = await getBushpopChannel();
   const buyer = await createTestUser();
   const seller = await createTestUser();
 

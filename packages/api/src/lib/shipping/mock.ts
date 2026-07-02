@@ -16,7 +16,7 @@ export class MockShippingProvider implements ShippingProvider {
   async createShipment(input: CreateShipmentInput): Promise<CreateShipmentResult> {
     const trackingNumber = `MOCK-${input.orderId.slice(-8).toUpperCase()}`;
     return {
-      labelUrl: `https://mock-shipping.piklo.internal/labels/${input.orderId}.pdf`,
+      labelUrl: `https://mock-shipping.bushpop.internal/labels/${input.orderId}.pdf`,
       trackingNumber,
       carrier: "mock",
     };
