@@ -51,7 +51,9 @@ The monorepo skeleton (pnpm workspaces + Turborepo) exists now even though only 
 
 ## Deploy
 
-GitHub Actions → `wrangler pages deploy apps/web/out --project-name bushpop-v2`
+GitHub Actions (`.github/workflows/deploy.yml`) → `wrangler pages deploy out --project-name bushpop-v2`, run with `workingDirectory: apps/web`. **The `workingDirectory` is load-bearing, not cosmetic:** `wrangler pages deploy` resolves the Pages Functions directory (`functions/`) relative to its own cwd, not the output-dir argument — running it from repo root with `apps/web/out` as the arg silently never finds `apps/web/functions/`, so no Function ever deploys. This bit us for weeks (17/06–02/07): `functions/uncategorized/[[path]].js` was scaffolded and "done" but never actually served — fixed 02/07 (PR #20).
+
+The deploy job only runs on `push` (`if: github.event_name == 'push'`) — **PRs get build/typecheck only, no preview deploy.** There is no per-PR live URL; the only way to see a change live pre-merge is to merge to `main` (staging) or run `pnpm build && wrangler pages deploy` locally against the same project.
 
 CF Pages project: `bushpop-v2`
 Staging URL: `bushpop-v2.pages.dev`
