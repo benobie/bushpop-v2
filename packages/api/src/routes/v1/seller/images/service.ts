@@ -200,6 +200,14 @@ export async function confirmUpload(
     .where(eq(inventoryItemImages.id, imageId))
     .returning();
 
+  // Image variants (thumb-320/card-800/pdp-1600) — enqueued UNCONDITIONALLY
+  // (Phase 1 task 3): variant generation must not depend on any AI key.
+  // Fire-and-forget; the worker retries with backoff.
+  const { enqueueImageVariants } = await import("../../../../workers/image-variants.js");
+  enqueueImageVariants(imageId, updated!.storageKey).catch((err: unknown) => {
+    console.error(`[images] Failed to enqueue image-variants for ${imageId}:`, err);
+  });
+
   // Fire-and-forget enrichment — worker owns all status transitions.
   // Skip enqueue entirely if no API key — avoids dead queue backlog.
   if (process.env.ANTHROPIC_API_KEY) {

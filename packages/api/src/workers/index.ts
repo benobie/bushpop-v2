@@ -1,4 +1,5 @@
 import { startImageCleanupWorker } from "./image-cleanup.js";
+import { startImageVariantsWorker } from "./image-variants.js";
 import { startEnrichmentWorker } from "./enrichment.js";
 import { startBackfillAspectRatiosWorker, scheduleBackfillAspectRatios } from "./backfill-aspect-ratios.js";
 import { startCheckoutExpiryWorker } from "./checkout-expiry.js";
@@ -27,6 +28,10 @@ export async function startWorkers() {
   if (process.env.NODE_ENV === "test") return;
 
   await startImageCleanupWorker();
+
+  // Always on — variants must generate regardless of AI configuration.
+  startImageVariantsWorker();
+  console.log("[workers] Image variants worker started");
 
   if (process.env.ANTHROPIC_API_KEY) {
     startEnrichmentWorker();
