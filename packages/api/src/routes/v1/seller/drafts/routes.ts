@@ -30,13 +30,28 @@ import { requestUploadUrl, confirmUpload } from "../images/service.js";
 import { getAiDraftStatus, requestAiDraft } from "./ai-service.js";
 import { duplicateDraft, publishDraft } from "./publish-service.js";
 
-const sellerPreHandlers = [requireAuth, requireRole("seller")];
+const requireSeller = requireRole("seller");
+// MUST be a factory: @fastify/rate-limit PUSHES its per-route preHandler
+// onto this array (routeOptions[hook].push). A shared array instance would
+// accumulate every route's limiter and the first-registered one would win
+// for all 13 routes (found via probe — one shared 60/min bucket).
+const sellerPreHandlers = () => [requireAuth, requireSeller];
 const idParam = z.object({ id: z.string().length(26) });
+
+// Per-route rate limits (task 10) — keyed by user id via the global
+// preHandler keyGenerator (see server.ts; onRequest would degrade to IP).
+const RATE_LIMITS = {
+  presign: { rateLimit: { max: 20, timeWindow: "1 minute" } },
+  aiDraft: { rateLimit: { max: 6, timeWindow: "1 minute" } },
+  publish: { rateLimit: { max: 10, timeWindow: "1 minute" } },
+  crud: { rateLimit: { max: 60, timeWindow: "1 minute" } },
+} as const;
 
 export async function sellerDraftRoutes(app: FastifyInstance) {
   // POST /api/v1/seller/drafts — start a new draft
   app.post("/api/v1/seller/drafts", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.crud,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Create an empty sell-flow draft",
@@ -49,7 +64,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
 
   // GET /api/v1/seller/drafts — newest drafts (resume lookup)
   app.get("/api/v1/seller/drafts", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.crud,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "List the seller's open drafts, newest first",
@@ -63,7 +79,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
 
   // GET /api/v1/seller/drafts/:id — item + images + strength
   app.get("/api/v1/seller/drafts/:id", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.crud,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Get a draft with images, measurement template and strength",
@@ -78,7 +95,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
   // ── Per-step PATCHes (optimistic version on every body) ──
 
   app.patch("/api/v1/seller/drafts/:id/details", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.crud,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Update details-step fields (title/brand/category/size/colour/description)",
@@ -92,7 +110,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
   });
 
   app.patch("/api/v1/seller/drafts/:id/condition", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.crud,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Update condition-step fields (condition/notes/measurements)",
@@ -106,7 +125,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
   });
 
   app.patch("/api/v1/seller/drafts/:id/price", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.crud,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Update price-step fields (asking price / RRP)",
@@ -120,7 +140,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
   });
 
   app.patch("/api/v1/seller/drafts/:id/shipping", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.crud,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Update shipping-step fields (option/parcel — derives shipping class)",
@@ -136,7 +157,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
   // ── Image aliases over the images service (same guards: max 10, content types) ──
 
   app.post("/api/v1/seller/drafts/:id/images/upload-url", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.presign,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Request a presigned upload URL for a draft photo",
@@ -151,7 +173,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
   });
 
   app.post("/api/v1/seller/drafts/:id/images/:imageId/confirm", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.presign,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Confirm a draft photo upload (enqueues variant generation)",
@@ -171,7 +194,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
   // ── Publish + duplicate (task 8) ──
 
   app.post("/api/v1/seller/drafts/:id/publish", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.publish,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Publish a draft — server-side gate, 422 with missing[] when not ready",
@@ -201,7 +225,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
   });
 
   app.post("/api/v1/seller/drafts/:id/duplicate", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.crud,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "List another like this — new draft keeping brand/category/colour/shipping",
@@ -217,7 +242,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
   // ── AI draft generation (202 + poll — D11/D12) ──
 
   app.post("/api/v1/seller/drafts/:id/ai-draft", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.aiDraft,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Request an AI listing draft (202; poll the returned jobId)",
@@ -235,7 +261,8 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
   });
 
   app.get("/api/v1/seller/drafts/:id/ai-draft/:jobId", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
+    config: RATE_LIMITS.crud,
     schema: {
       tags: ["Seller - Drafts"],
       summary: "Poll an AI draft generation job",

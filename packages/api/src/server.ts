@@ -73,10 +73,17 @@ export async function buildServer() {
   // Cookies
   await app.register(cookie);
 
-  // Rate limiting
+  // Rate limiting.
+  // hook MUST be 'preHandler' (task 10): the default onRequest runs before
+  // requireAuth (a route-level preHandler), so request.user is unset and a
+  // user-id keyGenerator silently degrades to IP. @fastify/rate-limit
+  // appends its per-route handler AFTER the route's own preHandler array,
+  // so at preHandler the authenticated user is available.
   await app.register(rateLimit, {
     max: 100,
     timeWindow: "1 minute",
+    hook: "preHandler",
+    keyGenerator: (req) => req.user?.id ?? req.ip,
   });
 
   // OpenAPI / Swagger
@@ -137,6 +144,16 @@ export async function buildServer() {
 
     // Fastify/Zod schema validation errors
     const errAsAny = error as { statusCode?: number; validation?: unknown; message?: string };
+
+    // @fastify/rate-limit throws a fastify error with statusCode 429 —
+    // without this branch it would fall through to the 500 catch-all.
+    if (errAsAny.statusCode === 429) {
+      return reply.status(429).send({
+        error: "TOO_MANY_REQUESTS",
+        message: errAsAny.message ?? "Rate limit exceeded",
+      });
+    }
+
     if (errAsAny.statusCode === 400 || errAsAny.validation) {
       return reply.status(400).send({
         error: "VALIDATION_ERROR",
