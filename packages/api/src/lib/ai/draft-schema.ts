@@ -48,6 +48,7 @@ export function parseAiDraftOutput(text: string): AiDraftRaw {
   } catch (err) {
     throw new Error(
       `AI draft output is not valid JSON: ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
     );
   }
 
