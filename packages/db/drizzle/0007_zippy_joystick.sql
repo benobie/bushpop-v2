@@ -1,0 +1,1 @@
+ALTER TABLE "channel_listings" ADD COLUMN "hidden_at" timestamp;

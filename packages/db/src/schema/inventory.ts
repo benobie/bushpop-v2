@@ -1,0 +1,67 @@
+import { pgTable, varchar, text, integer, boolean, real, numeric, timestamp, index, jsonb } from "drizzle-orm/pg-core";
+import { ulid } from "ulid";
+import { user } from "./auth";
+import { categories } from "./categories";
+
+export const inventoryItems = pgTable("inventory_items", {
+  id: varchar("id", { length: 26 }).primaryKey().$defaultFn(() => ulid()),
+  ownerId: varchar("owner_id", { length: 26 }).notNull().references(() => user.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }),
+  description: text("description"),
+  availabilityStatus: varchar("availability_status", { length: 20 }).notNull().default("available"),
+  lifecycleState: varchar("lifecycle_state", { length: 20 }).notNull().default("owned"),
+  version: integer("version").notNull().default(1),
+  brand: varchar("brand", { length: 100 }),
+  categoryId: varchar("category_id", { length: 26 }).references(() => categories.id),
+  size: varchar("size", { length: 20 }),
+  colour: varchar("colour", { length: 30 }),
+  material: varchar("material", { length: 50 }),
+  era: varchar("era", { length: 50 }),
+  fit: varchar("fit", { length: 50 }),
+  condition: varchar("condition", { length: 20 }),
+  conditionNotes: text("condition_notes"),
+
+  // AI enrichment output (advisory — canonical fields filled via COALESCE, never overwritten)
+  aiTitle: varchar("ai_title", { length: 255 }),
+  aiDescription: text("ai_description"),
+  aiTags: jsonb("ai_tags").$type<string[]>(),
+  aiSuggestedCategory: varchar("ai_suggested_category", { length: 100 }),
+  aiSuggestedColour: varchar("ai_suggested_colour", { length: 30 }),
+  aiSuggestedMaterial: varchar("ai_suggested_material", { length: 50 }),
+  aiConfidence: real("ai_confidence"),
+  aiPromptVersion: varchar("ai_prompt_version", { length: 20 }),
+  aiModel: varchar("ai_model", { length: 50 }),
+
+  // Enrichment operational state
+  aiStatus: varchar("ai_status", { length: 20 }).notNull().default("none"),
+  aiEnrichedAt: timestamp("ai_enriched_at", { withTimezone: true }),
+  aiLastError: text("ai_last_error"),
+  aiImageHash: varchar("ai_image_hash", { length: 64 }),
+
+  shippingClass: varchar("shipping_class", { length: 5 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdateFn(() => new Date()),
+}, (table) => [
+  index("inventory_items_owner_id_idx").on(table.ownerId),
+  index("inventory_items_lifecycle_state_idx").on(table.lifecycleState),
+  index("inventory_items_category_id_idx").on(table.categoryId),
+]);
+
+export const inventoryItemImages = pgTable("inventory_item_images", {
+  id: varchar("id", { length: 26 }).primaryKey().$defaultFn(() => ulid()),
+  inventoryItemId: varchar("inventory_item_id", { length: 26 }).notNull().references(() => inventoryItems.id, { onDelete: "cascade" }),
+  storageKey: varchar("storage_key", { length: 500 }).notNull(),
+  contentType: varchar("content_type", { length: 50 }),
+  sizeBytes: integer("size_bytes"),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  position: integer("position").notNull().default(0),
+  isPrimary: boolean("is_primary").notNull().default(false),
+  confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+  // Aspect ratio stored on confirm (numerator/denominator as width/height) for CLS prevention (FM-R2-2 + FM-R3-4)
+  aspectRatio: numeric("aspect_ratio"),
+  // Backfill status for the one-off backfill job (FM-R2-2 + FM-R3-4)
+  backfillStatus: varchar("backfill_status", { length: 30 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("inventory_item_images_item_id_idx").on(table.inventoryItemId),
+]);

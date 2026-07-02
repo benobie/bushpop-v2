@@ -1,0 +1,647 @@
+import { and, eq, inArray, isNull, sql } from "drizzle-orm";
+import { db } from "@bushpop/db/client";
+import {
+  carts,
+  cartItems,
+  channelListings,
+  inventoryItems,
+  checkoutSessions,
+  addresses,
+  channels,
+} from "@bushpop/db/schema";
+import { calculateShipping } from "@bushpop/config/shipping";
+import { AppError, ConflictError, NotFoundError, ValidationError } from "../../../../lib/errors.js";
+import { assertCheckoutReady } from "../../../../lib/seller-readiness.js";
+import { assertSingleSellerCart } from "../../../../lib/cart-sellers.js";
+import { reserveItems, releaseItems, getInventoryStatuses } from "../../../../lib/inventory-reservation.js";
+import { getStripe } from "../../../../lib/stripe.js";
+import { dispatchEvent } from "../../../../lib/events.js";
+import { CHECKOUT_ACTIVE_STATUSES } from "../../../../lib/commerce-machines.js";
+import { scheduleCheckoutExpiry } from "../../../../workers/checkout-expiry.js";
+
+// ── Constants ──
+
+const CHECKOUT_EXPIRY_MINUTES = 30;
+const PLATFORM_FEE_DEFAULT_BPS = 800; // 8% fallback
+
+// ── Types ──
+
+export interface CheckoutTotals {
+  subtotalCents: number;
+  shippingCents: number;
+  platformFeeCents: number;
+  sellerProceedsCents: number;
+  totalCents: number;
+  currency: string;
+}
+
+export interface CheckoutResult {
+  sessionId: string;
+  clientSecret: string | null;
+  expiresAt: Date | null;
+  status: string;
+  totals: CheckoutTotals;
+}
+
+// ── Helpers ──
+
+/**
+ * Calculate totals for a cart.
+ * Uses multi-item shipping: highest class rate + $3.00 per additional item.
+ */
+function calculateTotals(
+  items: Array<{ priceCents: number; shippingClass: string | null }>,
+  platformFeeBps: number,
+  currency: string,
+): CheckoutTotals {
+  const subtotalCents = items.reduce((sum, item) => sum + item.priceCents, 0);
+
+  const shippingClasses = items.map((i) => i.shippingClass ?? "m");
+  const shippingCents = calculateShipping(shippingClasses);
+
+  const platformFeeCents = Math.round((subtotalCents * platformFeeBps) / 10_000);
+  const totalCents = subtotalCents + shippingCents;
+  const sellerProceedsCents = totalCents - platformFeeCents;
+
+  return {
+    subtotalCents,
+    shippingCents,
+    platformFeeCents,
+    sellerProceedsCents,
+    totalCents,
+    currency: currency.toUpperCase(),
+  };
+}
+
+// ── Public API ──
+
+/**
+ * Initiate checkout for the buyer's current cart.
+ *
+ * Flow (DB-before-Stripe):
+ * 1. Validate cart + items
+ * 2. Check for existing active session (reuse if found)
+ * 3. Re-validate prices
+ * 4. Re-validate listings active
+ * 5. assertCheckoutReady(sellerId)
+ * 6. Validate buyer's address
+ * 7. Calculate totals
+ * 8. DB transaction: reserve inventory + insert checkout_session (created)
+ * 9. Emit inventory.reserved event (async)
+ * 10. Create Stripe PaymentIntent (try/catch — cleanup on failure)
+ * 11. Update session with stripe fields
+ * 12. Schedule BullMQ expiry job
+ * 13. Return result
+ */
+export async function initiateCheckout(
+  buyerId: string,
+  channelId: string,
+  shippingAddressId: string,
+): Promise<CheckoutResult> {
+  // 1. Validate cart exists + has items
+  const [cart] = await db
+    .select()
+    .from(carts)
+    .where(and(eq(carts.buyerId, buyerId), eq(carts.channelId, channelId)));
+
+  if (!cart) {
+    throw new NotFoundError("Cart not found");
+  }
+
+  const cartItemRows = await db
+    .select()
+    .from(cartItems)
+    .where(eq(cartItems.cartId, cart.id));
+
+  if (cartItemRows.length === 0) {
+    throw new ValidationError("Cart is empty");
+  }
+
+  // 2. Check for existing active checkout session → reuse
+  const [existingSession] = await db
+    .select()
+    .from(checkoutSessions)
+    .where(
+      and(
+        eq(checkoutSessions.cartId, cart.id),
+        inArray(
+          checkoutSessions.status,
+          CHECKOUT_ACTIVE_STATUSES as string[],
+        ),
+      ),
+    );
+
+  if (existingSession) {
+    return {
+      sessionId: existingSession.id,
+      clientSecret: existingSession.stripeClientSecret,
+      expiresAt: existingSession.expiresAt,
+      status: existingSession.status,
+      totals: {
+        subtotalCents: existingSession.subtotalCents,
+        shippingCents: existingSession.shippingCents,
+        platformFeeCents: existingSession.platformFeeCents,
+        sellerProceedsCents: existingSession.sellerProceedsCents,
+        totalCents: existingSession.totalCents,
+        currency: existingSession.currency,
+      },
+    };
+  }
+
+  // Fetch full listing + inventory data for validation
+  const listingRows = await db
+    .select({
+      listingId: channelListings.id,
+      listingStatus: channelListings.status,
+      listingHiddenAt: channelListings.hiddenAt,
+      listingPriceCents: channelListings.priceCents,
+      inventoryItemId: inventoryItems.id,
+      inventoryVersion: inventoryItems.version,
+      availabilityStatus: inventoryItems.availabilityStatus,
+      shippingClass: inventoryItems.shippingClass,
+      ownerId: inventoryItems.ownerId,
+    })
+    .from(cartItems)
+    .innerJoin(channelListings, eq(cartItems.channelListingId, channelListings.id))
+    .innerJoin(inventoryItems, eq(channelListings.inventoryItemId, inventoryItems.id))
+    .where(eq(cartItems.cartId, cart.id));
+
+  // 3. Re-validate prices — compare snapshot vs current listing price
+  for (const cartItem of cartItemRows) {
+    const row = listingRows.find((r) => r.listingId === cartItem.channelListingId);
+    if (!row) continue;
+    if (cartItem.priceCents !== row.listingPriceCents) {
+      throw new ValidationError(
+        `Price has changed for listing ${cartItem.channelListingId}. Please remove and re-add the item.`,
+      );
+    }
+  }
+
+  // 4. Re-validate all listings still active and not hidden
+  const inactiveListing = listingRows.find((r) => r.listingStatus !== "active");
+  if (inactiveListing) {
+    throw new ConflictError(
+      `Listing ${inactiveListing.listingId} is no longer available (status: ${inactiveListing.listingStatus})`,
+    );
+  }
+
+  const hiddenListing = listingRows.find((r) => r.listingHiddenAt !== null);
+  if (hiddenListing) {
+    throw new ConflictError(
+      `Listing ${hiddenListing.listingId} is no longer available`,
+    );
+  }
+
+  // 5. assertCheckoutReady(sellerId) — ADR-015 Sprint 1b W1: cart may hold items
+  // from multiple sellers, but the current checkout path (checkout_sessions +
+  // destination charges) only supports single-seller. assertSingleSellerCart
+  // rejects a multi-seller cart with 422 MULTI_SELLER_CHECKOUT_UNSUPPORTED.
+  // W2 replaces this with the order_groups quote flow.
+  const sellerId = await assertSingleSellerCart(cart.id);
+  await assertCheckoutReady(sellerId);
+
+  // 6. Validate buyer's address
+  const [buyerAddress] = await db
+    .select()
+    .from(addresses)
+    .where(and(eq(addresses.id, shippingAddressId), eq(addresses.userId, buyerId), isNull(addresses.deletedAt)));
+
+  if (!buyerAddress) {
+    throw new ValidationError("Shipping address not found or does not belong to you");
+  }
+
+  // 7. Calculate totals
+  const [channelRow] = await db
+    .select({ platformFeeBps: channels.platformFeeBps, currency: channels.currency })
+    .from(channels)
+    .where(eq(channels.id, channelId));
+
+  const platformFeeBps = channelRow?.platformFeeBps ?? PLATFORM_FEE_DEFAULT_BPS;
+  const currency = channelRow?.currency ?? "AUD";
+
+  const itemsForCalc = listingRows.map((r) => ({
+    priceCents: r.listingPriceCents,
+    shippingClass: r.shippingClass,
+  }));
+  const totals = calculateTotals(itemsForCalc, platformFeeBps, currency);
+
+  const expiresAt = new Date(Date.now() + CHECKOUT_EXPIRY_MINUTES * 60 * 1_000);
+
+  // Prepare reservation targets
+  const reservationTargets = listingRows.map((r) => ({
+    inventoryItemId: r.inventoryItemId,
+    version: r.inventoryVersion,
+  }));
+
+  // 8+9. DB transaction: reserve inventory + insert checkout_session
+  let sessionId: string;
+
+  await db.transaction(async (tx) => {
+    // Reserve inventory (throws ConflictError on version mismatch)
+    await reserveItems(reservationTargets, tx);
+
+    // Insert checkout_session in 'created' status
+    const [session] = await tx
+      .insert(checkoutSessions)
+      .values({
+        cartId: cart.id,
+        buyerId,
+        channelId,
+        status: "created",
+        version: 1,
+        subtotalCents: totals.subtotalCents,
+        shippingCents: totals.shippingCents,
+        platformFeeCents: totals.platformFeeCents,
+        sellerProceedsCents: totals.sellerProceedsCents,
+        totalCents: totals.totalCents,
+        currency: totals.currency,
+        shippingAddressId,
+        expiresAt,
+      })
+      .returning({ id: checkoutSessions.id });
+
+    sessionId = session!.id;
+  });
+
+  const inventoryItemIds = reservationTargets.map((r) => r.inventoryItemId);
+
+  // 10. Emit inventory.reserved event (async, best-effort)
+  dispatchEvent({
+    eventName: "inventory.reserved",
+    category: "inventory",
+    actorId: buyerId,
+    entityType: "checkout_session",
+    entityId: sessionId!,
+    channelId,
+    metadata: { inventoryItemIds },
+  }).catch((err) => {
+    console.error("[checkout] Failed to dispatch inventory.reserved:", err);
+  });
+
+  // 11. Create Stripe PaymentIntent (try/catch — cleanup on failure)
+  const stripe = getStripe();
+  let stripePaymentIntentId: string;
+  let stripeClientSecret: string;
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount: totals.totalCents,
+        currency: totals.currency.toLowerCase(),
+        transfer_group: sessionId!,
+        metadata: {
+          checkoutSessionId: sessionId!,
+          buyerId,
+          sellerId,
+          channelId,
+        },
+      },
+      {
+        idempotencyKey: sessionId!,
+      },
+    );
+
+    if (!paymentIntent.client_secret) {
+      throw new Error("Stripe PaymentIntent missing client_secret");
+    }
+
+    stripePaymentIntentId = paymentIntent.id;
+    stripeClientSecret = paymentIntent.client_secret;
+  } catch (stripeErr) {
+    // Cleanup: update session to failed + release reservations
+    await db
+      .update(checkoutSessions)
+      .set({ status: "failed" })
+      .where(eq(checkoutSessions.id, sessionId!));
+
+    await releaseItems(inventoryItemIds);
+
+    console.error("[checkout] Stripe PaymentIntent creation failed:", stripeErr);
+    throw new AppError("Payment initialisation failed. Please try again.", 502, "STRIPE_ERROR");
+  }
+
+  // 12. CAS transition: created → payment_pending + store Stripe fields
+  try {
+    const casResult = await db
+      .update(checkoutSessions)
+      .set({
+        stripePaymentIntentId,
+        stripeClientSecret,
+        status: "payment_pending",
+        version: sql`${checkoutSessions.version} + 1`,
+      })
+      .where(
+        and(
+          eq(checkoutSessions.id, sessionId!),
+          eq(checkoutSessions.status, "created"),
+        ),
+      )
+      .returning({ id: checkoutSessions.id });
+
+    if (casResult.length === 0) {
+      // Session was concurrently modified (e.g. expired) — cancel PI + release
+      await stripe.paymentIntents.cancel(stripePaymentIntentId).catch((e) => {
+        console.error("[checkout] Failed to cancel PaymentIntent after CAS failure:", e);
+      });
+      await releaseItems(inventoryItemIds);
+      throw new ConflictError("Checkout session was modified concurrently. Please try again.");
+    }
+  } catch (dbErr) {
+    if (dbErr instanceof ConflictError) throw dbErr;
+    // DB update failed after Stripe succeeded — cancel PaymentIntent + release
+    await stripe.paymentIntents.cancel(stripePaymentIntentId).catch((e) => {
+      console.error("[checkout] Failed to cancel PaymentIntent after DB error:", e);
+    });
+
+    await releaseItems(inventoryItemIds);
+
+    throw new AppError("Checkout initialisation failed. Please try again.", 500, "CHECKOUT_INIT_FAILED");
+  }
+
+  // 13. Schedule BullMQ expiry job
+  scheduleCheckoutExpiry(sessionId!, expiresAt, inventoryItemIds, stripePaymentIntentId).catch(
+    (err) => {
+      console.error("[checkout] Failed to schedule expiry job:", err);
+    },
+  );
+
+  return {
+    sessionId: sessionId!,
+    clientSecret: stripeClientSecret,
+    expiresAt,
+    status: "payment_pending",
+    totals,
+  };
+}
+
+/**
+ * Get a checkout session by ID (buyer ownership verified).
+ */
+export async function getCheckoutSession(
+  sessionId: string,
+  buyerId: string,
+): Promise<typeof checkoutSessions.$inferSelect> {
+  const [session] = await db
+    .select()
+    .from(checkoutSessions)
+    .where(and(eq(checkoutSessions.id, sessionId), eq(checkoutSessions.buyerId, buyerId)));
+
+  if (!session) {
+    throw new NotFoundError("Checkout session not found");
+  }
+
+  return session;
+}
+
+/**
+ * Cancel a checkout session.
+ *
+ * Allowed from 'created' and 'payment_pending' only (NOT requires_action).
+ * - Transitions session → abandoned (compare-and-set)
+ * - Releases inventory reservations
+ * - Cancels PaymentIntent (if present)
+ * - Emits inventory.released event
+ */
+export async function cancelCheckoutSession(
+  sessionId: string,
+  buyerId: string,
+): Promise<void> {
+  const session = await getCheckoutSession(sessionId, buyerId);
+
+  // Only allow cancel from created or payment_pending (not requires_action)
+  if (!["created", "payment_pending"].includes(session.status)) {
+    throw new ValidationError(
+      `Cannot cancel checkout session in status '${session.status}'. ` +
+        "Cancellation is only allowed from 'created' or 'payment_pending'.",
+    );
+  }
+
+  // Compare-and-set: transition to abandoned
+  const result = await db
+    .update(checkoutSessions)
+    .set({
+      status: "abandoned",
+      version: sql`${checkoutSessions.version} + 1`,
+    })
+    .where(
+      and(
+        eq(checkoutSessions.id, sessionId),
+        eq(checkoutSessions.version, session.version),
+        inArray(checkoutSessions.status, ["created", "payment_pending"] as string[]),
+      ),
+    )
+    .returning({ id: checkoutSessions.id });
+
+  if (result.length === 0) {
+    throw new ConflictError("Checkout session was modified concurrently. Please refresh and try again.");
+  }
+
+  // Fetch inventory items for this cart's checkout session
+  const inventoryItemIds = await getInventoryItemsForSession(sessionId, session.cartId);
+
+  // Release inventory reservations
+  await releaseItems(inventoryItemIds);
+
+  // Cancel Stripe PaymentIntent if present
+  if (session.stripePaymentIntentId) {
+    const stripe = getStripe();
+    await stripe.paymentIntents.cancel(session.stripePaymentIntentId).catch((err) => {
+      console.error("[checkout] Failed to cancel PaymentIntent on session cancel:", err);
+    });
+  }
+
+  // Emit inventory.released event (async, best-effort)
+  dispatchEvent({
+    eventName: "inventory.released",
+    category: "inventory",
+    actorId: buyerId,
+    entityType: "checkout_session",
+    entityId: sessionId,
+    channelId: session.channelId,
+    metadata: { inventoryItemIds, reason: "buyer_cancelled" },
+  }).catch((err) => {
+    console.error("[checkout] Failed to dispatch inventory.released:", err);
+  });
+}
+
+/**
+ * Expire a checkout session (called by BullMQ expiry worker).
+ *
+ * - Compare-and-set: transition to expired
+ * - Releases inventory reservations
+ * - Cancels PaymentIntent
+ * - Emits inventory.released
+ *
+ * Returns false if the session was already handled (0 rows updated = noop).
+ */
+export async function expireCheckoutSession(
+  sessionId: string,
+): Promise<boolean> {
+  const [session] = await db
+    .select()
+    .from(checkoutSessions)
+    .where(eq(checkoutSessions.id, sessionId));
+
+  if (!session) return false;
+
+  // Must be in an active status to expire
+  if (!(CHECKOUT_ACTIVE_STATUSES as readonly string[]).includes(session.status)) {
+    return false; // Already terminal
+  }
+
+  // Compare-and-set: transition to expired
+  const result = await db
+    .update(checkoutSessions)
+    .set({
+      status: "expired",
+      version: sql`${checkoutSessions.version} + 1`,
+    })
+    .where(
+      and(
+        eq(checkoutSessions.id, sessionId),
+        eq(checkoutSessions.version, session.version),
+        inArray(checkoutSessions.status, CHECKOUT_ACTIVE_STATUSES as string[]),
+      ),
+    )
+    .returning({ id: checkoutSessions.id });
+
+  if (result.length === 0) {
+    return false; // Concurrent transition won
+  }
+
+  const inventoryItemIds = await getInventoryItemsForSession(sessionId, session.cartId);
+
+  // Release inventory
+  await releaseItems(inventoryItemIds);
+
+  // Cancel PaymentIntent
+  if (session.stripePaymentIntentId) {
+    const stripe = getStripe();
+    await stripe.paymentIntents.cancel(session.stripePaymentIntentId).catch((err) => {
+      console.error("[checkout] Failed to cancel PaymentIntent on expiry:", err);
+    });
+  }
+
+  // Emit inventory.released
+  dispatchEvent({
+    eventName: "inventory.released",
+    category: "inventory",
+    entityType: "checkout_session",
+    entityId: sessionId,
+    channelId: session.channelId,
+    metadata: { inventoryItemIds, reason: "session_expired" },
+  }).catch((err) => {
+    console.error("[checkout] Failed to dispatch inventory.released on expiry:", err);
+  });
+
+  return true;
+}
+
+/**
+ * Compensation handler for payment_intent.succeeded on an expired session.
+ *
+ * Attempts re-reservation. If all items are available, marks session for order
+ * creation. If any item is sold/reserved, triggers auto-refund.
+ */
+export async function handlePaymentAfterExpiry(
+  sessionId: string,
+  paymentIntentId: string,
+): Promise<"reactivated" | "refunded"> {
+  const [session] = await db
+    .select()
+    .from(checkoutSessions)
+    .where(and(eq(checkoutSessions.id, sessionId), eq(checkoutSessions.stripePaymentIntentId, paymentIntentId)));
+
+  if (!session || session.status !== "expired") {
+    throw new Error(`Session ${sessionId} is not in expired status`);
+  }
+
+  const inventoryItemIds = await getInventoryItemsForSession(sessionId, session.cartId);
+  const statuses = await getInventoryStatuses(inventoryItemIds);
+  const allAvailable = statuses.every((s) => s.availabilityStatus === "available");
+
+  if (allAvailable) {
+    // Attempt re-reservation
+    const targets = statuses.map((s) => ({ inventoryItemId: s.id, version: s.version }));
+    try {
+      await reserveItems(targets);
+      // Mark session so webhook can create order (reactivate to payment_pending or custom state)
+      // For now, log and return — order creation is webhook-side
+      console.info(`[checkout] Re-reservation succeeded for expired session ${sessionId}`);
+      return "reactivated";
+    } catch {
+      // Fall through to refund
+    }
+  }
+
+  // Auto-refund
+  //
+  // LB-F7-REFUND-FLAGS (GPT-Council phase-4-checkout-slice R1 post-research,
+  // research-285 verified): Piklo uses Stripe Connect destination charges,
+  // for which `stripe.refunds.create` defaults both `reverse_transfer` and
+  // `refund_application_fee` to `false`. Without these flags the buyer is
+  // refunded from the platform's balance but the seller keeps the transferred
+  // funds AND Piklo keeps the application fee as a stranded liability — the
+  // platform account eats the full refund as negative balance. This is a
+  // silent money-leak that would fire on every late-success recovery.
+  //
+  // Guardrail: the two flags are independent and gated on different conditions.
+  // `reverse_transfer` is needed whenever `transfer_data.destination` is set,
+  // EVEN IF the application fee is zero (seller still got the transfer). Only
+  // `refund_application_fee` depends on a non-zero fee — otherwise Stripe
+  // errors with `application_fee_not_found`. Non-Connect charges skip both.
+  const stripe = getStripe();
+  const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+  const latestChargeId =
+    typeof pi.latest_charge === "string" ? pi.latest_charge : pi.latest_charge?.id;
+
+  let hasDestinationTransfer = false;
+  let hasApplicationFee = false;
+  if (latestChargeId) {
+    const charge = await stripe.charges.retrieve(latestChargeId);
+    hasDestinationTransfer = charge.transfer_data?.destination != null;
+    hasApplicationFee = (charge.application_fee_amount ?? 0) > 0;
+  }
+
+  await stripe.refunds.create({
+    payment_intent: paymentIntentId,
+    reason: "requested_by_customer",
+    metadata: {
+      piklo_reason: "late_success_recovery",
+      checkout_session_id: sessionId,
+    },
+    ...(hasDestinationTransfer && { reverse_transfer: true }),
+    ...(hasApplicationFee && { refund_application_fee: true }),
+  });
+
+  await db
+    .update(checkoutSessions)
+    .set({ status: "refunded_after_expiry", version: sql`${checkoutSessions.version} + 1` })
+    .where(eq(checkoutSessions.id, sessionId));
+
+  console.warn(
+    `[checkout] Auto-refunded payment after expiry for session ${sessionId} ` +
+      `(reverse_transfer=${hasDestinationTransfer} refund_application_fee=${hasApplicationFee})`,
+  );
+
+  return "refunded";
+}
+
+// ── Private helpers ──
+
+/**
+ * Fetches inventory item IDs for a checkout session via its cart items.
+ */
+async function getInventoryItemsForSession(
+  _sessionId: string,
+  cartId: string,
+): Promise<string[]> {
+  const rows = await db
+    .select({ inventoryItemId: inventoryItems.id })
+    .from(cartItems)
+    .innerJoin(channelListings, eq(cartItems.channelListingId, channelListings.id))
+    .innerJoin(inventoryItems, eq(channelListings.inventoryItemId, inventoryItems.id))
+    .where(eq(cartItems.cartId, cartId));
+
+  return rows.map((r) => r.inventoryItemId);
+}

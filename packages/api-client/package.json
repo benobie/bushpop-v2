@@ -1,0 +1,28 @@
+{
+  "name": "@bushpop/api-client",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Generated TypeScript client from OpenAPI spec",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./browser": "./src/browser.ts",
+    "./cache-tags": "./src/cache-tags.ts"
+  },
+  "scripts": {
+    "generate": "openapi-typescript http://localhost:3333/docs/json -o ./src/schema.d.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.13.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "next": "^16.2.3",
+    "openapi-typescript": "^7.6.1"
+  },
+  "peerDependencies": {
+    "next": "^16.2.3"
+  }
+}

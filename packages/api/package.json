@@ -1,0 +1,58 @@
+{
+  "name": "@bushpop/api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:prod": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "optionalDependencies": {
+    "@img/sharp-darwin-arm64": "^0.34.0",
+    "@img/sharp-linux-x64": "^0.34.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.82.0",
+    "@aws-sdk/client-s3": "^3.1024.0",
+    "@aws-sdk/s3-request-presigner": "^3.1024.0",
+    "@fastify/cookie": "^11",
+    "@fastify/cors": "^11",
+    "@fastify/rate-limit": "^10",
+    "@fastify/swagger": "^9",
+    "@fastify/swagger-ui": "^5",
+    "@bushpop/config": "workspace:*",
+    "@bushpop/db": "workspace:*",
+    "@bushpop/types": "workspace:*",
+    "@types/sharp": "^0.32.0",
+    "better-auth": "^1.5.6",
+    "bullmq": "^5",
+    "drizzle-orm": "~0.45",
+    "fastify": "^5",
+    "fastify-plugin": "^5",
+    "fastify-raw-body": "^5.0.0",
+    "fastify-type-provider-zod": "^4",
+    "ioredis": "^5",
+    "meilisearch": "^0.57.0",
+    "resend": "^6.10.0",
+    "sharp": "^0.34.5",
+    "stripe": "^22.0.0",
+    "ulid": "^2.3",
+    "zod": "^3.24"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "pino-pretty": "^13",
+    "tsx": "^4",
+    "typescript": "^5.7",
+    "vite": "^8.0.5",
+    "vitest": "^4.1.3"
+  }
+}

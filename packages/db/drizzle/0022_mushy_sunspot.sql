@@ -1,0 +1,1 @@
+ALTER TABLE "payout_holds" ADD COLUMN "funding_deferrals" integer DEFAULT 0 NOT NULL;
