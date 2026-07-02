@@ -30,6 +30,7 @@ for (const [name, value] of Object.entries({
 }
 
 const WC_AUTH_HEADER = 'Basic ' + Buffer.from(`${WC_CONSUMER_KEY}:${WC_CONSUMER_SECRET}`).toString('base64');
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function log(fields) {
   console.log(JSON.stringify({ ts: new Date().toISOString(), ...fields }));
@@ -74,10 +75,16 @@ async function lookupOrdersByEmail(email) {
     );
   } else {
     // Guest checkouts have no customer record — WooCommerce's `search` param
-    // matches against billing email among other order fields.
+    // is a broad substring match (order number, names, etc.), not an email
+    // filter, so results are post-filtered to an exact billing-email match
+    // below to avoid returning other customers' orders.
     orders = await wcFetch(
       `/wp-json/wc/v3/orders?search=${encodeURIComponent(email)}&per_page=20&orderby=date&order=desc`
     );
+    if (Array.isArray(orders)) {
+      const wanted = email.toLowerCase();
+      orders = orders.filter((o) => (o.billing && o.billing.email || '').toLowerCase() === wanted);
+    }
   }
   if (!Array.isArray(orders)) return [];
   return orders.map((o) => ({
@@ -148,7 +155,7 @@ const INDEX_HTML = `<!doctype html>
     root.innerHTML = data
       .map(function (o) {
         var items = (o.items || [])
-          .map(function (li) { return li.quantity + '&times; ' + escapeHtml(li.name); })
+          .map(function (li) { return Number(li.quantity) + '&times; ' + escapeHtml(li.name); })
           .join(', ');
         return (
           '<div class="order">' +
@@ -191,6 +198,11 @@ const INDEX_HTML = `<!doctype html>
   }
 
   window.addEventListener('message', function (event) {
+    // Defense-in-depth: only react to messages from the same origin (the
+    // Chatwoot app this iframe is embedded in). The /api/orders token check
+    // is the real access control; this just narrows who can drive the
+    // postMessage handler in the first place.
+    if (event.origin !== window.location.origin) return;
     var payload = event.data;
     if (typeof payload === 'string') {
       try { payload = JSON.parse(payload); } catch (e) { return; }
@@ -205,7 +217,16 @@ const INDEX_HTML = `<!doctype html>
 `;
 
 const server = http.createServer(async (req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  let url;
+  try {
+    url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  } catch {
+    // Malformed request-target/Host must not take the process down — this
+    // was reachable and crashed the whole service before this guard.
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'bad request' }));
+    return;
+  }
 
   if (req.method === 'GET' && url.pathname === '/') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -224,9 +245,9 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (!email) {
+    if (!email || !EMAIL_RE.test(email)) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'missing email' }));
+      res.end(JSON.stringify({ error: 'missing or invalid email' }));
       return;
     }
 
@@ -245,6 +266,20 @@ const server = http.createServer(async (req, res) => {
 
   res.writeHead(404, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify({ error: 'not found' }));
+});
+
+// Backstop: log-and-continue rather than let one bad request or a stray
+// rejection take the whole process down. The handler above already guards
+// its own error paths; these just prevent a future gap from being fatal.
+process.on('uncaughtException', (err) => {
+  log({ msg: 'uncaughtException', error: String((err && err.stack) || err) });
+});
+process.on('unhandledRejection', (err) => {
+  log({ msg: 'unhandledRejection', error: String((err && err.stack) || err) });
+});
+server.on('clientError', (err, socket) => {
+  log({ msg: 'clientError', error: String((err && err.message) || err) });
+  if (socket.writable) socket.end('HTTP/1.1 400 Bad Request\r\n\r\n');
 });
 
 server.listen(PORT, () => {
