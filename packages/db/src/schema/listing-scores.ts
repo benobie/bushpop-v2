@@ -1,4 +1,4 @@
-import { pgTable, varchar, integer, timestamp, unique } from "drizzle-orm/pg-core";
+import { pgTable, varchar, integer, timestamp, unique, jsonb } from "drizzle-orm/pg-core";
 import { ulid } from "ulid";
 import { channelListings } from "./listings";
 
@@ -11,6 +11,8 @@ export const listingScores = pgTable("listing_scores", {
   completenessScore: integer("completeness_score").notNull().default(0),
   categoryScore: integer("category_score").notNull().default(0),
   pricingScore: integer("pricing_score"),
+  // Strength-v3 per-component points (listing-strength.ts breakdown).
+  breakdown: jsonb("breakdown").$type<Record<string, number>>(),
   nudgeKey: varchar("nudge_key", { length: 50 }).notNull(),
   scoredFromVersion: integer("scored_from_version").notNull(),
   scoreVersion: varchar("score_version", { length: 20 }).notNull().default("v1"),
