@@ -154,7 +154,7 @@ stateDiagram-v2
 ```
 
 System-triggered transitions:
-- `confirmUpload()` enqueues enrichment when `ANTHROPIC_API_KEY` is present.
+- `confirmUpload()` enqueues the `image-variants` worker unconditionally (Phase 1, PR #27). The old auto-enrichment enqueue is disabled — AI drafts run on demand via `POST /api/v1/seller/drafts/:id/ai-draft`.
 - `processEnrichmentJob()` sets `aiStatus = "processing"` when work begins.
 - Successful enrichment sets `processing -> completed`.
 - Errors set `processing -> failed`.
