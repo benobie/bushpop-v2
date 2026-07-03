@@ -40,7 +40,7 @@ The engine was forked from `benobie/piklo-v2` @ `2419a38` (02/07/2026), renamed 
 - **Trailing-slash parity** with WordPress (`trailingSlash: true`). This is load-bearing for SEO.
 - **Content site stays static** — `apps/web` keeps `output: 'export'` + CF Pages; the engine (API, DB, Stripe, auth, workers) lives in `packages/*` + `apps/market` and deploys separately (Coolify). Never import engine packages from `apps/web`.
 - **No `[channel]` routing** — Bushpop is single-tenant. Flat routes in both apps. The engine keeps channel *tables* (one seeded `bushpop` row) but no channel URL segments or hostname rewrites.
-- **CI split** — `deploy.yml` = content site only (its typecheck is `--filter @bushpop/web`); `engine-ci.yml` = path-filtered engine gates (build/lint/typecheck/integration tests/webpack build/cache audit/security). An engine failure must never block a content deploy.
+- **CI split** — `deploy.yml` = content site only (install, typecheck AND build are all `--filter @bushpop/web...` since PR #30 — engine packages are never installed in the content pipeline); `engine-ci.yml` = path-filtered engine gates (build/lint/typecheck/integration tests/webpack build/cache audit/security). An engine failure must never block a content deploy. Engine container builds: `R2_PUBLIC_URL` must be passed as a Docker build arg to `apps/market` (wired in the prod compose; PR #30) or listing images break.
 
 ## Next.js 16 gotchas (from piklo-v2 AGENTS.md)
 
@@ -80,7 +80,8 @@ The approved prototype (`~/projects/Bushpop/design/home/`) is ported and live on
 - **Fonts** — Hanken Grotesk + Inter via `next/font` in `layout.tsx` (licensed Roc Grotesk swap later).
 - **Components** — `apps/web/src/components/`: wordmark, button, chip, product-card, site-nav, site-footer (RSC) + client leaves: fav-button, fresh-drops, waitlist-form, mobile-bottom-bar. Icons = `lucide-react`.
 - **Coming-soon framing** — no marketplace yet, so every marketplace CTA routes to the `/shop` "Launching soon" storefront via `src/lib/links.ts` (`COMING_SOON`); homepage demo products (`src/lib/demo-products.ts`) are illustrative. Shop/product/sell/checkout are Launch-2.
-- **Waitlist** — `waitlist-form.tsx` POSTs to `NEXT_PUBLIC_WAITLIST_ENDPOINT` (UNSET → optimistic success). Wire a real endpoint (CF Pages Function or form service) to actually capture emails.
+- **Waitlist** — first-party capture live (F1, 03/07): `waitlist-form.tsx` POSTs same-origin to `/api/waitlist` (Pages Function → n8n → homelab `bushpop.waitlist`), success only on 2xx, `segment` prop per the F10 contract (`buyer`|`seller`|`opshop`). Secret `N8N_WAITLIST_WEBHOOK` on the CF Pages project (repo is public — never commit the webhook URL). Full architecture + export path: `docs/waitlist.md`.
+- **Trust claims** — site copy is governed by `docs/trust-claims-ledger.md` (W3 gate closed 03/07, PR #28): every removed fabricated claim + its exact reinstatement condition. No invented numbers, no fictional people/quotes, no unbuilt features described as current, numbers rendered from real data only. Check the ledger BEFORE adding any stat/social-proof/trust copy.
 
 ## Git workflow
 

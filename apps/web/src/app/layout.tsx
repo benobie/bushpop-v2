@@ -26,14 +26,14 @@ const ORG_JSONLD = {
   name: "Bushpop",
   url: "https://bushpop.com.au",
   description:
-    "Australia's secondhand fashion marketplace — preloved clothing kept in circulation.",
+    "Australia's secondhand fashion marketplace. Preloved clothing kept in circulation.",
   areaServed: "AU",
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://bushpop.com.au"),
   title: {
-    default: "Bushpop — Secondhand Fashion Australia",
+    default: "Bushpop | Secondhand Fashion Australia",
     template: "%s | Bushpop",
   },
   description:

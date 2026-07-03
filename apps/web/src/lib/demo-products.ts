@@ -13,25 +13,25 @@ export type DemoProduct = {
   rrp?: number;
   size?: string;
   condition?: string;
-  savedBy?: number;
-  rating?: number;
+  // Trust-claims gate (02/07/2026): no savedBy/rating fields. Fabricated
+  // social-proof numbers are banned until a real review system exists.
   flag?: string; // scarcity cue e.g. "Only 1", "Just listed"
   category: "Outerwear" | "Shoes" | "Vintage" | "Accessories";
 };
 
 export const FRESH_DROPS: DemoProduct[] = [
-  { id: "d1", name: "Vintage Carhartt Detroit jacket", brand: "Carhartt", img: "/demo/tnf-puffer.jpg", price: 204, rrp: 612, size: "L", condition: "Used – good", savedBy: 34, rating: 5.0, flag: "Only 1", category: "Outerwear" },
-  { id: "d2", name: "TNF Nuptse 700 puffer", brand: "The North Face", img: "/demo/puffer-model.jpg", price: 189, rrp: 380, size: "M", condition: "Excellent", savedBy: 52, rating: 4.9, flag: "Just listed", category: "Outerwear" },
-  { id: "d3", name: "Salomon XT-6 trainers", brand: "Salomon", img: "/demo/salomon.jpg", price: 145, rrp: 260, size: "US 9", condition: "Used – good", savedBy: 28, rating: 4.8, category: "Shoes" },
-  { id: "d4", name: "Adidas Gazelle indoor", brand: "Adidas", img: "/demo/gazelle.jpg", price: 72, rrp: 160, size: "US 8", condition: "Excellent", savedBy: 19, rating: 4.9, category: "Shoes" },
-  { id: "d5", name: "Nike Air Max TN", brand: "Nike", img: "/demo/nike-tn.jpg", price: 118, rrp: 240, size: "US 10", condition: "Used – good", savedBy: 41, rating: 4.7, flag: "Only 1", category: "Shoes" },
-  { id: "d6", name: "Birkenstock Boston clogs", brand: "Birkenstock", img: "/demo/birkenstock.jpg", price: 68, rrp: 150, size: "EU 40", condition: "Used – good", savedBy: 15, rating: 4.8, category: "Shoes" },
-  { id: "d7", name: "Vintage wool blanket coat", brand: "Vintage", img: "/demo/vint1.jpg", price: 96, rrp: 210, size: "12", condition: "Used – fair", savedBy: 22, rating: 4.6, category: "Vintage" },
-  { id: "d8", name: "90s striped knit", brand: "Vintage", img: "/demo/vint2.jpg", price: 42, rrp: 95, size: "S", condition: "Excellent", savedBy: 11, rating: 4.9, flag: "Just listed", category: "Vintage" },
-  { id: "d9", name: "Retro shell jacket", brand: "Vintage", img: "/demo/vint3.jpg", price: 58, rrp: 130, size: "M", condition: "Used – good", savedBy: 17, rating: 4.7, category: "Vintage" },
-  { id: "d10", name: "Salomon Speedcross", brand: "Salomon", img: "/demo/salomon2.jpg", price: 130, rrp: 220, size: "US 9.5", condition: "Excellent", savedBy: 30, rating: 4.8, category: "Shoes" },
-  { id: "d11", name: "Leather work gloves", brand: "Vintage", img: "/demo/gloves.jpg", price: 24, rrp: 55, size: "One size", condition: "Used – good", savedBy: 8, rating: 4.6, category: "Accessories" },
-  { id: "d12", name: "TNF 1996 retro puffer", brand: "The North Face", img: "/demo/tnf-puffer2.jpg", price: 175, rrp: 340, size: "L", condition: "Excellent", savedBy: 46, rating: 4.9, flag: "Only 1", category: "Outerwear" },
+  { id: "d1", name: "Vintage Carhartt Detroit jacket", brand: "Carhartt", img: "/demo/tnf-puffer.jpg", price: 204, rrp: 612, size: "L", condition: "Used – good", flag: "Only 1", category: "Outerwear" },
+  { id: "d2", name: "TNF Nuptse 700 puffer", brand: "The North Face", img: "/demo/puffer-model.jpg", price: 189, rrp: 380, size: "M", condition: "Excellent", flag: "Just listed", category: "Outerwear" },
+  { id: "d3", name: "Salomon XT-6 trainers", brand: "Salomon", img: "/demo/salomon.jpg", price: 145, rrp: 260, size: "US 9", condition: "Used – good", category: "Shoes" },
+  { id: "d4", name: "Adidas Gazelle indoor", brand: "Adidas", img: "/demo/gazelle.jpg", price: 72, rrp: 160, size: "US 8", condition: "Excellent", category: "Shoes" },
+  { id: "d5", name: "Nike Air Max TN", brand: "Nike", img: "/demo/nike-tn.jpg", price: 118, rrp: 240, size: "US 10", condition: "Used – good", flag: "Only 1", category: "Shoes" },
+  { id: "d6", name: "Birkenstock Boston clogs", brand: "Birkenstock", img: "/demo/birkenstock.jpg", price: 68, rrp: 150, size: "EU 40", condition: "Used – good", category: "Shoes" },
+  { id: "d7", name: "Vintage wool blanket coat", brand: "Vintage", img: "/demo/vint1.jpg", price: 96, rrp: 210, size: "12", condition: "Used – fair", category: "Vintage" },
+  { id: "d8", name: "90s striped knit", brand: "Vintage", img: "/demo/vint2.jpg", price: 42, rrp: 95, size: "S", condition: "Excellent", flag: "Just listed", category: "Vintage" },
+  { id: "d9", name: "Retro shell jacket", brand: "Vintage", img: "/demo/vint3.jpg", price: 58, rrp: 130, size: "M", condition: "Used – good", category: "Vintage" },
+  { id: "d10", name: "Salomon Speedcross", brand: "Salomon", img: "/demo/salomon2.jpg", price: 130, rrp: 220, size: "US 9.5", condition: "Excellent", category: "Shoes" },
+  { id: "d11", name: "Leather work gloves", brand: "Vintage", img: "/demo/gloves.jpg", price: 24, rrp: 55, size: "One size", condition: "Used – good", category: "Accessories" },
+  { id: "d12", name: "TNF 1996 retro puffer", brand: "The North Face", img: "/demo/tnf-puffer2.jpg", price: 175, rrp: 340, size: "L", condition: "Excellent", flag: "Only 1", category: "Outerwear" },
 ];
 
 export const FRESH_DROP_FILTERS = ["All", "Outerwear", "Shoes", "Vintage", "Accessories", "Under $50"] as const;

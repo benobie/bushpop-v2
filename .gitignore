@@ -12,6 +12,8 @@ next-env.d.ts
 .env
 .env.*
 !.env.example
+# wrangler pages dev local bindings (holds the n8n webhook URL — secret)
+.dev.vars
 .DS_Store
 .vscode/
 .idea/
@@ -26,3 +28,6 @@ coverage/
 # Engine (piklo-v2 fork) additions
 *.db
 drizzle-out/
+
+# wrangler local state (pages dev cache)
+.wrangler/
