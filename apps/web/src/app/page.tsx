@@ -7,8 +7,6 @@ import Link from "next/link";
 import {
   Search,
   Shield,
-  Lock,
-  BadgeCheck,
   MapPin,
   Zap,
   Tag,
@@ -33,39 +31,36 @@ const MARQUEE_POOL = [
 const QUICK_PATHS = ["Women", "Men", "Vintage", "Streetwear", "Outdoors", "Designer", "Sneakers", "Under $50"];
 const HERO_CHIPS = ["Women", "Men", "Vintage", "Streetwear", "Sneakers", "Under $50"];
 
+// Trust-claims gate (02/07/2026): honest, whitelisted claims only. No member
+// counts, ratings, review counts, testimonials, "top-rated" language or invented
+// numbers anywhere on this page. Every removed claim + its reinstatement
+// condition is recorded in docs/trust-claims-ledger.md (repo root). Check the
+// whitelist there before adding any trust or social-proof copy back.
 const TRUST = [
-  { Icon: Shield, label: "Buyer protection" },
-  { Icon: Lock, label: "Secure checkout" },
-  { Icon: BadgeCheck, label: "Free authentication" },
-  { Icon: MapPin, label: "Australian support" },
+  { Icon: Shield, label: "Buyer Protection on every order" },
+  { Icon: Tag, label: "Free to sell" },
+  { Icon: Package, label: "Sellers ship direct" },
+  { Icon: MapPin, label: "Human support, based in Australia" },
 ];
 
 const SELLER_BENEFITS = [
-  { Icon: Zap, title: "List in 60 seconds", body: "Snap, price, publish. Our tools do the fiddly bits." },
-  { Icon: Tag, title: "No storefront fees", body: "Open a store and list for free. Keep more of every sale." },
-  { Icon: Lock, title: "Paid securely", body: "Funds are protected and released once the buyer's happy." },
-  { Icon: Package, title: "We print the label", body: "Prepaid, tracked postage — just pack and drop off." },
+  { Icon: Zap, title: "List for free", body: "Photograph your pieces, set a price and publish. No listing fees." },
+  { Icon: Tag, title: "Keep what you make", body: "No seller commission on anything you sell." },
+  { Icon: Package, title: "You ship direct", body: "Post the order straight to the buyer once it sells." },
+  { Icon: MapPin, title: "Human support", body: "Real people, based in Australia, at support@bushpop.com.au." },
 ];
 
-const SELLERS = [
-  { name: "Marlowe Vintage", handle: "@marlowe", rating: 5.0, sold: 240, ships: 1, thumbs: ["/demo/vint1.jpg", "/demo/vint2.jpg", "/demo/vint3.jpg", "/demo/vint4.jpg"] },
-  { name: "Northside Threads", handle: "@northside", rating: 4.9, sold: 512, ships: 2, thumbs: ["/demo/tnf-puffer.jpg", "/demo/puffer-model.jpg", "/demo/tnf-puffer2.jpg", "/demo/puffer-model2.jpg"] },
-  { name: "Sole Society", handle: "@solesociety", rating: 4.9, sold: 388, ships: 1, thumbs: ["/demo/salomon.jpg", "/demo/gazelle.jpg", "/demo/nike-tn.jpg", "/demo/salomon2.jpg"] },
-  { name: "The Reset Room", handle: "@resetroom", rating: 4.8, sold: 176, ships: 2, thumbs: ["/demo/vint4.jpg", "/demo/birkenstock.jpg", "/demo/gloves.jpg", "/demo/vint2.jpg"] },
+const HOW_IT_WORKS = [
+  { step: "1", title: "List for free.", body: "Sellers photograph their preloved pieces and list them at no cost." },
+  { step: "2", title: "Buy with protection.", body: "Buyers pay the item price plus a 7% Buyer Protection fee at checkout." },
+  { step: "3", title: "Shipped direct.", body: "The seller posts your order straight to you." },
 ];
 
-const REVIEWS = [
-  { quote: "Found a grail Carhartt jacket for a third of retail. Arrived spotless.", name: "Aisha K.", tag: "verified buyer", init: "A", bg: "#d9ede2" },
-  { quote: "Sold my whole winter wardrobe in a week. The label printing is genius.", name: "Tom R.", tag: "seller", init: "T", bg: "#e5e0f2" },
-  { quote: "Everything is authenticated, so I actually trust the designer listings.", name: "Priya M.", tag: "verified buyer", init: "P", bg: "#f2e6d9" },
-  { quote: "Aussie sellers, quick postage, no customs nonsense. My new default.", name: "Jack D.", tag: "verified buyer", init: "J", bg: "#dbe8f0" },
-];
-
-const STATS = [
-  { n: "1,600+", l: "pieces listed" },
-  { n: "4,800+", l: "members" },
-  { n: "1–2 days", l: "avg dispatch" },
-  { n: "100%", l: "Aussie sellers" },
+const FACTS = [
+  { title: "Free to sell", body: "No listing fees and no seller commission. Keep what you make." },
+  { title: "Buyer Protection on every order", body: "A 7% Buyer Protection fee is added at checkout, so every purchase is covered." },
+  { title: "Sellers ship direct", body: "Your order comes straight from the seller's wardrobe to your door." },
+  { title: "Australian owned and based", body: "A P2P marketplace for preloved fashion, trading since 2024." },
 ];
 
 function MarqueeRow({ offset, reverse, duration }: { offset: number; reverse?: boolean; duration: number }) {
@@ -100,7 +95,7 @@ export default function HomePage() {
               Bring <span className="text-green-ink">joy</span> to your wardrobe
             </h1>
             <p className="muted mx-auto mt-4 max-w-lg text-[17px]">
-              Vintage, streetwear &amp; designer — pre-loved, from sellers right across Australia.
+              Vintage, streetwear and designer. Preloved, from sellers right across Australia.
             </p>
             <Link href={COMING_SOON} className="search mx-auto mt-6 !max-w-md" aria-label="Search preloved (launching soon)">
               <Search size={16} strokeWidth={2} />
@@ -115,6 +110,9 @@ export default function HomePage() {
               <Button href={COMING_SOON} variant="green" size="lg">Shop preloved</Button>
               <Button href={SELL_SOON} variant="ghost" size="lg">Start selling</Button>
             </div>
+            <p className="mt-5 text-xs text-ink-3">
+              Preloved fashion, bought and sold Australia-wide. Trading since 2024.
+            </p>
           </div>
         </div>
       </section>
@@ -128,12 +126,6 @@ export default function HomePage() {
               {label}
             </span>
           ))}
-          <span className="hidden items-center gap-2 text-ink-3 md:inline-flex">
-            <span className="h-4 w-px bg-line-2" />
-            {["Afterpay", "Zip", "PayPal", "VISA"].map((p) => (
-              <span key={p} className="rounded-md border border-line-2 px-2 py-0.5 text-[11px] font-medium">{p}</span>
-            ))}
-          </span>
         </div>
       </section>
 
@@ -156,16 +148,15 @@ export default function HomePage() {
           </Link>
         </div>
         <FreshDrops />
-        <p className="mt-4 text-xs text-ink-3">Illustrative preview — live listings arrive at launch.</p>
+        <p className="mt-4 text-xs text-ink-3">Illustrative preview. Live listings arrive at launch.</p>
       </section>
 
       {/* ===== Shop by brand ===== */}
       <section className="bg-surface py-10">
         <div className="shell">
-          <div className="eyebrow">Brands Australia loves</div>
+          <div className="eyebrow">The labels you know</div>
           <h2 className="sec mb-5">Shop by brand</h2>
           <div className="flex flex-wrap gap-2">
-            <Chip href={COMING_SOON} deal>Up to 80% off</Chip>
             {BRANDS.map((b) => (
               <Chip key={b} href={COMING_SOON}>{b}</Chip>
             ))}
@@ -192,61 +183,41 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== Top-rated sellers ===== */}
+      {/* ===== How Bushpop works ===== */}
       <section className="bg-surface py-10">
         <div className="shell">
-          <div className="eyebrow">Real Aussie sellers</div>
-          <h2 className="sec mb-5">Top-rated storefronts</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {SELLERS.map((s) => (
-              <div key={s.handle} className="rounded-[18px] border border-line bg-white p-3">
-                <div className="grid grid-cols-2 gap-1.5">
-                  {s.thumbs.map((t, i) => (
-                    <div key={`${s.handle}-${i}`} className="aspect-square overflow-hidden rounded-lg bg-[#eceef0]">
-                      <Image src={t} alt="" width={120} height={120} className="h-full w-full object-cover" />
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center gap-1.5">
-                  <span className="font-head text-sm font-bold">{s.name}</span>
-                  <BadgeCheck size={15} className="text-green-ink" />
-                </div>
-                <div className="text-xs text-ink-2">{s.handle}</div>
-                <div className="mt-1 text-xs text-green-ink">★ {s.rating.toFixed(1)} · {s.sold} sold · ships in {s.ships} day{s.ships > 1 ? "s" : ""}</div>
-                <Button href={COMING_SOON} variant="ghost" className="mt-3 !w-full" block>Follow</Button>
+          <div className="eyebrow">Simple by design</div>
+          <h2 className="sec mb-5">How Bushpop works</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {HOW_IT_WORKS.map((s) => (
+              <div key={s.step} className="rounded-[18px] border border-line bg-white p-5">
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-surface font-head text-sm font-bold text-green-ink">{s.step}</span>
+                <div className="mt-3 font-head text-sm font-bold">{s.title}</div>
+                <p className="mt-1 text-sm text-ink-2">{s.body}</p>
               </div>
             ))}
           </div>
+          <p className="mt-5 text-sm text-ink-2">
+            Questions? We answer them ourselves: support@bushpop.com.au.
+          </p>
           <div className="mt-6 flex justify-center">
             <Button href={SELL_SOON} variant="dark" size="lg">Open a store &amp; trade</Button>
           </div>
         </div>
       </section>
 
-      {/* ===== Reviews + stats ===== */}
+      {/* ===== Product facts ===== */}
       <section className="shell py-12 text-center">
-        <h2 className="sec">Loved by buyers and sellers</h2>
-        <p className="muted mt-2">★★★★★ <strong>4.7 / 5</strong> from 1,248 buyers and sellers</p>
+        <h2 className="sec">What you can count on</h2>
+        <p className="muted mx-auto mt-2 max-w-xl">
+          Every order is covered by Buyer Protection, with human support based in
+          Australia when you need it. Reach us any time at support@bushpop.com.au.
+        </p>
         <div className="mt-8 grid grid-cols-1 gap-4 text-left sm:grid-cols-2 lg:grid-cols-4">
-          {REVIEWS.map((r) => (
-            <figure key={r.name} className="rounded-[18px] border border-line bg-white p-5">
-              <div className="text-green-ink">★★★★★</div>
-              <blockquote className="mt-2 text-sm text-ink">{r.quote}</blockquote>
-              <figcaption className="mt-4 flex items-center gap-2">
-                <span className="grid h-9 w-9 place-items-center rounded-full font-head text-sm font-bold text-ink" style={{ background: r.bg }}>{r.init}</span>
-                <span>
-                  <span className="block text-sm font-semibold">{r.name}</span>
-                  <span className="block text-xs text-ink-3">{r.tag}</span>
-                </span>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
-        <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {STATS.map((s) => (
-            <div key={s.l} className="rounded-[18px] bg-surface p-5">
-              <div className="font-head text-2xl font-extrabold">{s.n}</div>
-              <div className="text-xs text-ink-2">{s.l}</div>
+          {FACTS.map((f) => (
+            <div key={f.title} className="rounded-[18px] bg-surface p-5">
+              <div className="font-head text-base font-extrabold">{f.title}</div>
+              <p className="mt-1 text-sm text-ink-2">{f.body}</p>
             </div>
           ))}
         </div>
@@ -259,7 +230,7 @@ export default function HomePage() {
             <div className="eyebrow !text-[#79e0a0]">Sell with Bushpop</div>
             <h2 className="font-head text-3xl font-extrabold text-white">Turn your wardrobe into cash</h2>
             <p className="mt-3 max-w-md text-[#a9b1ac]">
-              List in a minute, we handle the postage label, and you get paid securely. No storefront fees to start.
+              List for free, post it straight to the buyer and keep what you make. Selling on Bushpop costs nothing.
             </p>
             <Button href={SELL_SOON} variant="green" size="lg" className="mt-6">Start selling free</Button>
           </div>
