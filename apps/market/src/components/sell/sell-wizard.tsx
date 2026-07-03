@@ -11,11 +11,19 @@ import {
   removeStoredSellDraftSnapshot,
   resolveResumeStep,
 } from "@/lib/sell/resume";
+import { computeListingStrength } from "@bushpop/config";
 import { PhotosStep } from "./photos-step";
 import { DetailsStep } from "./details-step";
 import { ConditionStep } from "./condition-step";
 import { PriceStep } from "./price-step";
 import { ShippingStep } from "./shipping-step";
+import { ReviewStep } from "./review-step";
+import { WizardAside } from "./wizard-aside";
+import {
+  SELL_READY_PULSE_CLASS,
+  shouldEnterAdvance,
+  useReadyPulse,
+} from "@/lib/sell/use-ready-pulse";
 
 const STEPS = ["photos", "details", "condition", "price", "shipping", "review"] as const;
 type Step = (typeof STEPS)[number];
@@ -30,13 +38,11 @@ const STEP_LABELS: Record<Step, string> = {
   review: "Review",
 };
 
-const STEP_PANELS: Record<Step, (() => JSX.Element) | null> = {
-  photos: PhotosStep,
-  details: DetailsStep,
-  condition: ConditionStep,
-  price: PriceStep,
-  shipping: ShippingStep,
-  review: null,
+const STRENGTH_STEP_INDEX_BY_WIZARD_STEP: Partial<Record<Step, number>> = {
+  photos: 0,
+  details: 1,
+  condition: 2,
+  price: 3,
 };
 
 export type DraftSummary =
@@ -104,8 +110,51 @@ function formatRelativeAge(value: Date | string): string {
   return `${years} year${years === 1 ? "" : "s"} ago`;
 }
 
+function isCurrentStepReady(
+  draft: ReturnType<typeof useSellDraftStore.getState>["draft"],
+  step: Step,
+): boolean {
+  if (!draft) {
+    return false;
+  }
+
+  const strengthStepIndex = STRENGTH_STEP_INDEX_BY_WIZARD_STEP[step];
+
+  if (strengthStepIndex !== undefined) {
+    const strength = computeListingStrength({
+      photoCount: draft.images.filter((image) => image.status === "ready").length,
+      title: draft.title,
+      brand: draft.brand,
+      categoryLeaf: draft.category?.slug ?? null,
+      size: draft.size,
+      sizeExempt: draft.measurementTemplate?.sizeExempt ?? false,
+      colour: draft.colour,
+      description: draft.description,
+      condition: draft.condition,
+      hasMeasurements: Object.values(draft.measurements ?? {}).some(
+        (value) => typeof value === "number" && Number.isFinite(value) && value > 0,
+      ),
+      priceCents: draft.askingPriceCents,
+      rrpCents: draft.rrpCents,
+      offersEnabled: false,
+    });
+
+    return !strength.missing.some((item) => item.step === strengthStepIndex);
+  }
+
+  if (step === "shipping") {
+    return Boolean(
+      draft.shippingOption &&
+        (draft.shippingOption === "pickup" || Boolean(draft.parcelSize)),
+    );
+  }
+
+  return false;
+}
+
 export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
-  const draftId = useSellDraftStore((state) => state.draft?.id ?? null);
+  const draft = useSellDraftStore((state) => state.draft);
+  const draftId = draft?.id ?? null;
   const hydrate = useSellDraftStore((state) => state.hydrate);
   const [currentStep, setCurrentStep] = useState<Step>(STEPS[0]);
   const [draftChoice, setDraftChoice] = useState<DraftChoice>(
@@ -304,6 +353,42 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
   };
 
   const showDraftBar = existingDraft !== null && draftChoice === "pending";
+  const isReadyToAdvance = isCurrentStepReady(draft, currentStep);
+  const isPulsingReady = useReadyPulse(isReadyToAdvance && !isLastStep);
+
+  useEffect(() => {
+    if (showDraftBar) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Enter") {
+        return;
+      }
+
+      const activeElement = document.activeElement;
+      const activeTag = activeElement?.tagName.toLowerCase();
+
+      // Buttons/links already advance on their own native Enter behaviour —
+      // don't double-fire a step change on top of that.
+      if (activeTag === "button" || activeTag === "a") {
+        return;
+      }
+
+      if (!shouldEnterAdvance(activeElement, currentStep)) {
+        return;
+      }
+
+      event.preventDefault();
+      void goToNextStep();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, showDraftBar]);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -374,26 +459,25 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
                   <i style={{ width: `${(currentIndex / (STEPS.length - 1)) * 100}%` }} />
                 </div>
 
-                {STEPS.map((step) => {
-                  const PanelComponent = STEP_PANELS[step];
+                {STEPS.map((step) => (
+                  <div
+                    key={step}
+                    className={["panel", step === currentStep ? "on" : ""].filter(Boolean).join(" ")}
+                  >
+                    {step === "photos" && <PhotosStep />}
+                    {step === "details" && <DetailsStep />}
+                    {step === "condition" && <ConditionStep />}
+                    {step === "price" && <PriceStep />}
+                    {step === "shipping" && <ShippingStep />}
+                    {step === "review" && <ReviewStep onEditStep={(target) => void goToStep(target as Step)} />}
+                  </div>
+                ))}
 
-                  return (
-                    <div
-                      key={step}
-                      className={["panel", step === currentStep ? "on" : ""].filter(Boolean).join(" ")}
-                    >
-                      {PanelComponent ? (
-                        <PanelComponent />
-                      ) : (
-                        <>
-                          <h2>{STEP_LABELS[step]}</h2>
-                          <p className="hint">Step content coming in a later task.</p>
-                        </>
-                      )}
-                    </div>
-                  );
-                })}
-
+                {/* Review renders its own Publish nav (with the gated-click wobble/toast) —
+                    the generic Continue/Publish button here would duplicate it and, on
+                    mobile, collide with it for the same fixed bottom-bar slot. The
+                    always-available stepper above still lets a seller jump back from
+                    Review to any earlier step. */}
                 <div className="wnav">
                   <button
                     type="button"
@@ -405,15 +489,25 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
                     Back
                   </button>
                   <div className="spacer" />
-                  <button type="button" className="btn green lg" onClick={goToNextStep}>
-                    {isLastStep ? "Publish" : "Continue"}
-                  </button>
+                  {currentStep !== "review" && (
+                    <button
+                      type="button"
+                      className={["btn green lg", isPulsingReady ? SELL_READY_PULSE_CLASS : ""]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={goToNextStep}
+                    >
+                      Continue
+                    </button>
+                  )}
                 </div>
               </>
             )}
           </section>
 
-          <aside className="aside" />
+          <aside className="aside">
+            {!showDraftBar && <WizardAside onJumpToStep={(target) => void goToStep(target as Step)} />}
+          </aside>
         </div>
       </div>
     </main>
