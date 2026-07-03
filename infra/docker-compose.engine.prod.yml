@@ -138,6 +138,10 @@ services:
         # ships loadStripe("") and checkout silently dies. Ben sets the pk_test_
         # value in Coolify; Coolify forwards it as a build arg. See INF-C1.
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+        # BUILD-TIME bake: next.config.ts derives images.remotePatterns from
+        # this URL's hostname. Default mirrors the api service's R2_PUBLIC_URL
+        # default below so web + api can never disagree on the media host.
+        R2_PUBLIC_URL: ${R2_PUBLIC_URL:-https://media.bushpop.com.au}
     restart: unless-stopped
     depends_on:
       api:
