@@ -56,7 +56,13 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 export function validateEnv(env: Record<string, string | undefined> = process.env as Record<string, string | undefined>): Env {
-  const result = envSchema.safeParse(env);
+  // Compose `${VAR:-}` defaults inject "" for unset vars; treat empty as
+  // absent so `.optional()` keys stay optional in containers. Required keys
+  // still fail (as "Required" instead of a min-length/url error).
+  const normalized = Object.fromEntries(
+    Object.entries(env).filter(([, value]) => value !== ""),
+  );
+  const result = envSchema.safeParse(normalized);
   if (!result.success) {
     const formatted = result.error.flatten().fieldErrors;
     const message = Object.entries(formatted)
