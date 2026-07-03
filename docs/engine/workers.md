@@ -12,7 +12,11 @@ Reference for every BullMQ worker started by [`packages/api/src/workers/index.ts
 ## Boot facts
 
 - `startWorkers()` returns immediately when `NODE_ENV=test` — every worker is skipped.
-- The `enrichment` worker only starts when `ANTHROPIC_API_KEY` is set; otherwise the worker is silently disabled and a console warning is logged.
+- The `enrichment` worker only starts when `ANTHROPIC_API_KEY` is set; otherwise the worker is silently disabled and a console warning is logged. Its auto-enqueue from image confirm was disabled in Phase 1 (PR #27) — kept registered for manually-enqueued legacy jobs only.
+- **Phase 1 (PR #27, 03/07/2026) added two workers** (rows below are pre-Phase-1; see the source files for full detail):
+  - `image-variants` (`image-variants` queue, [image-variants.ts](../packages/api/src/workers/image-variants.ts)) — always-on, no env gating; enqueued unconditionally from `confirmUpload()`; generates `thumb-320`/`card-800`/`pdp-1600` WebP q85 + EXIF verify/strip + aspect ratio.
+  - `ai-draft` (`ai-draft` queue, [ai-draft.ts](../packages/api/src/workers/ai-draft.ts)) — gated on `GEMINI_API_KEY || ANTHROPIC_API_KEY`; Gemini 2.5 Flash-Lite primary + Claude Haiku 4.5 escalation; single-attempt jobs, jobId = `ai_generations` ulid; writes ONLY `ai*` suggestion columns (confirm-not-commit — no canonical COALESCE).
+  - `image-cleanup` also gained a stale-draft sweep (archive `owned` items >30d with no listing, atomic-guarded).
 - Production boot hard-fails without `STARSHIPIT_API_KEY` and `RESEND_API_KEY` (config validation, not worker-level).
 - `backfill-aspect-ratios` is a one-off backfill scheduled at boot via `scheduleBackfillAspectRatios()`. Idempotent via fixed jobId; safe to re-deploy.
 - The repo currently runs **13** worker bootstraps. The Sprint 1b W3 branch (multi-vendor checkout) will add more. See [Pending W3 merge](#pending-w3-merge) below.
@@ -22,7 +26,7 @@ Reference for every BullMQ worker started by [`packages/api/src/workers/index.ts
 | # | Worker | Queue | File | Trigger | Env-gating | Emits |
 | - | ------ | ----- | ---- | ------- | ---------- | ----- |
 | 1 | `image-cleanup` | `image-cleanup` | [image-cleanup.ts](../packages/api/src/workers/image-cleanup.ts) | self-scheduled hourly (`upsertJobScheduler`) | none | none |
-| 2 | `enrichment` | `ai-enrichment` | [enrichment.ts](../packages/api/src/workers/enrichment.ts) | `enqueueEnrichment(itemId)` from seller image confirm (30s debounced) | **`ANTHROPIC_API_KEY`** required | [`inventory.enriched`](events.md#inventoryenriched), [`channel_listing.content_changed`](events.md#channel_listingcontent_changed) |
+| 2 | `enrichment` | `ai-enrichment` | [enrichment.ts](../packages/api/src/workers/enrichment.ts) | manual/legacy enqueue only — the auto-enqueue from image confirm was **disabled 03/07 (PR #27)**; the sell-flow `ai-draft` worker replaces it | **`ANTHROPIC_API_KEY`** required | [`inventory.enriched`](events.md#inventoryenriched), [`channel_listing.content_changed`](events.md#channel_listingcontent_changed) |
 | 3 | `backfill-aspect-ratios` | `backfill-aspect-ratios` | [backfill-aspect-ratios.ts](../packages/api/src/workers/backfill-aspect-ratios.ts) | one-off `scheduleBackfillAspectRatios()` at boot | none | none |
 | 4 | `checkout-expiry` | `checkout-expiry` | [checkout-expiry.ts](../packages/api/src/workers/checkout-expiry.ts) | `scheduleCheckoutExpiry()` (delayed) + 5-min reconcile loop | none | [`inventory.released`](events.md#inventoryreleased) (via `expireCheckoutSession`) |
 | 5 | `shipping-label` | `shipping-label` | [shipping-label.ts](../packages/api/src/workers/shipping-label.ts) | `enqueueShippingLabel()` from Stripe webhook `enqueueOrderJobs()` | none | none |
@@ -59,7 +63,7 @@ Calls Claude on a seller's `inventoryItem` to fill in `ai_*` fields and canonica
 | | |
 | --- | --- |
 | Queue | `ai-enrichment` (constructed in [`lib/enrichment-queue.ts`](../packages/api/src/lib/enrichment-queue.ts)) |
-| Trigger | `enqueueEnrichment(itemId, ownerId)` from `routes/v1/seller/images/service.ts` `confirmUpload()` |
+| Trigger | `enqueueEnrichment(itemId, ownerId)` — **no longer called from `confirmUpload()`** (disabled 03/07, PR #27); manual/legacy enqueue only |
 | Idempotency | jobId `enrich-${inventoryItemId}`; manual debounce — `getJob()` → `remove()` if not active → `add(..., { delay: 30_000 })`. BullMQ jobId dedup alone is not a debounce. Worker also re-checks the image hash before writing and re-enqueues if it changed during the run. |
 | Retry | `attempts=3`, exponential backoff 5000ms, `removeOnComplete=true`, `removeOnFail={ count: 50 }` |
 | Concurrency | `2`, BullMQ limiter `max=10` per `60_000ms` |

@@ -235,7 +235,7 @@ All status fields use an explicit state machine. Invalid transitions throw `Inva
 
 Source: `packages/api/src/workers/index.ts`, `docs/workers.md`
 
-Workers are started by `startWorkers()` in `packages/api/src/index.ts` alongside Fastify. They are skipped entirely in `NODE_ENV=test`. The enrichment worker only starts when `ANTHROPIC_API_KEY` is present.
+Workers are started by `startWorkers()` in `packages/api/src/index.ts` alongside Fastify. They are skipped entirely in `NODE_ENV=test`. The enrichment worker only starts when `ANTHROPIC_API_KEY` is present; the sell-flow `ai-draft` worker starts when `GEMINI_API_KEY || ANTHROPIC_API_KEY` is present; `image-variants` is always on (PR #27).
 
 | Worker | Queue | Schedule | Purpose |
 |---|---|---|---|
