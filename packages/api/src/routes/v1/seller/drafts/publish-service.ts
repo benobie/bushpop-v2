@@ -23,6 +23,7 @@ import {
   resolveCategoryInfo,
   type CategoryInfo,
 } from "../../../../lib/strength-input.js";
+import { assertListingActivationReady } from "../../../../lib/seller-readiness.js";
 import {
   createListing,
   transitionListingStatus,
@@ -149,13 +150,34 @@ export async function publishDraft(
   input: { version: number; legalAgree: boolean },
 ) {
   const item = await findOwnedDraftItem(itemId, ownerId);
-  if (item.lifecycleState !== "owned") {
-    throw new ConflictError("This item has already been published");
+
+  // A prior publish attempt may have flipped the lifecycle and then failed
+  // (crash, guard error). `for_sale` with no ACTIVE listing is therefore a
+  // RESUMABLE state, not a terminal one (review finding: treating it as
+  // terminal permanently bricked the draft).
+  const resuming = item.lifecycleState === "for_sale";
+  if (!resuming && item.lifecycleState !== "owned") {
+    throw new ConflictError("This item cannot be published from its current state");
   }
   if (item.version !== input.version) {
     throw new ConflictError(
       "Draft was modified by another request. Please retry with the latest version.",
     );
+  }
+  if (resuming) {
+    const [existingActive] = await db
+      .select({ id: channelListings.id, status: channelListings.status })
+      .from(channelListings)
+      .where(
+        and(
+          eq(channelListings.inventoryItemId, itemId),
+          eq(channelListings.channelId, channelId),
+          eq(channelListings.status, "active"),
+        ),
+      );
+    if (existingActive) {
+      throw new ConflictError("This item has already been published");
+    }
   }
 
   const draft = await getDraft(itemId, ownerId); // images + template context
@@ -167,58 +189,94 @@ export async function publishDraft(
     throw new PublishNotReadyError(missing);
   }
 
+  // Pre-flight the tier-1 activation guard BEFORE any mutation — vacation
+  // mode / missing ship-from address are ordinary seller states, and failing
+  // on them AFTER the lifecycle flip is what bricked drafts (review finding).
+  await assertListingActivationReady(ownerId);
+
   const strength = computeListingStrength(
     buildStrengthInput(item, readyImageCount, category),
   );
 
   // 1. Item graduates to for_sale (optimistic — publish is feature-grade).
-  const lifecycleResult = await db
-    .update(inventoryItems)
-    .set({ lifecycleState: "for_sale", version: input.version + 1, updatedAt: new Date() })
-    .where(and(eq(inventoryItems.id, itemId), eq(inventoryItems.version, input.version)))
-    .returning({ version: inventoryItems.version });
-  if (lifecycleResult.length === 0) {
-    throw new ConflictError(
-      "Draft was modified by another request. Please retry with the latest version.",
-    );
+  //    Skipped when resuming a previously-flipped item.
+  let flippedFromVersion: number | null = null;
+  if (!resuming) {
+    const lifecycleResult = await db
+      .update(inventoryItems)
+      .set({ lifecycleState: "for_sale", version: input.version + 1, updatedAt: new Date() })
+      .where(and(eq(inventoryItems.id, itemId), eq(inventoryItems.version, input.version)))
+      .returning({ version: inventoryItems.version });
+    if (lifecycleResult.length === 0) {
+      throw new ConflictError(
+        "Draft was modified by another request. Please retry with the latest version.",
+      );
+    }
+    flippedFromVersion = input.version + 1;
   }
 
-  // 2. Channel listing via the existing machinery (handle gen, guards,
-  //    channel_listing.created event). Recover an existing draft listing if a
-  //    prior publish attempt got this far and then failed.
-  let listing;
-  try {
-    listing = await createListing(ownerId, {
-      inventoryItemId: itemId,
-      channelId,
-      title: item.title!,
-      description: item.description ?? undefined,
-      priceCents: item.askingPriceCents!,
-      currency: "AUD",
-    });
-  } catch (err) {
-    if (err instanceof ConflictError) {
-      const [existing] = await db
-        .select()
-        .from(channelListings)
+  /** Best-effort compensation: put a freshly-flipped item back into the
+   *  draft flow if anything below fails, so retry starts clean. */
+  const revertLifecycle = async () => {
+    if (flippedFromVersion === null) return;
+    try {
+      await db
+        .update(inventoryItems)
+        .set({ lifecycleState: "owned", version: flippedFromVersion + 1, updatedAt: new Date() })
         .where(
           and(
-            eq(channelListings.inventoryItemId, itemId),
-            eq(channelListings.channelId, channelId),
+            eq(inventoryItems.id, itemId),
+            eq(inventoryItems.version, flippedFromVersion),
+            eq(inventoryItems.lifecycleState, "for_sale"),
           ),
         );
-      if (!existing) throw err;
-      if (existing.status === "active") {
-        throw new ConflictError("This item has already been published");
-      }
-      listing = existing;
-    } else {
-      throw err;
+    } catch (revertErr) {
+      // Best-effort — the resumable for_sale path is the backstop.
+      console.error(`[publish] Failed to revert lifecycle for ${itemId}:`, revertErr);
     }
-  }
+  };
 
-  // 3. Activate — fires status events → search-sync + score fan-out.
-  await transitionListingStatus(listing.id, ownerId, "active", listing.version);
+  let listing;
+  try {
+    // 2. Channel listing via the existing machinery (handle gen, guards,
+    //    channel_listing.created event). Recover an existing draft listing
+    //    if a prior publish attempt got this far and then failed.
+    try {
+      listing = await createListing(ownerId, {
+        inventoryItemId: itemId,
+        channelId,
+        title: item.title!,
+        description: item.description ?? undefined,
+        priceCents: item.askingPriceCents!,
+        currency: "AUD",
+      });
+    } catch (err) {
+      if (err instanceof ConflictError) {
+        const [existing] = await db
+          .select()
+          .from(channelListings)
+          .where(
+            and(
+              eq(channelListings.inventoryItemId, itemId),
+              eq(channelListings.channelId, channelId),
+            ),
+          );
+        if (!existing) throw err;
+        if (existing.status === "active") {
+          throw new ConflictError("This item has already been published");
+        }
+        listing = existing;
+      } else {
+        throw err;
+      }
+    }
+
+    // 3. Activate — fires status events → search-sync + score fan-out.
+    await transitionListingStatus(listing.id, ownerId, "active", listing.version);
+  } catch (err) {
+    await revertLifecycle();
+    throw err;
+  }
 
   // 4. Published event carries the legal-agree audit (task 8).
   await dispatchEvent({

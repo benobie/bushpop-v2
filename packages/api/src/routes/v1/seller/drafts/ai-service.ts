@@ -1,4 +1,4 @@
-import { and, count, eq, gte, sql } from "drizzle-orm";
+import { and, count, eq, gte, inArray, sql } from "drizzle-orm";
 import { ulid } from "ulid";
 import { AI_DRAFT_CONFIG, type AiGenerationTrigger } from "@bushpop/config";
 import { db } from "@bushpop/db/client";
@@ -106,6 +106,9 @@ export async function requestAiDraft(
     }
 
     if (trigger === "regenerate") {
+      // Only attempts that produced (or may still produce) a draft consume
+      // the lifetime allowance — failed/filtered attempts (e.g. a provider
+      // outage) must not permanently burn the 3 regenerates (review finding).
       const [regenRow] = await tx
         .select({ count: count() })
         .from(aiGenerations)
@@ -113,6 +116,7 @@ export async function requestAiDraft(
           and(
             eq(aiGenerations.inventoryItemId, itemId),
             eq(aiGenerations.trigger, "regenerate"),
+            inArray(aiGenerations.status, ["pending", "completed"]),
           ),
         );
       if ((regenRow?.count ?? 0) >= AI_DRAFT_CONFIG.caps.regeneratesPerListing) {

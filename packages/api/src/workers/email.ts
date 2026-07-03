@@ -228,7 +228,8 @@ async function processNotificationEmail(job: Job<EmailJobData>): Promise<void> {
 
   // No request or order context available in this background worker path —
   // fall back to the process-level channel config.
-  const channelName = getChannelConfig(process.env.CHANNEL_SLUG ?? DEFAULT_CHANNEL).name;
+  const channelConfig = getChannelConfig(process.env.CHANNEL_SLUG ?? DEFAULT_CHANNEL);
+  const channelName = channelConfig.name;
 
   const template =
     type === "score_nudge"
@@ -242,6 +243,10 @@ async function processNotificationEmail(job: Job<EmailJobData>): Promise<void> {
             listingTitle:
               typeof payload["listingTitle"] === "string" ? payload["listingTitle"] : "Your item",
             handle: typeof payload["handle"] === "string" ? payload["handle"] : "",
+            listingUrl:
+              typeof payload["handle"] === "string" && payload["handle"] && channelConfig.domain
+                ? `https://${channelConfig.domain}/products/${payload["handle"]}`
+                : null,
             strengthScore:
               typeof payload["strengthScore"] === "number" ? payload["strengthScore"] : null,
             channelName,

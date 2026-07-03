@@ -103,6 +103,19 @@ export async function processImageVariantsJob(
     );
   }
 
+  // The image may have been deleted between confirm and this job running —
+  // generating variants for a deleted image would recreate R2 objects that
+  // nothing can ever clean up (review finding). Small race remains between
+  // this check and the Puts; acceptable for a best-effort variant.
+  const [row] = await db
+    .select({ id: inventoryItemImages.id })
+    .from(inventoryItemImages)
+    .where(eq(inventoryItemImages.id, imageId));
+  if (!row) {
+    console.info(`[image-variants] Image ${imageId} deleted before variants ran — skipping`);
+    return;
+  }
+
   const getRes = await r2.send(new GetObjectCommand({ Bucket: bucket, Key: storageKey }));
   if (!getRes.Body) {
     throw new Error(`[image-variants] Empty body for ${storageKey}`);

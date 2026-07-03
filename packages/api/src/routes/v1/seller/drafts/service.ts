@@ -295,6 +295,7 @@ export async function patchCondition(id: string, ownerId: string, input: Conditi
   assertDraftMutable(item);
 
   const updates = collectUpdates(input);
+  if (updates.conditionNotes === "") updates.conditionNotes = null; // "" clears, like details-step strings
 
   if (updates.measurements && typeof updates.measurements === "object") {
     const category = await resolveCategoryInfo(item.categoryId);

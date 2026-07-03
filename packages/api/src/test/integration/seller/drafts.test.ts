@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
-import { categories, channels, channelListings, inventoryItemImages } from "@bushpop/db/schema";
+import { categories, channels, channelListings, inventoryItems, inventoryItemImages } from "@bushpop/db/schema";
 import { signUpTestUser, grantSellerRole } from "../../helpers/auth.js";
 import { authedRequest } from "../../helpers/http.js";
 
@@ -315,6 +315,33 @@ describe("Seller Drafts API", () => {
         .from(inventoryItemImages)
         .where(eq(inventoryItemImages.id, imageId));
       expect(img!.status).toBe("ready");
+    });
+
+    it("photo confirm refreshes the draft's updatedAt (stale-sweep freshness key)", async () => {
+      // Regression (review HIGH): image activity never bumped
+      // inventory_items.updatedAt, so photo-only sellers looked idle to the
+      // 30-day stale-draft sweep and got their uploads reaped.
+      const draft = (await authedRequest(sessionToken, "POST", "/api/v1/seller/drafts", {})).json();
+      const staleDate = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000);
+      await db
+        .update(inventoryItems)
+        .set({ updatedAt: staleDate })
+        .where(eq(inventoryItems.id, draft.id));
+
+      const presign = (
+        await authedRequest(sessionToken, "POST", `/api/v1/seller/drafts/${draft.id}/images/upload-url`, {
+          contentType: "image/jpeg",
+        })
+      ).json();
+      await authedRequest(
+        sessionToken,
+        "POST",
+        `/api/v1/seller/drafts/${draft.id}/images/${presign.imageId}/confirm`,
+        { position: 0, isPrimary: true },
+      );
+
+      const [item] = await db.select().from(inventoryItems).where(eq(inventoryItems.id, draft.id));
+      expect(item!.updatedAt.getTime()).toBeGreaterThan(staleDate.getTime());
     });
   });
 });

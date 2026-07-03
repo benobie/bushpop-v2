@@ -236,6 +236,8 @@ export function trackingExceptionAdminTemplate(params: TrackingExceptionAdminPar
 export interface ListingPublishedSellerParams {
   listingTitle: string;
   handle: string;
+  /** Absolute URL of the live listing (derived from the channel domain). */
+  listingUrl?: string | null;
   strengthScore?: number | null;
   channelName: string;
 }
@@ -248,12 +250,14 @@ export function listingPublishedSellerTemplate(params: ListingPublishedSellerPar
     typeof params.strengthScore === "number"
       ? `Listing strength: ${params.strengthScore}/100`
       : null;
+  const urlLine = params.listingUrl ? `View it live: ${params.listingUrl}` : null;
 
   return {
     subject: `Your listing is live on ${params.channelName} — ${params.listingTitle}`,
     text: [
       `Your listing "${params.listingTitle}" is now live on ${params.channelName}.`,
       "",
+      ...(urlLine ? [urlLine, ""] : []),
       ...(scoreLine ? [scoreLine, ""] : []),
       "What happens next:",
       "  1. Buyers can find your item in search right now.",

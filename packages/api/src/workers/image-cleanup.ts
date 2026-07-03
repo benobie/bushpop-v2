@@ -78,6 +78,34 @@ export async function cleanupStaleDrafts() {
 
   let archived = 0;
   for (const draft of staleDrafts) {
+    // ARCHIVE FIRST, with every staleness condition re-checked atomically in
+    // the UPDATE itself (review finding: the snapshot above is racy — a
+    // seller can resume/publish between the SELECT and this point). Once
+    // archived, the draft endpoints reject the item, so the deletes below
+    // cannot race a live seller.
+    const archivedRows = await db
+      .update(inventoryItems)
+      .set({
+        lifecycleState: "archived",
+        version: sql`${inventoryItems.version} + 1`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(inventoryItems.id, draft.id),
+          eq(inventoryItems.lifecycleState, "owned"),
+          lt(inventoryItems.updatedAt, cutoff),
+          notExists(
+            db
+              .select({ one: sql`1` })
+              .from(channelListings)
+              .where(eq(channelListings.inventoryItemId, inventoryItems.id)),
+          ),
+        ),
+      )
+      .returning({ id: inventoryItems.id });
+    if (archivedRows.length === 0) continue; // resumed or published meanwhile
+
     const images = await db
       .select({ id: inventoryItemImages.id, storageKey: inventoryItemImages.storageKey })
       .from(inventoryItemImages)
@@ -103,14 +131,6 @@ export async function cleanupStaleDrafts() {
       await db.delete(inventoryItemImages).where(eq(inventoryItemImages.id, image.id));
     }
 
-    await db
-      .update(inventoryItems)
-      .set({
-        lifecycleState: "archived",
-        version: sql`${inventoryItems.version} + 1`,
-        updatedAt: new Date(),
-      })
-      .where(eq(inventoryItems.id, draft.id));
     archived++;
   }
 

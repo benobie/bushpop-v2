@@ -224,6 +224,26 @@ describe("AI draft endpoints + worker", () => {
     expect(res.json().message).toMatch(/Regenerate limit/);
   });
 
+  it("failed/filtered regenerates do NOT consume the lifetime allowance", async () => {
+    // Regression (review MEDIUM): a provider outage producing 3 failed
+    // regenerates used to permanently burn the cap for the listing.
+    const itemId = await createDraftWithPhoto();
+    for (const status of ["failed", "failed", "filtered"]) {
+      await db.insert(aiGenerations).values({
+        id: ulid(),
+        sellerId: userId,
+        inventoryItemId: itemId,
+        trigger: "regenerate",
+        provider: "gemini",
+        model: "gemini-2.5-flash-lite",
+        promptVersion: "v1",
+        status,
+      });
+    }
+    const res = await requestDraft(itemId, "regenerate");
+    expect(res.statusCode).toBe(202);
+  });
+
   it("enforces the 20/day Sydney cap per seller", async () => {
     const itemId = await createDraftWithPhoto();
     for (let i = 0; i < 20; i++) {

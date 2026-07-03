@@ -219,6 +219,84 @@ describe("Publish + duplicate", () => {
       expect(res.statusCode).toBe(409);
     });
 
+    it("pre-flights seller readiness BEFORE mutating — a missing address cannot brick the draft", async () => {
+      // Regression (review CRITICAL): the readiness guard used to run only
+      // inside activation, AFTER the lifecycle flip — the draft got stuck
+      // for_sale with no listing and every retry 409'd.
+      const { user: bare, sessionToken: bareToken } = await signUpTestUser();
+      await grantSellerRole(bare.id); // NO default address → not activation-ready
+
+      const createRes = await authedRequest(bareToken, "POST", "/api/v1/seller/drafts", {});
+      const draft = createRes.json();
+      const jeansId = await categoryIdBySlug("jeans");
+      const imageId = ulid();
+      await db.insert(inventoryItemImages).values({
+        id: imageId,
+        inventoryItemId: draft.id,
+        storageKey: `items/${draft.id}/${imageId}.jpg`,
+        status: "ready",
+        isPrimary: true,
+      });
+      let res = await authedRequest(bareToken, "PATCH", `/api/v1/seller/drafts/${draft.id}/details`, {
+        version: 1,
+        title: "Complete but unready seller",
+        categoryId: jeansId,
+        size: "W32",
+        colour: "navy",
+      });
+      res = await authedRequest(bareToken, "PATCH", `/api/v1/seller/drafts/${draft.id}/condition`, {
+        version: res.json().version,
+        condition: "good",
+      });
+      res = await authedRequest(bareToken, "PATCH", `/api/v1/seller/drafts/${draft.id}/price`, {
+        version: res.json().version,
+        askingPriceCents: 20_000,
+      });
+      res = await authedRequest(bareToken, "PATCH", `/api/v1/seller/drafts/${draft.id}/shipping`, {
+        version: res.json().version,
+        shippingOption: "pickup",
+      });
+      const version = res.json().version;
+
+      const publishRes = await authedRequest(
+        bareToken,
+        "POST",
+        `/api/v1/seller/drafts/${draft.id}/publish`,
+        { version, legalAgree: true },
+      );
+      expect(publishRes.statusCode).toBe(422);
+      expect(publishRes.json().message).toMatch(/shipping address/i);
+
+      // Draft is untouched and still editable — NOT bricked.
+      const [item] = await db.select().from(inventoryItems).where(eq(inventoryItems.id, draft.id));
+      expect(item!.lifecycleState).toBe("owned");
+      const editRes = await authedRequest(
+        bareToken,
+        "PATCH",
+        `/api/v1/seller/drafts/${draft.id}/details`,
+        { version, title: "Still editable" },
+      );
+      expect(editRes.statusCode).toBe(200);
+    });
+
+    it("resumes a publish that crashed after the lifecycle flip", async () => {
+      // Regression (review CRITICAL): for_sale with no active listing used to
+      // be terminal ("already been published") — now it's resumable.
+      const { id, version } = await buildCompleteDraft();
+      await db
+        .update(inventoryItems)
+        .set({ lifecycleState: "for_sale" }) // simulate crash-after-flip
+        .where(eq(inventoryItems.id, id));
+
+      const res = await publish(id, version);
+      expect(res.statusCode).toBe(200);
+      const [listing] = await db
+        .select()
+        .from(channelListings)
+        .where(eq(channelListings.id, res.json().listingId));
+      expect(listing!.status).toBe("active");
+    });
+
     it("409s on stale version and on double publish", async () => {
       const { id, version } = await buildCompleteDraft();
       const stale = await publish(id, version - 1);

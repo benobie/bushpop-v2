@@ -33,5 +33,23 @@ export function getAiDraftQueue(): Queue {
 }
 
 export async function enqueueAiDraftJob(data: AiDraftJobData): Promise<void> {
-  await getAiDraftQueue().add("generate-draft", data, { jobId: data.generationId });
+  const queue = getAiDraftQueue();
+
+  // BullMQ dedupes adds by jobId against RETAINED jobs — including failed
+  // ones kept by removeOnFail. Without clearing a terminal leftover, a
+  // pending generation whose job crashed pre-finalise could never be
+  // re-enqueued (review finding): the idempotent-on-pending path reuses the
+  // generation id, add() would silently no-op, and the poll would show
+  // pending forever.
+  const existing = await queue.getJob(data.generationId);
+  if (existing) {
+    const state = await existing.getState();
+    if (state === "failed" || state === "completed") {
+      await existing.remove();
+    } else {
+      return; // queued/active/delayed — already in flight
+    }
+  }
+
+  await queue.add("generate-draft", data, { jobId: data.generationId });
 }

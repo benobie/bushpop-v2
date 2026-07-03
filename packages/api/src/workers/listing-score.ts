@@ -206,7 +206,10 @@ export async function processListingScoreJob(
     return;
   }
 
-  if (previousNudgeKey !== null && previousNudgeKey !== nudgeKey) {
+  // A perfect score has nothing to nudge — without this, completing the
+  // last missing field fires an "add more photos" nudge (the tie-break
+  // fallback of strengthNudgeKey) at the exact moment the listing hits 100.
+  if (score < 100 && previousNudgeKey !== null && previousNudgeKey !== nudgeKey) {
     const nudgeMessage = SCORE_NUDGE_MESSAGES[nudgeKey];
     await sendNotification(
       item.ownerId,

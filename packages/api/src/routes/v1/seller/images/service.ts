@@ -9,7 +9,7 @@ import {
   getExtensionForContentType,
   type AllowedContentType,
 } from "../../../../lib/r2.js";
-import { getPublicImageUrl } from "../../../../lib/image-url.js";
+import { extractImageId, getPublicImageUrl, IMAGE_VARIANT_NAMES } from "../../../../lib/image-url.js";
 import { cascadeImageDeletionToListings } from "../../../../lib/inventory-invariants.js";
 import { NotFoundError, ConflictError, ValidationError } from "../../../../lib/errors.js";
 import { dispatchEvent } from "../../../../lib/events.js";
@@ -75,6 +75,26 @@ async function dispatchContentChangedForItem(itemId: string, actorId: string): P
     }).catch((err: unknown) => {
       console.error(`[images] Failed to dispatch content_changed for listing ${listing.id}:`, err);
     });
+  }
+}
+
+/**
+ * Bump the parent item's updatedAt on photo activity. The stale-draft sweep
+ * (workers/image-cleanup.ts) keys freshness on inventory_items.updatedAt —
+ * without this, a seller who only uploads photos (no field PATCH) looks
+ * idle and their draft gets reaped at 30 days (review finding). Deliberately
+ * does NOT bump `version`: photo routes are not optimistic-locked and a
+ * version bump here would 409 concurrent step PATCHes.
+ */
+async function touchItemActivity(itemId: string): Promise<void> {
+  try {
+    await db
+      .update(inventoryItems)
+      .set({ updatedAt: new Date() })
+      .where(eq(inventoryItems.id, itemId));
+  } catch (err) {
+    // Best-effort — never fail an image operation over the freshness bump.
+    console.error(`[images] Failed to touch item activity for ${itemId}:`, err);
   }
 }
 
@@ -214,6 +234,8 @@ export async function confirmUpload(
   // into canonical fields. The enrichment worker remains registered for any
   // manually-enqueued legacy jobs.
 
+  await touchItemActivity(itemId);
+
   // Dispatch content_changed for all channel listings of this item
   await dispatchContentChangedForItem(itemId, ownerId);
 
@@ -307,12 +329,27 @@ export async function deleteImage(
     }
   });
 
-  // Delete from R2 (best-effort — orphan cleanup catches failures)
+  // Delete from R2 (best-effort — orphan cleanup catches failures).
+  // Derived variants too: once the row is gone nothing else knows their
+  // keys, so skipping them here leaks 3 objects per deleted photo
+  // (review finding).
   try {
     await deleteObject(image.storageKey);
   } catch {
     // Log but don't fail the request
   }
+  const variantImageId = extractImageId(image.storageKey);
+  if (variantImageId) {
+    for (const variant of IMAGE_VARIANT_NAMES) {
+      try {
+        await deleteObject(`items/${itemId}/${variant}/${variantImageId}.webp`);
+      } catch {
+        // Variant may never have been generated
+      }
+    }
+  }
+
+  await touchItemActivity(itemId);
 
   // Dispatch content_changed for all channel listings of this item
   await dispatchContentChangedForItem(itemId, ownerId);

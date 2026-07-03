@@ -72,7 +72,15 @@ async function runWithEscalation(
     return { provider: escalation!, result };
   } catch (escalationErr) {
     console.error("[ai-draft] Escalation provider failed:", escalationErr);
-    throw firstError ?? escalationErr;
+    // Surface BOTH causes — a DB row saying only "confidence below minimum"
+    // hides the escalation outage an operator actually needs to see.
+    const firstMessage =
+      firstError instanceof Error ? firstError.message : String(firstError ?? "unknown");
+    const escalationMessage =
+      escalationErr instanceof Error ? escalationErr.message : String(escalationErr);
+    throw new Error(`primary: ${firstMessage}; escalation: ${escalationMessage}`, {
+      cause: escalationErr,
+    });
   }
 }
 
@@ -140,37 +148,40 @@ export async function processAiDraftJob(data: AiDraftJobData): Promise<void> {
   const { generationId, inventoryItemId } = data;
   const startedAt = Date.now();
 
-  const [generation] = await db
-    .select()
-    .from(aiGenerations)
-    .where(eq(aiGenerations.id, generationId));
-  if (!generation || generation.status !== "pending") return; // idempotent
-
-  const images = await db
-    .select({
-      storageKey: inventoryItemImages.storageKey,
-      contentType: inventoryItemImages.contentType,
-    })
-    .from(inventoryItemImages)
-    .where(
-      and(
-        eq(inventoryItemImages.inventoryItemId, inventoryItemId),
-        eq(inventoryItemImages.status, "ready"),
-      ),
-    )
-    .orderBy(inventoryItemImages.position)
-    .limit(MAX_IMAGES);
-
-  if (images.length === 0) {
-    await finaliseGeneration(generationId, inventoryItemId, {
-      status: "failed",
-      error: "No ready images on item",
-      latencyMs: Date.now() - startedAt,
-    });
-    return;
-  }
-
   try {
+    // All DB reads live INSIDE the try (review finding): a transient error
+    // here would otherwise fail the job with the row still pending — and
+    // with attempts:1 nothing retries it until the seller re-requests.
+    const [generation] = await db
+      .select()
+      .from(aiGenerations)
+      .where(eq(aiGenerations.id, generationId));
+    if (!generation || generation.status !== "pending") return; // idempotent
+
+    const images = await db
+      .select({
+        storageKey: inventoryItemImages.storageKey,
+        contentType: inventoryItemImages.contentType,
+      })
+      .from(inventoryItemImages)
+      .where(
+        and(
+          eq(inventoryItemImages.inventoryItemId, inventoryItemId),
+          eq(inventoryItemImages.status, "ready"),
+        ),
+      )
+      .orderBy(inventoryItemImages.position)
+      .limit(MAX_IMAGES);
+
+    if (images.length === 0) {
+      await finaliseGeneration(generationId, inventoryItemId, {
+        status: "failed",
+        error: "No ready images on item",
+        latencyMs: Date.now() - startedAt,
+      });
+      return;
+    }
+
     const imageInputs = await Promise.all(
       images.map(async (img) => ({
         url: await createPresignedGetUrl(img.storageKey),
