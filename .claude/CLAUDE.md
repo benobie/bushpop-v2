@@ -34,6 +34,8 @@ docs/engine/    - Curated upstream engine docs + FORK.md (provenance, pick recip
 
 The engine was forked from `benobie/piklo-v2` @ `2419a38` (02/07/2026), renamed `@piklo/*` → `@bushpop/*`, single-tenant (only the `bushpop` channel exists; `CHANNEL_SLUG=bushpop`). **Read `docs/engine/FORK.md` before touching engine code** — notably the Stripe metadata keys (`piklo_payment_op_id` etc.) are deliberately NOT renamed (money-safety byte-parity with upstream) and must stay that way.
 
+**Sell-flow backend SHIPPED 03/07 (PR #27, Phase 1 of `~/.claude/plans/build-brief-merry-garden.md`):** drafts façade (`routes/v1/seller/drafts/` — draft = inventory_items row, per-step PATCH, optimistic `version`), AI listing drafts (`lib/ai/` + `workers/ai-draft.ts` — Gemini 2.5 Flash-Lite primary, Haiku 4.5 escalation, worker gated on `GEMINI_API_KEY || ANTHROPIC_API_KEY`, writes ONLY `ai*` suggestion columns), image-variants worker (thumb-320/card-800/pdp-1600, always-on), shared strength v3 (`@bushpop/config` `computeListingStrength` — ONE rubric for drafts API/score worker/wizard, never fork it), publish gate (422 + `missing[]`), commission from `@bushpop/config` `COMMISSION_SCHEDULE` (1.75% + 30c — `channels.platform_fee_bps` is no longer consulted), migration `0023`. Gotcha for route authors: `@fastify/rate-limit` MUTATES the shared `preHandler` array — always build per-route arrays (see `drafts/routes.ts`). Next: Phase 2 `/sell` wizard in `apps/market`.
+
 ## Key constraints
 
 - **Pure RSC** — no `"use client"` on content pages. Interactivity = isolated leaf client components only.
