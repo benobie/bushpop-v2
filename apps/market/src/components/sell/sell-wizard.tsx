@@ -5,6 +5,7 @@ import type { JSX } from "react";
 import type { paths } from "@bushpop/api-client";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
 import { useSellDraftStore } from "@/lib/sell/store";
+import { track } from "@/lib/analytics";
 import {
   buildSellDraftReplayPatches,
   readStoredSellDraftSnapshot,
@@ -44,6 +45,7 @@ const STRENGTH_STEP_INDEX_BY_WIZARD_STEP: Partial<Record<Step, number>> = {
   condition: 2,
   price: 3,
 };
+const ANALYTICS_CHANNEL = "bushpop";
 
 export type DraftSummary =
   paths["/api/v1/seller/drafts"]["get"]["responses"][200]["content"]["application/json"]["drafts"][number];
@@ -163,6 +165,23 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
   const [isChoosingDraft, setIsChoosingDraft] = useState(false);
   const hasInitialisedDraftRef = useRef(false);
   const hasSyncedUrlRef = useRef(false);
+  const hasTrackedWizardStartedRef = useRef(false);
+  const stepEnteredAtRef = useRef<number | null>(null);
+
+  const trackWizardStarted = (resumed: boolean) => {
+    if (hasTrackedWizardStartedRef.current) {
+      return;
+    }
+
+    hasTrackedWizardStartedRef.current = true;
+    track({
+      event: "wizard.started",
+      props: {
+        channel: ANALYTICS_CHANNEL,
+        resumed,
+      },
+    });
+  };
 
   useEffect(() => {
     const urlStep = parseStep(window.location.search);
@@ -219,6 +238,7 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
             startedAt: Date.now(),
             resumed: false,
           });
+          trackWizardStarted(false);
           return;
         }
 
@@ -233,6 +253,7 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
           startedAt: Date.now(),
           resumed: false,
         });
+        trackWizardStarted(false);
         return;
       }
 
@@ -268,6 +289,15 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
     }
 
     await useSellDraftStore.getState().flush();
+    const stepCompletedMs = Math.max(0, Date.now() - (stepEnteredAtRef.current ?? Date.now()));
+    track({
+      event: "wizard.step_completed",
+      props: {
+        channel: ANALYTICS_CHANNEL,
+        step: currentIndex,
+        ms: stepCompletedMs,
+      },
+    });
     setCurrentStep(STEPS[currentIndex + 1]);
   };
 
@@ -298,6 +328,7 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
         startedAt: Date.now(),
         resumed: true,
       });
+      trackWizardStarted(true);
 
       const store = useSellDraftStore.getState();
 
@@ -344,6 +375,7 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
         startedAt: Date.now(),
         resumed: false,
       });
+      trackWizardStarted(false);
       removeStoredSellDraftSnapshot(existingDraft.id);
       await goToStep(STEPS[0]);
       setDraftChoice("fresh");
@@ -355,6 +387,14 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
   const showDraftBar = existingDraft !== null && draftChoice === "pending";
   const isReadyToAdvance = isCurrentStepReady(draft, currentStep);
   const isPulsingReady = useReadyPulse(isReadyToAdvance && !isLastStep);
+
+  useEffect(() => {
+    if (showDraftBar) {
+      return;
+    }
+
+    stepEnteredAtRef.current = Date.now();
+  }, [currentStep, showDraftBar]);
 
   useEffect(() => {
     if (showDraftBar) {

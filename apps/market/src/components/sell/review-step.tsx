@@ -15,6 +15,7 @@ import { createBrowserApiClient } from "@bushpop/api-client/browser";
 import { removeStoredSellDraftSnapshot } from "@/lib/sell/resume";
 import { useSellDraftStore } from "@/lib/sell/store";
 import type { SellDraft } from "@/lib/sell/types";
+import { track } from "@/lib/analytics";
 import {
   ListingPreviewCard,
   type ListingPreviewCardProps,
@@ -80,6 +81,35 @@ export interface ReviewStepProps {
 
 const EMPTY_VALUE = "—";
 const CONFETTI_COUNT = 46;
+const ANALYTICS_CHANNEL = "bushpop";
+
+const AI_FIELD_MAPPERS = [
+  {
+    field: "title",
+    resolveCanonicalValue: (draft: SellDraft) => draft.title,
+    resolveAiValue: (draft: SellDraft) => draft.aiTitle,
+  },
+  {
+    field: "brand",
+    resolveCanonicalValue: (draft: SellDraft) => draft.brand,
+    resolveAiValue: (draft: SellDraft) => draft.aiSuggestedBrand,
+  },
+  {
+    field: "category",
+    resolveCanonicalValue: (draft: SellDraft) => draft.category?.slug ?? null,
+    resolveAiValue: (draft: SellDraft) => draft.aiSuggestedCategory,
+  },
+  {
+    field: "colour",
+    resolveCanonicalValue: (draft: SellDraft) => draft.colour,
+    resolveAiValue: (draft: SellDraft) => draft.aiSuggestedColour,
+  },
+  {
+    field: "description",
+    resolveCanonicalValue: (draft: SellDraft) => draft.description,
+    resolveAiValue: (draft: SellDraft) => draft.aiDescription,
+  },
+] as const;
 
 const REQUIRED_CHECKLIST_ITEMS: readonly RequiredChecklistItem[] = [
   { key: "photos", label: "Add at least 1 ready photo", step: "photos" },
@@ -201,9 +231,13 @@ function formatBandLabel(band: string): string {
     .join(" ");
 }
 
-function formatElapsedLabel(startedAt: number): string {
+function resolveElapsedMs(startedAt: number): number {
   const safeStart = Number.isFinite(startedAt) ? startedAt : Date.now();
-  const elapsedSeconds = Math.max(1, Math.round((Date.now() - safeStart) / 1000));
+  return Math.max(0, Date.now() - safeStart);
+}
+
+function formatElapsedLabelFromElapsedMs(elapsedMs: number): string {
+  const elapsedSeconds = Math.max(1, Math.round(elapsedMs / 1000));
 
   if (elapsedSeconds < 60) {
     return `${elapsedSeconds}s`;
@@ -268,6 +302,45 @@ function resolveReadyImages(draft: SellDraft): SellDraft["images"] {
 
       return left.position - right.position;
     });
+}
+
+function hasAnyAiSuggestions(draft: SellDraft): boolean {
+  return Boolean(
+    draft.aiTitle ??
+      draft.aiDescription ??
+      draft.aiSuggestedBrand ??
+      draft.aiSuggestedCategory ??
+      draft.aiSuggestedColour,
+  );
+}
+
+function trackAiDraftOutcome(draft: SellDraft): boolean {
+  const aiUsed = hasAnyAiSuggestions(draft);
+
+  if (!aiUsed) {
+    return false;
+  }
+
+  for (const fieldMapper of AI_FIELD_MAPPERS) {
+    const aiValue = fieldMapper.resolveAiValue(draft);
+
+    if (aiValue === null) {
+      continue;
+    }
+
+    track({
+      event:
+        fieldMapper.resolveCanonicalValue(draft) === aiValue
+          ? "wizard.ai_draft_kept"
+          : "wizard.ai_draft_edited",
+      props: {
+        channel: ANALYTICS_CHANNEL,
+        field: fieldMapper.field,
+      },
+    });
+  }
+
+  return true;
 }
 
 function resolvePreviewCardProps(draft: SellDraft): ListingPreviewCardProps {
@@ -629,10 +702,25 @@ export function ReviewStep({ onEditStep }: ReviewStepProps): JSX.Element {
           wizardMeta.startedAt > 0 && wizardMeta.startedAt <= Date.now()
             ? wizardMeta.startedAt
             : createdAtMs;
+        const timeToListMs = resolveElapsedMs(sessionStart);
+        const aiUsed = trackAiDraftOutcome(latestDraft);
+        const publishResult = result.data as PublishResponse;
+
+        track({
+          event: "wizard.published",
+          props: {
+            channel: ANALYTICS_CHANNEL,
+            listing_id: publishResult.listingId,
+            strength: publishResult.strength.score,
+            time_to_list_ms: timeToListMs,
+            photo_count: resolveReadyImages(latestDraft).length,
+            ai_used: aiUsed,
+          },
+        });
 
         setPublished({
-          result: result.data as PublishResponse,
-          elapsedLabel: formatElapsedLabel(sessionStart),
+          result: publishResult,
+          elapsedLabel: formatElapsedLabelFromElapsedMs(timeToListMs),
         });
         return;
       }

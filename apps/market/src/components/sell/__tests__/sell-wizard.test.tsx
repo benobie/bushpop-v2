@@ -15,8 +15,9 @@ import {
 import type { SellDraft } from "@/lib/sell/types";
 import { SellWizard, type DraftSummary } from "../sell-wizard";
 
-const { apiOrigin } = vi.hoisted(() => ({
+const { apiOrigin, trackMock } = vi.hoisted(() => ({
   apiOrigin: "http://localhost",
+  trackMock: vi.fn(),
 }));
 
 vi.mock("@bushpop/api-client/browser", () => {
@@ -89,6 +90,10 @@ vi.mock("@bushpop/api-client/browser", () => {
     },
   };
 });
+
+vi.mock("@/lib/analytics", () => ({
+  track: trackMock,
+}));
 
 const API_ORIGIN = apiOrigin;
 const DRAFTS_URL = `${API_ORIGIN}/api/v1/seller/drafts`;
@@ -169,6 +174,7 @@ beforeEach(() => {
   localStorage.clear();
   resetSellDraftStoreForTests();
   useSellDraftStore.setState({ patchDetails: ORIGINAL_PATCH_DETAILS });
+  trackMock.mockClear();
 });
 
 describe("SellWizard", () => {
@@ -218,6 +224,59 @@ describe("SellWizard", () => {
 
     expect(screen.queryByText(/You have a draft from/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Continue" })).toBeInTheDocument();
+  });
+
+  it("tracks wizard.started when a fresh draft hydrates", async () => {
+    server.use(
+      http.post(DRAFTS_URL, () => HttpResponse.json(buildDraft())),
+    );
+
+    render(<SellWizard existingDraft={null} initialDraftId={null} />);
+
+    await screen.findByRole("button", { name: "Continue" });
+
+    expect(trackMock).toHaveBeenCalledWith({
+      event: "wizard.started",
+      props: {
+        channel: "bushpop",
+        resumed: false,
+      },
+    });
+    expect(
+      trackMock.mock.calls.filter(
+        ([payload]) => payload.event === "wizard.started",
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("tracks wizard.started when an existing draft is resumed", async () => {
+    const resumeDraft = buildDraft();
+
+    server.use(
+      http.get(DRAFT_URL, () => HttpResponse.json(resumeDraft)),
+    );
+
+    render(
+      <SellWizard
+        existingDraft={buildSummary({ id: resumeDraft.id })}
+        initialDraftId={resumeDraft.id}
+      />,
+    );
+
+    await resumeFromBanner();
+
+    expect(trackMock).toHaveBeenCalledWith({
+      event: "wizard.started",
+      props: {
+        channel: "bushpop",
+        resumed: true,
+      },
+    });
+    expect(
+      trackMock.mock.calls.filter(
+        ([payload]) => payload.event === "wizard.started",
+      ),
+    ).toHaveLength(1);
   });
 
   it("resumes to the photos step even when a later missing item appears first", async () => {
@@ -390,5 +449,68 @@ describe("SellWizard", () => {
     expect(patchBodies).toEqual([
       { version: 7, title: "Local title" },
     ]);
+  });
+
+  it("tracks wizard.step_completed when continuing forward", async () => {
+    let now = new Date("2026-07-04T00:10:00.000Z").getTime();
+    const dateNowSpy = vi.spyOn(Date, "now").mockImplementation(() => now);
+
+    server.use(
+      http.post(DRAFTS_URL, () => HttpResponse.json(buildDraft())),
+    );
+
+    render(<SellWizard existingDraft={null} initialDraftId={null} />);
+
+    await screen.findByRole("button", { name: "Continue" });
+    trackMock.mockClear();
+
+    now += 2_500;
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+
+    await waitFor(() => {
+      expect(trackMock).toHaveBeenCalledWith({
+        event: "wizard.step_completed",
+        props: {
+          channel: "bushpop",
+          step: 0,
+          ms: 2_500,
+        },
+      });
+    });
+
+    dateNowSpy.mockRestore();
+  });
+
+  it("does not track wizard.step_completed on back or stepper jumps", async () => {
+    server.use(
+      http.post(DRAFTS_URL, () => HttpResponse.json(buildDraft())),
+    );
+
+    const { container } = render(<SellWizard existingDraft={null} initialDraftId={null} />);
+
+    await screen.findByRole("button", { name: "Continue" });
+    trackMock.mockClear();
+
+    fireEvent.click(screen.getByRole("button", { name: /Condition/ }));
+
+    await waitFor(() => {
+      expect(activeStepLabel(container)).toBe("Condition");
+    });
+    expect(
+      trackMock.mock.calls.filter(
+        ([payload]) => payload.event === "wizard.step_completed",
+      ),
+    ).toHaveLength(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "Back" }));
+
+    await waitFor(() => {
+      expect(activeStepLabel(container)).toBe("Details");
+    });
+    expect(
+      trackMock.mock.calls.filter(
+        ([payload]) => payload.event === "wizard.step_completed",
+      ),
+    ).toHaveLength(0);
   });
 });

@@ -12,8 +12,9 @@ import {
 import type { SellDraft } from "@/lib/sell/types";
 import { DetailsStep } from "../details-step";
 
-const { apiOrigin } = vi.hoisted(() => ({
+const { apiOrigin, trackMock } = vi.hoisted(() => ({
   apiOrigin: "http://localhost",
+  trackMock: vi.fn(),
 }));
 
 vi.mock("@bushpop/api-client/browser", () => {
@@ -59,6 +60,10 @@ vi.mock("@bushpop/api-client/browser", () => {
     },
   };
 });
+
+vi.mock("@/lib/analytics", () => ({
+  track: trackMock,
+}));
 
 type CategoryItem = {
   id: string;
@@ -227,6 +232,7 @@ beforeEach(() => {
   resetSellDraftStoreForTests();
   setReducedMotion(true);
   currentDraft = buildDraft();
+  trackMock.mockClear();
 
   server.use(
     http.get(CATEGORIES_URL, ({ request }) => {
@@ -316,6 +322,12 @@ describe("DetailsStep AI reveal", () => {
     expect(categoryButton).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("status")).toHaveTextContent("Draft ready");
     expect(screen.getByRole("button", { name: /regenerate/i })).toBeInTheDocument();
+    expect(trackMock).toHaveBeenCalledWith({
+      event: "wizard.ai_draft_generated",
+      props: {
+        channel: "bushpop",
+      },
+    });
   });
 
   it("shows the regenerate limit message when the backend rejects a regenerate request with 429", async () => {
@@ -351,5 +363,6 @@ describe("DetailsStep AI reveal", () => {
         screen.getByText("You've hit the regenerate limit for this item."),
       ).toBeInTheDocument();
     });
+    expect(trackMock).not.toHaveBeenCalled();
   });
 });

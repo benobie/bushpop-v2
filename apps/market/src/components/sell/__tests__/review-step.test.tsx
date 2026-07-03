@@ -16,8 +16,9 @@ import {
   computePublishGateMissing,
 } from "../review-step";
 
-const { apiOrigin } = vi.hoisted(() => ({
+const { apiOrigin, trackMock } = vi.hoisted(() => ({
   apiOrigin: "http://localhost",
+  trackMock: vi.fn(),
 }));
 
 vi.mock("@bushpop/api-client/browser", () => {
@@ -63,6 +64,10 @@ vi.mock("@bushpop/api-client/browser", () => {
     },
   };
 });
+
+vi.mock("@/lib/analytics", () => ({
+  track: trackMock,
+}));
 
 const PUBLISH_URL = /\/api\/v1\/seller\/drafts\/[^/]+\/publish$/;
 const DUPLICATE_URL = /\/api\/v1\/seller\/drafts\/[^/]+\/duplicate$/;
@@ -185,6 +190,7 @@ beforeEach(() => {
   window.history.replaceState({}, "", "/sell?step=review");
   localStorage.clear();
   resetSellDraftStoreForTests();
+  trackMock.mockClear();
 
   Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
     configurable: true,
@@ -429,5 +435,90 @@ describe("ReviewStep", () => {
     await waitFor(() => {
       expect(duplicateCalls).toHaveLength(1);
     });
+  });
+
+  it("tracks publish analytics with ready-photo count and AI kept/edited diffs", async () => {
+    const now = new Date("2026-07-04T00:10:00.000Z").getTime();
+    const dateNowSpy = vi.spyOn(Date, "now").mockReturnValue(now);
+
+    server.use(
+      http.post(PUBLISH_URL, () =>
+        HttpResponse.json({
+          listingId: "listing_analytics",
+          handle: "arcteryx-beta-ar-jacket",
+          itemId: "01J0SELLDRAFT00000000000000",
+          strength: {
+            score: 92,
+            band: "excellent",
+            breakdown: {
+              photos: 20,
+            },
+            version: "v3",
+          },
+        }),
+      ),
+    );
+
+    renderReviewStep({
+      title: "AI title",
+      aiTitle: "AI title",
+      brand: "Seller brand",
+      aiSuggestedBrand: "AI brand",
+      category: {
+        id: "cat-jackets",
+        slug: "jackets",
+        name: "Jackets",
+        parentId: "cat-outerwear",
+        parentSlug: "outerwear",
+      },
+      aiSuggestedCategory: "jackets",
+      colour: "Black",
+      aiSuggestedColour: "Black",
+      description: "Seller edited description",
+      aiDescription: "AI description",
+      images: [
+        buildDraft().images[0],
+        {
+          ...buildDraft().images[0],
+          id: "img-processing",
+          status: "processing",
+          isPrimary: false,
+          position: 1,
+        },
+      ],
+    });
+
+    await checkLegalAgree();
+    fireEvent.click(screen.getByRole("button", { name: "Publish" }));
+
+    await screen.findByText("Your listing is live");
+
+    expect(trackMock).toHaveBeenCalledWith({
+      event: "wizard.ai_draft_kept",
+      props: {
+        channel: "bushpop",
+        field: "title",
+      },
+    });
+    expect(trackMock).toHaveBeenCalledWith({
+      event: "wizard.ai_draft_edited",
+      props: {
+        channel: "bushpop",
+        field: "brand",
+      },
+    });
+    expect(trackMock).toHaveBeenCalledWith({
+      event: "wizard.published",
+      props: {
+        channel: "bushpop",
+        listing_id: "listing_analytics",
+        strength: 92,
+        time_to_list_ms: 5 * 60 * 1000,
+        photo_count: 1,
+        ai_used: true,
+      },
+    });
+
+    dateNowSpy.mockRestore();
   });
 });

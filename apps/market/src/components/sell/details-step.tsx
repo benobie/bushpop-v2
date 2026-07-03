@@ -12,6 +12,7 @@ import {
   SIZES_BY_GARMENT,
 } from "@bushpop/config";
 import { useSellDraftStore } from "@/lib/sell/store";
+import { track } from "@/lib/analytics";
 import {
   startAiReveal,
   type AiRevealError,
@@ -86,6 +87,7 @@ const QUICK_ADD_SENTENCES = [
 const BRAND_INPUT_MAX = 100;
 const TITLE_MAX = 80;
 const DESCRIPTION_MAX = 1200;
+const ANALYTICS_CHANNEL = "bushpop";
 
 function isGarmentType(value: string): value is GarmentType {
   return GARMENT_TYPES.includes(value as GarmentType);
@@ -738,6 +740,12 @@ export function DetailsStep(): JSX.Element {
           setTitlePreview(null);
           setShowRegenerate(true);
           setShowDraftReadyBanner(true);
+          track({
+            event: "wizard.ai_draft_generated",
+            props: {
+              channel: ANALYTICS_CHANNEL,
+            },
+          });
           return;
         }
 
