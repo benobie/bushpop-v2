@@ -129,6 +129,13 @@ Also recorded:
 - Em dashes cleared from all rendered copy in these four files: body prose, `title:` metadata ("—" → "|", per the §9 homepage precedent), the complete-guide H1 and ArticleJsonLd headline ("—" → ":"), and the Size Charts link text. Verified nothing anchor-links into these pages, so the H1 slug change is safe.
 - Kept as approved: the 7% Buyer Protection fee (matches live homepage copy), "Buyer Protection on every order" framing, free to sell / no seller commission / keep your full asking price, ship direct, "marketplaces that charge sellers around 10% or more" (true of eBay/Depop-class competitors), and "takes minutes to start" (§7's sanctioned no-number form of the speed claim).
 
+**Leftover sweep (03/07/2026, batch 36B).** A read-only pass over the rest of `apps/web/src/app` (outside this section's original four files) found two more instances of the same claim classes:
+
+| Original copy | Where | Why removed or rewritten | Reinstate when |
+|---|---|---|---|
+| "our support team is based in Australia" | `guides/how-to-buy-secondhand-clothes-online` | Same as the §11 "team" wording fix above (§5). Now whitelist form: "human support, based in Australia". | Headcount > 1 (§5). |
+| "**Check seller ratings** and read recent reviews." | `guides/vinted-australia` | Platform-agnostic tip (Vinted/eBay/Depop have real ratings) sitting on a Bushpop page with no attribution. Reworded to "Check seller ratings and reviews on platforms that have them." | n/a — already platform-neutral wording, no Bushpop-specific claim involved. |
+
 ## Known remaining issues (outside the homepage fix)
 
 - ~~`about/how-it-works`, `about/buying` and the selling guide MDX pages describe seller ratings/reviews as a current feature.~~ CLOSED 03/07/2026 — see §11.
