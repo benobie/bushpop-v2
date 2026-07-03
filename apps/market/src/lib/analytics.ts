@@ -14,14 +14,34 @@
 import posthog from "posthog-js";
 
 export type BushpopEvent =
-  | { event: "wizard.started"; props: { channel: string } }
+  | { event: "wizard.started"; props: { channel: string; resumed: boolean } }
   | {
       event: "wizard.photos_uploaded";
       props: { channel: string; photo_count: number };
     }
   | {
+      event: "wizard.step_completed";
+      props: { channel: string; step: number; ms: number };
+    }
+  | { event: "wizard.ai_draft_generated"; props: { channel: string } }
+  | {
+      event: "wizard.ai_draft_kept";
+      props: { channel: string; field: string };
+    }
+  | {
+      event: "wizard.ai_draft_edited";
+      props: { channel: string; field: string };
+    }
+  | {
       event: "wizard.published";
-      props: { channel: string; listing_id: string };
+      props: {
+        channel: string;
+        listing_id: string;
+        strength: number;
+        time_to_list_ms: number;
+        photo_count: number;
+        ai_used: boolean;
+      };
     }
   | {
       event: "listing.viewed";
