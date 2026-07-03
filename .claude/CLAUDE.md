@@ -80,7 +80,7 @@ The approved prototype (`~/projects/Bushpop/design/home/`) is ported and live on
 - **Fonts** — Hanken Grotesk + Inter via `next/font` in `layout.tsx` (licensed Roc Grotesk swap later).
 - **Components** — `apps/web/src/components/`: wordmark, button, chip, product-card, site-nav, site-footer (RSC) + client leaves: fav-button, fresh-drops, waitlist-form, mobile-bottom-bar. Icons = `lucide-react`.
 - **Coming-soon framing** — no marketplace yet, so every marketplace CTA routes to the `/shop` "Launching soon" storefront via `src/lib/links.ts` (`COMING_SOON`); homepage demo products (`src/lib/demo-products.ts`) are illustrative. Shop/product/sell/checkout are Launch-2.
-- **Waitlist** — `waitlist-form.tsx` POSTs to `NEXT_PUBLIC_WAITLIST_ENDPOINT` (UNSET → optimistic success). Wire a real endpoint (CF Pages Function or form service) to actually capture emails.
+- **Waitlist** — first-party capture live (F1, 03/07): `waitlist-form.tsx` POSTs same-origin to `/api/waitlist` (Pages Function → n8n → homelab `bushpop.waitlist`), success only on 2xx, `segment` prop per the F10 contract (`buyer`|`seller`|`opshop`). Secret `N8N_WAITLIST_WEBHOOK` on the CF Pages project (repo is public — never commit the webhook URL). Full architecture + export path: `docs/waitlist.md`.
 - **Trust claims** — site copy is governed by `docs/trust-claims-ledger.md` (W3 gate closed 03/07, PR #28): every removed fabricated claim + its exact reinstatement condition. No invented numbers, no fictional people/quotes, no unbuilt features described as current, numbers rendered from real data only. Check the ledger BEFORE adding any stat/social-proof/trust copy.
 
 ## Git workflow
