@@ -44,6 +44,23 @@ fresh history (no graft). Decision record: `~/.claude/plans/build-brief-merry-ga
   templates are replaced in Phase 1 (task 8: `listing_published_seller`
   template work) rather than blind-sed'd.
 
+## Post-fork review fixes
+
+The 03/07 independent cross-model review of the fork (PR #22) surfaced three
+pre-merge items; all are now closed:
+
+- **Platform-fee fallback bug** — fixed in PR #27 (Phase 1 sell-flow backend).
+- **R2 public hostname never wired as a Docker build ARG** — fixed in PR #30:
+  `apps/market/Dockerfile` now declares `ARG/ENV R2_PUBLIC_URL`, the prod
+  compose passes it in `web.build.args`, and the `next.config.ts` fallback is
+  `media.bushpop.com.au` (missed fork rename; not a byte-parity surface).
+- **Content-site `deploy.yml` installed the whole workspace** — fixed in
+  PR #30: both jobs install with `--filter @bushpop/web...` so engine packages
+  can never break or bloat a content deploy.
+
+Upstream note: piklo-v2 has the same unwired R2 ARG (latent there — its
+fallback hostname is correct for piklo). Candidate for an upstream pick.
+
 ## Pruned / dropped
 
 - `apps/admin`, `apps/mobile` (package.json stubs) — COPY lines removed from
