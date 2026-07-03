@@ -305,11 +305,13 @@ function resolveReadyImages(draft: SellDraft): SellDraft["images"] {
 }
 
 function hasAnyAiSuggestions(draft: SellDraft): boolean {
+  // `||`, not `??` — an empty-string AI field must not short-circuit the
+  // check before a later, genuinely-suggested field is looked at.
   return Boolean(
-    draft.aiTitle ??
-      draft.aiDescription ??
-      draft.aiSuggestedBrand ??
-      draft.aiSuggestedCategory ??
+    draft.aiTitle ||
+      draft.aiDescription ||
+      draft.aiSuggestedBrand ||
+      draft.aiSuggestedCategory ||
       draft.aiSuggestedColour,
   );
 }
