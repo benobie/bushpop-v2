@@ -101,7 +101,35 @@ Kept, for the record: demo product prices, RRPs and per-item "-X%" sale badges r
 | Opt-in authentication | Contradicts locked model facts; no service exists. | Change the model facts + build/contract the service, then see §5. |
 | "Support team" wording | One person answers support. | Headcount > 1. |
 
+## 11. About and selling explainer pages (03/07/2026 sweep)
+
+Follow-up to the first "Known remaining issues" item below (now closed). Files: `apps/web/src/app/about/how-it-works/page.mdx`, `apps/web/src/app/about/buying/page.mdx`, `apps/web/src/app/about/selling/page.mdx`, `apps/web/src/app/selling/how-to-sell-on-bushpop-the-complete-guide/page.mdx`.
+
+| Original copy | Where | Why removed or rewritten | Reinstate when |
+|---|---|---|---|
+| "condition and the seller's ratings" (buyer step); "Seller ratings build over time so the community can buy with confidence" | how-it-works | Rating system does not exist (see §2). Now future tense: "Seller reviews are coming with the marketplace launch." | Review system live with real data, per §2. |
+| "check the photos, measurements and the seller's ratings"; "**Check the seller's ratings** and read recent reviews" (buyer tip) | buying | Same as §2. Ratings tip replaced with a read-the-listing-closely tip. | Same as §2. |
+| "Positive ratings build over time and make every future listing easier to sell" | complete selling guide | Same as §2. Rewritten to the future-tense form. | Same as §2. |
+| "Bushpop releases the payment"; "your payment is protected while the order is completed"; "Payments are held securely until an order is completed... funds are there before they post"; "**Get paid** once the buyer receives the item" | how-it-works | Escrow hold/release flow does not exist (§7). Replaced with Buyer Protection whitelist framing and keep-your-full-asking-price wording. | Stripe (or equivalent) hold/release payout flow is live; wording must match the real flow (§7). |
+| "Your payment is held safely until your order is completed" | buying | Same as §7. | Same as §7. |
+| "their payment is held securely"; "Funds are released to you once the buyer receives the item" | about/selling | Same as §7. | Same as §7. |
+| "payment is held securely by Bushpop... funds are **released to your connected payment method**"; "payouts can be released after a sale" | complete selling guide | Same as §7. Replaced with free-to-sell whitelist claims plus "Exact payout mechanics will be confirmed when the marketplace launches." | Same as §7. |
+| "Bushpop accepts major cards and common online payment methods" | buying | No checkout exists; methods unconfirmed (§6). Now future tense: "Checkout will take major cards when the marketplace launches, with the exact payment options confirmed then." | Checkout live; list only the methods actually enabled (§6). |
+| "Browse **thousands** of preloved pieces"; "Browse thousands of pre-loved items" (meta description) | how-it-works, buying | Invented volume; nothing is listed on v2 (§1). Now count-free wording. | Live listings exist; any count computed from the listings table (§1). |
+| "Sellers post items directly to you, usually within a couple of business days" | buying | Behavioural dispatch claim with no data (§1). Now stated as the ask: "are asked to post within two business days". | Real dispatch data over a trailing window (§1). |
+| "our support team" (three instances) | how-it-works, buying, complete selling guide | "team" wording parked until headcount > 1 (§5). Now whitelist form: human support, based in Australia. | Headcount > 1 (§5). |
+| "Found a seller you like? Follow them to see their new listings first"; "keeps your shop visible to followers" | buying, complete selling guide | Follow feature unverified/unbuilt. Dropped or reworded to "visible to buyers". | Follow feature ships. |
+| "you can always consider offers" | complete selling guide | Offers feature unverified/unbuilt. Now "you can always reduce the price later". | Offers feature ships. |
+| "Search Bushpop and other marketplaces for what comparable items actually sold for" | complete selling guide | No browsable sold history on Bushpop pre-launch. Now "Search other marketplaces". | Live marketplace with sold-listing data worth citing. |
+| "Buy securely through Bushpop" / "buy securely" / "We handle secure payments" / "covers secure payment" (two instances) | all four | Same class as the removed "Secure checkout" badge (§5); no checkout exists. Reworded to Buyer Protection whitelist framing / "payment processing". | Checkout live on a real payment rail (§5). |
+
+Also recorded:
+
+- Each of the four pages gained one launch-framing sentence ("The new marketplace is launching soon; here is how ... will work" style, consistent with the `/shop` coming-soon page). **Remove these at L2 launch** and restore plain present tense.
+- Em dashes cleared from all rendered copy in these four files: body prose, `title:` metadata ("—" → "|", per the §9 homepage precedent), the complete-guide H1 and ArticleJsonLd headline ("—" → ":"), and the Size Charts link text. Verified nothing anchor-links into these pages, so the H1 slug change is safe.
+- Kept as approved: the 7% Buyer Protection fee (matches live homepage copy), "Buyer Protection on every order" framing, free to sell / no seller commission / keep your full asking price, ship direct, "marketplaces that charge sellers around 10% or more" (true of eBay/Depop-class competitors), and "takes minutes to start" (§7's sanctioned no-number form of the speed claim).
+
 ## Known remaining issues (outside the homepage fix)
 
-- `about/how-it-works`, `about/buying` and the selling guide MDX pages describe seller ratings/reviews as a current feature. Rewrite to future tense or fix at L2 when the feature ships.
-- Em dashes remain throughout the MDX guides and `brands.ts` AIO copy. Site-wide sweep is a separate, careful job (AIO answer blocks are load-bearing for SEO).
+- ~~`about/how-it-works`, `about/buying` and the selling guide MDX pages describe seller ratings/reviews as a current feature.~~ CLOSED 03/07/2026 — see §11.
+- Em dashes remain throughout the MDX guides and `brands.ts` AIO copy. Site-wide sweep is a separate, careful job (AIO answer blocks are load-bearing for SEO). The four §11 pages are now clean.
