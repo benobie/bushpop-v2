@@ -2,6 +2,7 @@
 // "coming-soon" framing: demo products are illustrative and every marketplace
 // action routes to the "Launching soon" storefront (see @/lib/links). Only the
 // Fresh-drops filter, product hearts and waitlist form hydrate as client islands.
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -21,6 +22,13 @@ import { WaitlistForm } from "@/components/waitlist-form";
 import { MobileBottomBar } from "@/components/mobile-bottom-bar";
 import { BRANDS, RECENTLY_VIEWED, STYLES } from "@/lib/demo-products";
 import { COMING_SOON, SELL_SOON } from "@/lib/links";
+
+// Title/description come from the root layout defaults; the homepage only
+// needs the canonical, which pageMeta() would otherwise override with a
+// templated title.
+export const metadata: Metadata = {
+  alternates: { canonical: "https://bushpop.com.au/" },
+};
 
 const MARQUEE_POOL = [
   "/demo/tnf-puffer.jpg", "/demo/puffer-model.jpg", "/demo/salomon.jpg", "/demo/gazelle.jpg",
