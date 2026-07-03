@@ -11,9 +11,12 @@ import type {
   ShippingPatch,
   WizardMeta,
 } from "./types";
+import {
+  SELL_DRAFT_LOCAL_STORAGE_KEY_PREFIX,
+  SELL_DRAFT_STEP_FIELDS,
+} from "./resume";
 
 const DEBOUNCE_MS = 800;
-const LOCAL_STORAGE_KEY_PREFIX = "bushpop_sell_draft:";
 const STEP_ORDER = ["details", "condition", "price", "shipping"] as const;
 
 type SyncStep = (typeof STEP_ORDER)[number];
@@ -59,23 +62,6 @@ type ApiResult = {
   data?: SellDraft;
   error?: unknown;
   response?: Response;
-};
-
-const STEP_FIELDS = {
-  details: [
-    "title",
-    "brand",
-    "categoryId",
-    "size",
-    "sizeScale",
-    "colour",
-    "description",
-  ],
-  condition: ["condition", "conditionNotes", "measurements"],
-  price: ["askingPriceCents", "rrpCents"],
-  shipping: ["shippingOption", "parcelSize"],
-} as const satisfies {
-  [K in SyncStep]: readonly (keyof StepPatchInputMap[K])[];
 };
 
 const INITIAL_AI_META: AiMeta = { status: "idle" };
@@ -173,7 +159,7 @@ function clonePatch<T extends object>(patch: T): T {
 }
 
 function getEditableFields(step: SyncStep): readonly EditableDraftField[] {
-  return STEP_FIELDS[step] as readonly EditableDraftField[];
+  return SELL_DRAFT_STEP_FIELDS[step] as readonly EditableDraftField[];
 }
 
 function hasPatchValues(patch: object): boolean {
@@ -609,7 +595,7 @@ function buildDirtyPatchForStep<K extends SyncStep>(
 ): Partial<StepPatchInputMap[K]> {
   const dirtyPatch: Partial<StepPatchInputMap[K]> = {};
 
-  for (const field of STEP_FIELDS[step]) {
+  for (const field of SELL_DRAFT_STEP_FIELDS[step]) {
     const oursValue = ours[field as keyof SellDraft];
     const baseValue = base[field as keyof SellDraft];
 
@@ -696,7 +682,7 @@ function persistSnapshot(draft: SellDraft, wizardMeta: WizardMeta): void {
 
   try {
     localStorage.setItem(
-      `${LOCAL_STORAGE_KEY_PREFIX}${draft.id}`,
+      `${SELL_DRAFT_LOCAL_STORAGE_KEY_PREFIX}${draft.id}`,
       JSON.stringify({ draft, wizardMeta }),
     );
   } catch {
