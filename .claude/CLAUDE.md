@@ -69,6 +69,8 @@ Staging URL: `bushpop-v2.pages.dev`
 
 Production wiring (`bushpop.com.au` → Pages) is NOT this step — it's the cutover in MASTER-PLAN Phase 2. Pushing `main` deploys to **staging only**; production stays WordPress until the DNS cut (~9 Jul).
 
+**Engine staging LIVE 03/07** — `market.bushpop.xyz` (web) + `api.bushpop.xyz` (api) via Coolify app `bushpop-engine` (uuid `w1be995ronuhl7092d4jr392`, deploy-key source, tracks `main`, base dir `/infra`, compose `/docker-compose.engine.prod.yml`). Deploys are API-triggered (`POST /api/v1/deploy?uuid=…`), NOT push-triggered. `/health/ready` all green (real Stripe test key; R2 bucket is **`bushpop-images`** + its r2.dev public URL — NOT `bushpop-media`); 6 fixtures seeded + Meili-indexed. Three gotchas fixed en route (PRs #41–#43): healthchecks must probe `127.0.0.1` not `localhost` (busybox wget resolves `::1`, meili binds IPv4-only); `validateEnv` treats `""` as unset (compose `${VAR:-}` injects empty strings); **Coolify resets any env whose compose default is non-empty to that default on EVERY deploy** — compose defaults must BE the real staging values, and Coolify-only overrides (e.g. `ADMIN_EMAIL`) will not stick. Seeding is manual (`docker exec <api> pnpm --filter @bushpop/db db:seed{,:categories}`) and does NOT index into Meili (search-sync is event-driven) — backfill by script if reseeding. Outstanding: `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` unset (checkout dead until Ben supplies `pk_test_` + rebuild), Stripe webhook secret is a placeholder (Phase 5), Resend domain unverified.
+
 ## Content authoring
 
 Ben writes prose → Claude commits MDX → auto-deploy via CF Pages.
