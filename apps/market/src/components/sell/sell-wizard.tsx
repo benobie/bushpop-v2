@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import type { paths } from "@bushpop/api-client";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
+import { useSellDraftStore } from "@/lib/sell/store";
 
 const STEPS = ["photos", "details", "condition", "price", "shipping", "review"] as const;
 type Step = (typeof STEPS)[number];
@@ -40,10 +41,10 @@ function buildStepUrl(step: Step): string {
 }
 
 export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
-  const [resumeDraft] = useState(existingDraft);
-  const [draftId, setDraftId] = useState<string | null>(initialDraftId ?? resumeDraft?.id ?? null);
+  const draftId = useSellDraftStore((state) => state.draft?.id ?? null);
+  const hydrate = useSellDraftStore((state) => state.hydrate);
   const [currentStep, setCurrentStep] = useState<Step>(STEPS[0]);
-  const hasCreatedDraftRef = useRef(false);
+  const hasInitialisedDraftRef = useRef(false);
   const hasSyncedUrlRef = useRef(false);
 
   useEffect(() => {
@@ -81,52 +82,75 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
   }, [currentStep]);
 
   useEffect(() => {
-    if (draftId || hasCreatedDraftRef.current) {
+    if (draftId || hasInitialisedDraftRef.current) {
       return;
     }
 
-    hasCreatedDraftRef.current = true;
+    hasInitialisedDraftRef.current = true;
 
     let cancelled = false;
     const api = createBrowserApiClient();
 
     void (async () => {
-      const { data } = await api.POST("/api/v1/seller/drafts");
+      if (initialDraftId) {
+        const { data } = await api.GET("/api/v1/seller/drafts/{id}", {
+          params: { path: { id: initialDraftId } },
+        });
 
-      if (!cancelled && data) {
-        setDraftId(data.id);
+        if (!cancelled && data) {
+          hydrate(data, {
+            startedAt: Date.now(),
+            resumed: false,
+          });
+          return;
+        }
+
+        hasInitialisedDraftRef.current = false;
         return;
       }
 
-      hasCreatedDraftRef.current = false;
+      const { data } = await api.POST("/api/v1/seller/drafts");
+
+      if (!cancelled && data) {
+        hydrate(data, {
+          startedAt: Date.now(),
+          resumed: false,
+        });
+        return;
+      }
+
+      hasInitialisedDraftRef.current = false;
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [draftId]);
+  }, [draftId, hydrate, initialDraftId]);
 
   const currentIndex = STEPS.indexOf(currentStep);
   const isFirstStep = currentIndex === 0;
   const isLastStep = currentIndex === STEPS.length - 1;
 
-  const goToStep = (step: Step) => {
+  const goToStep = async (step: Step) => {
+    await useSellDraftStore.getState().flush();
     setCurrentStep(step);
   };
 
-  const goToPreviousStep = () => {
+  const goToPreviousStep = async () => {
     if (isFirstStep) {
       return;
     }
 
+    await useSellDraftStore.getState().flush();
     setCurrentStep(STEPS[currentIndex - 1]);
   };
 
-  const goToNextStep = () => {
+  const goToNextStep = async () => {
     if (isLastStep) {
       return;
     }
 
+    await useSellDraftStore.getState().flush();
     setCurrentStep(STEPS[currentIndex + 1]);
   };
 
