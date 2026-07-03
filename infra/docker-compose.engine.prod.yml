@@ -102,6 +102,9 @@ services:
       R2_BUCKET_NAME: ${R2_BUCKET_NAME:-bushpop-media}
       R2_PUBLIC_URL: ${R2_PUBLIC_URL:-https://media.bushpop.com.au}
       # --- optional / graceful fallback ---
+      # GEMINI is the ai-draft worker's primary model; ANTHROPIC the escalation.
+      # Worker stays off unless at least one is set.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
