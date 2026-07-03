@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState } from "react";
+import type { JSX } from "react";
 import type { paths } from "@bushpop/api-client";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
 import { useSellDraftStore } from "@/lib/sell/store";
@@ -10,6 +11,11 @@ import {
   removeStoredSellDraftSnapshot,
   resolveResumeStep,
 } from "@/lib/sell/resume";
+import { PhotosStep } from "./photos-step";
+import { DetailsStep } from "./details-step";
+import { ConditionStep } from "./condition-step";
+import { PriceStep } from "./price-step";
+import { ShippingStep } from "./shipping-step";
 
 const STEPS = ["photos", "details", "condition", "price", "shipping", "review"] as const;
 type Step = (typeof STEPS)[number];
@@ -22,6 +28,15 @@ const STEP_LABELS: Record<Step, string> = {
   price: "Price",
   shipping: "Shipping",
   review: "Review",
+};
+
+const STEP_PANELS: Record<Step, (() => JSX.Element) | null> = {
+  photos: PhotosStep,
+  details: DetailsStep,
+  condition: ConditionStep,
+  price: PriceStep,
+  shipping: ShippingStep,
+  review: null,
 };
 
 export type DraftSummary =
@@ -359,15 +374,25 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
                   <i style={{ width: `${(currentIndex / (STEPS.length - 1)) * 100}%` }} />
                 </div>
 
-                {STEPS.map((step) => (
-                  <div
-                    key={step}
-                    className={["panel", step === currentStep ? "on" : ""].filter(Boolean).join(" ")}
-                  >
-                    <h2>{STEP_LABELS[step]}</h2>
-                    <p className="hint">Step content coming in a later task.</p>
-                  </div>
-                ))}
+                {STEPS.map((step) => {
+                  const PanelComponent = STEP_PANELS[step];
+
+                  return (
+                    <div
+                      key={step}
+                      className={["panel", step === currentStep ? "on" : ""].filter(Boolean).join(" ")}
+                    >
+                      {PanelComponent ? (
+                        <PanelComponent />
+                      ) : (
+                        <>
+                          <h2>{STEP_LABELS[step]}</h2>
+                          <p className="hint">Step content coming in a later task.</p>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
 
                 <div className="wnav">
                   <button
