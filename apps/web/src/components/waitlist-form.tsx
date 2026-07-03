@@ -1,17 +1,28 @@
 "use client";
 
-// Waitlist / drop-alert capture. Client island: validates the email and shows a
-// success state. POSTs to NEXT_PUBLIC_WAITLIST_ENDPOINT when configured; until a
-// real capture endpoint is wired (Cloudflare Pages Function or form service) it
-// resolves optimistically so the UX is complete. See plan "Follow-ups".
+// Waitlist / drop-alert capture. Client island: validates the email, POSTs to the
+// same-origin Pages Function (/api/waitlist → n8n → bushpop.waitlist; see
+// docs/waitlist.md) and only shows success on a 2xx — no optimistic fake success.
+// `segment` pre-segments the list per the F10 contract (buyer | seller | opshop).
+// The `company` input is a honeypot: visually hidden, dropped server-side if filled.
+// Note: plain `next dev` has no Pages Functions, so submits fail locally — use
+// `wrangler pages dev out` to exercise the full flow.
 import { useState } from "react";
 import { ActionButton } from "./button";
 
-const ENDPOINT = process.env.NEXT_PUBLIC_WAITLIST_ENDPOINT;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function WaitlistForm({ cta = "Get alerts" }: { cta?: string }) {
+export type WaitlistSegment = "buyer" | "seller" | "opshop";
+
+export function WaitlistForm({
+  cta = "Get alerts",
+  segment = "buyer",
+}: {
+  cta?: string;
+  segment?: WaitlistSegment;
+}) {
   const [email, setEmail] = useState("");
+  const [company, setCompany] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
 
   async function onSubmit(e: React.FormEvent) {
@@ -22,14 +33,17 @@ export function WaitlistForm({ cta = "Get alerts" }: { cta?: string }) {
     }
     setState("sending");
     try {
-      if (ENDPOINT) {
-        const res = await fetch(ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, source: "homepage-waitlist" }),
-        });
-        if (!res.ok) throw new Error("bad status");
-      }
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          segment,
+          source: window.location.pathname,
+          company,
+        }),
+      });
+      if (!res.ok) throw new Error("bad status");
       setState("done");
     } catch {
       setState("error");
@@ -63,12 +77,22 @@ export function WaitlistForm({ cta = "Get alerts" }: { cta?: string }) {
         aria-invalid={state === "error"}
         className="flex-1 rounded-full border border-line-2 bg-white px-4 py-3 text-sm text-ink outline-none focus:border-green"
       />
+      <input
+        type="text"
+        name="company"
+        value={company}
+        onChange={(e) => setCompany(e.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="hidden"
+      />
       <ActionButton type="submit" variant="green" disabled={state === "sending"}>
         {state === "sending" ? "Adding…" : cta}
       </ActionButton>
       {state === "error" && (
         <span className="text-red text-sm sm:sr-only" role="alert">
-          Enter a valid email.
+          Something went wrong — check the email and try again.
         </span>
       )}
     </form>
