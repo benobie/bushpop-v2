@@ -40,7 +40,7 @@ The engine was forked from `benobie/piklo-v2` @ `2419a38` (02/07/2026), renamed 
 - **Trailing-slash parity** with WordPress (`trailingSlash: true`). This is load-bearing for SEO.
 - **Content site stays static** — `apps/web` keeps `output: 'export'` + CF Pages; the engine (API, DB, Stripe, auth, workers) lives in `packages/*` + `apps/market` and deploys separately (Coolify). Never import engine packages from `apps/web`.
 - **No `[channel]` routing** — Bushpop is single-tenant. Flat routes in both apps. The engine keeps channel *tables* (one seeded `bushpop` row) but no channel URL segments or hostname rewrites.
-- **CI split** — `deploy.yml` = content site only (its typecheck is `--filter @bushpop/web`); `engine-ci.yml` = path-filtered engine gates (build/lint/typecheck/integration tests/webpack build/cache audit/security). An engine failure must never block a content deploy.
+- **CI split** — `deploy.yml` = content site only (install, typecheck AND build are all `--filter @bushpop/web...` since PR #30 — engine packages are never installed in the content pipeline); `engine-ci.yml` = path-filtered engine gates (build/lint/typecheck/integration tests/webpack build/cache audit/security). An engine failure must never block a content deploy. Engine container builds: `R2_PUBLIC_URL` must be passed as a Docker build arg to `apps/market` (wired in the prod compose; PR #30) or listing images break.
 
 ## Next.js 16 gotchas (from piklo-v2 AGENTS.md)
 
