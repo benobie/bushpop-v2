@@ -3,7 +3,6 @@
 // there are no real product pages until Launch 2.
 import Image from "next/image";
 import Link from "next/link";
-import { Star } from "lucide-react";
 import type { DemoProduct } from "@/lib/demo-products";
 import { priceParts } from "@/lib/demo-products";
 import { COMING_SOON } from "@/lib/links";
@@ -50,13 +49,8 @@ export function ProductCard({
       <div className="psize">
         {product.size} • {product.condition} • {product.brand}
       </div>
-      {product.rating && (
-        <div className="prate">
-          <Star size={12} fill="currentColor" strokeWidth={0} />
-          {product.rating.toFixed(1)}
-          {product.savedBy ? ` · ${product.savedBy} saved` : ""}
-        </div>
-      )}
+      {/* Trust-claims gate (02/07/2026): no star ratings or saved-by counts on
+          cards until a real review system with real data exists. */}
     </Link>
   );
 }
