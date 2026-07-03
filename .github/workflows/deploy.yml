@@ -104,3 +104,28 @@ jobs:
           # the Function was silently never deployed before this).
           workingDirectory: apps/web
           command: pages deploy out --project-name bushpop-v2 --commit-dirty=true
+
+      - name: Wait for deploy
+        # Cloudflare Pages deploys are async — the wrangler step above returns
+        # as soon as the deployment is queued, not once it's actually live.
+        # Poll the staging URL until it answers 200 before running smoke
+        # tests against it, so we don't false-fail on a not-yet-propagated
+        # deploy.
+        run: |
+          for i in $(seq 1 15); do
+            status=$(curl -s -o /dev/null -w "%{http_code}" https://bushpop-v2.pages.dev/ || echo "000")
+            if [ "$status" = "200" ]; then
+              echo "Deploy is live (attempt $i, status $status)"
+              exit 0
+            fi
+            echo "Attempt $i: status $status, retrying in 2s..."
+            sleep 2
+          done
+          echo "Deploy did not become live after 15 attempts"
+          exit 1
+
+      - name: Redirect smoke test
+        run: node apps/web/scripts/check-redirects.mjs --base https://bushpop-v2.pages.dev --fixture apps/web/scripts/fixtures/redirect-fixture.csv
+
+      - name: Post-deploy hygiene
+        run: node apps/web/scripts/post-deploy-check.mjs --base https://bushpop-v2.pages.dev

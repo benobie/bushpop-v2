@@ -1,0 +1,28 @@
+name: Redirect health check
+
+# Scheduled smoke test that the redirect fixture still passes against the
+# live site. Runs independently of deploys so it also catches drift caused
+# by anything outside this repo (Cloudflare Pages project config changes,
+# DNS/proxy changes, etc).
+on:
+  schedule:
+    - cron: "0 22 * * *"
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: Redirect fixture smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Run redirect fixture check
+        # TODO cutover: flip --base to https://bushpop.com.au after DNS cut
+        # (runbook flips this at T+24h post-cutover).
+        run: node apps/web/scripts/check-redirects.mjs --base https://bushpop-v2.pages.dev --fixture apps/web/scripts/fixtures/redirect-fixture.csv
