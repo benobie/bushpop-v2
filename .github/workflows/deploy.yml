@@ -33,7 +33,11 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        # Filtered to the content site only: engine packages (packages/*,
+        # apps/market) must never be installed here, so an engine dep change
+        # can't break or bloat the content deploy. @bushpop/web has zero
+        # workspace deps, so this installs just the web app.
+        run: pnpm install --frozen-lockfile --filter @bushpop/web...
 
       - name: Typecheck
         # Content-site scope only: an engine (packages/*, apps/market) type
@@ -76,7 +80,8 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        # Same content-site-only filter as the build job (engine exclusion).
+        run: pnpm install --frozen-lockfile --filter @bushpop/web...
 
       - name: Build (static export)
         run: pnpm --filter @bushpop/web build

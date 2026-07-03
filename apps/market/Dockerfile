@@ -35,6 +35,12 @@ ENV NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY
 # mount (no error thrown). Ben sets the pk_test_ value in Coolify. See INF-C1.
 ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=""
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+# R2 public media URL — next.config.ts derives images.remotePatterns' hostname
+# from this at BUILD time. Without it the image bakes in the fallback hostname
+# and next/image rejects every listing image served from the real R2 domain.
+# Coolify forwards the real value as a build arg (compose web.build.args).
+ARG R2_PUBLIC_URL=""
+ENV R2_PUBLIC_URL=$R2_PUBLIC_URL
 
 RUN pnpm --filter @bushpop/market build
 

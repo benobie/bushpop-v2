@@ -4,7 +4,7 @@ import path from "node:path";
 const API_URL = process.env.API_BASE_URL ?? process.env.API_URL ?? "http://localhost:3333";
 const MEDIA_HOSTNAME = process.env.R2_PUBLIC_URL
   ? new URL(process.env.R2_PUBLIC_URL).hostname
-  : "media.piklo.com.au";
+  : "media.bushpop.com.au";
 
 const nextConfig: NextConfig = {
   // Sprint 0.5c (FM-R2-1 + GPT-Council R1): enable Next.js 16 Cache Components.
