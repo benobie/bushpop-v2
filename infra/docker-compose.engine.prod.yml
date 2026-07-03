@@ -99,8 +99,11 @@ services:
       R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
       R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
       R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
-      R2_BUCKET_NAME: ${R2_BUCKET_NAME:-bushpop-media}
-      R2_PUBLIC_URL: ${R2_PUBLIC_URL:-https://media.bushpop.com.au}
+      # Coolify re-syncs env rows from this file on EVERY deploy: a non-empty
+      # `:-default` here CLOBBERS any Coolify-stored value, so defaults must BE
+      # the real staging values. Swap both to media.bushpop.com.au at cutover.
+      R2_BUCKET_NAME: ${R2_BUCKET_NAME:-bushpop-images}
+      R2_PUBLIC_URL: ${R2_PUBLIC_URL:-https://pub-3c7f819593c94086b71e9663605d4c11.r2.dev}
       # --- optional / graceful fallback ---
       # GEMINI is the ai-draft worker's primary model; ANTHROPIC the escalation.
       # Worker stays off unless at least one is set.
@@ -144,7 +147,7 @@ services:
         # BUILD-TIME bake: next.config.ts derives images.remotePatterns from
         # this URL's hostname. Default mirrors the api service's R2_PUBLIC_URL
         # default below so web + api can never disagree on the media host.
-        R2_PUBLIC_URL: ${R2_PUBLIC_URL:-https://media.bushpop.com.au}
+        R2_PUBLIC_URL: ${R2_PUBLIC_URL:-https://pub-3c7f819593c94086b71e9663605d4c11.r2.dev}
     restart: unless-stopped
     depends_on:
       api:
