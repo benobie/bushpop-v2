@@ -65,6 +65,8 @@ The deploy job only runs on `push` (`if: github.event_name == 'push'`) — **PRs
 CF Pages project: `bushpop-v2`
 Staging URL: `bushpop-v2.pages.dev`
 
+**Post-deploy verification (PR #36, 03/07):** the deploy job runs `apps/web/scripts/check-redirects.mjs` (59-row public-safe fixture) + `apps/web/scripts/post-deploy-check.mjs` (noindex polarity, security headers, sitemap/robots) against staging after every wrangler deploy; `.github/workflows/redirect-health.yml` repeats the fixture check daily. At cutover, flip `--base` in both to `https://bushpop.com.au` (marked `# TODO cutover`). Method doc: `apps/web/docs/redirect-verification.md`. The full 1,927-URL inventory, launch runbook, and monitoring plan are deliberately OUTSIDE this public repo (`~/projects/Bushpop/audit/` + `~/projects/Bushpop/docs/cutover/`); full inventory machine-verified 1,927/1,927 vs staging on 03/07. Gotcha: the 410 Pages Function only implements GET — HEAD returns 404; both scripts GET-fallback.
+
 Production wiring (`bushpop.com.au` → Pages) is NOT this step — it's the cutover in MASTER-PLAN Phase 2. Pushing `main` deploys to **staging only**; production stays WordPress until the DNS cut (~9 Jul).
 
 ## Content authoring
