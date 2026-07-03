@@ -115,7 +115,7 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
           {listings.map((listing) => (
             <Link
               key={listing.id}
-              href={`/sell/${listing.inventoryItemId}/review`}
+              href={`/sell?draft=${listing.inventoryItemId}`}
               className="group overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="relative aspect-square bg-brand-100">
