@@ -107,6 +107,8 @@ Authoritative source: `packages/config/src/env.ts`. Set all values in the **Cool
 
 `RESEND_API_KEY` is **optional** (mock sender fallback) — earlier docs claiming it hard-fails boot are wrong.
 
+**Empty string = unset** for every env var (PR #42): `validateEnv` strips `""` values before parsing, because compose `${VAR:-}` defaults inject empty strings that would otherwise fail zod `min(1)`/`url` checks on optional keys. Required keys still fail — as `Required`. Corollary: never rely on `""` being observable in `process.env`-driven engine code.
+
 #### Stripe webhook secret bootstrap (chicken-and-egg)
 
 `env.ts` declares `STRIPE_WEBHOOK_SECRET: z.string().min(1)` — hard-required at boot. But the real `whsec_…` value only exists **after** you register a webhook endpoint, which needs the API already live. Break the deadlock with a two-deploy bootstrap:
