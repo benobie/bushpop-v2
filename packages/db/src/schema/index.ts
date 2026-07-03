@@ -12,3 +12,4 @@ export * from "./wishlists";
 export * from "./saved-searches";
 export * from "./listing-reports";
 export * from "./listing-scores";
+export * from "./ai-generations";

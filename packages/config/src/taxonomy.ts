@@ -29,6 +29,33 @@ export const GARMENT_TYPE_LABELS: Record<GarmentType, string> = {
   other: "Other",
 };
 
+/**
+ * Leaf categories per garment type — the single source for the category
+ * seed (packages/db/src/seeds/categories.ts), the AI draft prompt's
+ * category tree, and resolve-time validation. Garment types absent here
+ * (swimwear, activewear, other) have no leaves and act as leaves themselves.
+ */
+export const CATEGORY_LEAVES: Partial<Record<GarmentType, readonly string[]>> = {
+  tops: ["t-shirts", "shirts", "blouses", "knitwear", "tank-tops"],
+  bottoms: ["jeans", "trousers", "skirts", "shorts"],
+  dresses: ["mini-dresses", "midi-dresses", "maxi-dresses"],
+  outerwear: ["jackets", "coats", "blazers", "vests"],
+  footwear: ["sneakers", "boots", "heels", "sandals", "flats"],
+  bags: ["tote-bags", "crossbody", "clutches", "backpacks"],
+  accessories: ["jewellery", "belts", "scarves", "hats", "sunglasses"],
+};
+
+/** Every valid leaf slug (incl. leafless garment types, which self-qualify). */
+export function allCategoryLeafSlugs(): string[] {
+  const slugs: string[] = [];
+  for (const garmentType of GARMENT_TYPES) {
+    const leaves = CATEGORY_LEAVES[garmentType];
+    if (leaves && leaves.length > 0) slugs.push(...leaves);
+    else slugs.push(garmentType);
+  }
+  return slugs;
+}
+
 export const SIZES_CLOTHING = [
   "XS",
   "S",

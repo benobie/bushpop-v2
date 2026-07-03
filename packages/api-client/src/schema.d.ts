@@ -461,6 +461,7 @@ export interface paths {
                             };
                             roles: string[];
                             channel: {
+                                id: string;
                                 slug: string;
                                 name: string;
                             };
@@ -1434,6 +1435,1128 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/seller/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the seller's open drafts, newest first */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            drafts: {
+                                id: string;
+                                version: number;
+                                title: string | null;
+                                /** Format: date-time */
+                                updatedAt: string;
+                                readyImageCount: number;
+                                strengthScore: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create an empty sell-flow draft */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            version: number;
+                            lifecycleState: string;
+                            title: string | null;
+                            brand: string | null;
+                            categoryId: string | null;
+                            category: {
+                                id: string;
+                                slug: string;
+                                name: string;
+                                parentId: string | null;
+                                parentSlug: string | null;
+                            } | null;
+                            size: string | null;
+                            sizeScale: string | null;
+                            colour: string | null;
+                            description: string | null;
+                            condition: string | null;
+                            conditionNotes: string | null;
+                            measurements: {
+                                [key: string]: number;
+                            } | null;
+                            measurementTemplate: {
+                                key: string;
+                                keys: string[];
+                                sizeExempt: boolean;
+                            };
+                            askingPriceCents: number | null;
+                            rrpCents: number | null;
+                            shippingOption: string | null;
+                            parcelSize: string | null;
+                            shippingClass: string | null;
+                            images: {
+                                id: string;
+                                url: string;
+                                contentType: string | null;
+                                sizeBytes: number | null;
+                                status: string;
+                                position: number;
+                                isPrimary: boolean;
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                thumbUrl: string;
+                            }[];
+                            strength: {
+                                score: number;
+                                band: string;
+                                breakdown: {
+                                    [key: string]: number;
+                                };
+                                missing: {
+                                    key: string;
+                                    label: string;
+                                    step: number;
+                                    points: number;
+                                }[];
+                                version: string;
+                            };
+                            aiTitle: string | null;
+                            aiDescription: string | null;
+                            aiSuggestedBrand: string | null;
+                            aiSuggestedCategory: string | null;
+                            aiSuggestedColour: string | null;
+                            aiConfidence: number | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a draft with images, measurement template and strength */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            version: number;
+                            lifecycleState: string;
+                            title: string | null;
+                            brand: string | null;
+                            categoryId: string | null;
+                            category: {
+                                id: string;
+                                slug: string;
+                                name: string;
+                                parentId: string | null;
+                                parentSlug: string | null;
+                            } | null;
+                            size: string | null;
+                            sizeScale: string | null;
+                            colour: string | null;
+                            description: string | null;
+                            condition: string | null;
+                            conditionNotes: string | null;
+                            measurements: {
+                                [key: string]: number;
+                            } | null;
+                            measurementTemplate: {
+                                key: string;
+                                keys: string[];
+                                sizeExempt: boolean;
+                            };
+                            askingPriceCents: number | null;
+                            rrpCents: number | null;
+                            shippingOption: string | null;
+                            parcelSize: string | null;
+                            shippingClass: string | null;
+                            images: {
+                                id: string;
+                                url: string;
+                                contentType: string | null;
+                                sizeBytes: number | null;
+                                status: string;
+                                position: number;
+                                isPrimary: boolean;
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                thumbUrl: string;
+                            }[];
+                            strength: {
+                                score: number;
+                                band: string;
+                                breakdown: {
+                                    [key: string]: number;
+                                };
+                                missing: {
+                                    key: string;
+                                    label: string;
+                                    step: number;
+                                    points: number;
+                                }[];
+                                version: string;
+                            };
+                            aiTitle: string | null;
+                            aiDescription: string | null;
+                            aiSuggestedBrand: string | null;
+                            aiSuggestedCategory: string | null;
+                            aiSuggestedColour: string | null;
+                            aiConfidence: number | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update details-step fields (title/brand/category/size/colour/description) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        version: number;
+                        title?: string | null;
+                        brand?: string | null;
+                        categoryId?: string | null;
+                        size?: string | null;
+                        /** @enum {string|null} */
+                        sizeScale?: "alpha" | "au" | "shoe" | null;
+                        colour?: string | null;
+                        description?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            version: number;
+                            lifecycleState: string;
+                            title: string | null;
+                            brand: string | null;
+                            categoryId: string | null;
+                            category: {
+                                id: string;
+                                slug: string;
+                                name: string;
+                                parentId: string | null;
+                                parentSlug: string | null;
+                            } | null;
+                            size: string | null;
+                            sizeScale: string | null;
+                            colour: string | null;
+                            description: string | null;
+                            condition: string | null;
+                            conditionNotes: string | null;
+                            measurements: {
+                                [key: string]: number;
+                            } | null;
+                            measurementTemplate: {
+                                key: string;
+                                keys: string[];
+                                sizeExempt: boolean;
+                            };
+                            askingPriceCents: number | null;
+                            rrpCents: number | null;
+                            shippingOption: string | null;
+                            parcelSize: string | null;
+                            shippingClass: string | null;
+                            images: {
+                                id: string;
+                                url: string;
+                                contentType: string | null;
+                                sizeBytes: number | null;
+                                status: string;
+                                position: number;
+                                isPrimary: boolean;
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                thumbUrl: string;
+                            }[];
+                            strength: {
+                                score: number;
+                                band: string;
+                                breakdown: {
+                                    [key: string]: number;
+                                };
+                                missing: {
+                                    key: string;
+                                    label: string;
+                                    step: number;
+                                    points: number;
+                                }[];
+                                version: string;
+                            };
+                            aiTitle: string | null;
+                            aiDescription: string | null;
+                            aiSuggestedBrand: string | null;
+                            aiSuggestedCategory: string | null;
+                            aiSuggestedColour: string | null;
+                            aiConfidence: number | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}/condition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update condition-step fields (condition/notes/measurements) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        version: number;
+                        /** @enum {string|null} */
+                        condition?: "new_with_tags" | "like_new" | "good" | "fair" | "poor" | null;
+                        conditionNotes?: string | null;
+                        measurements?: {
+                            chest: number;
+                            waist: number;
+                            hip: number;
+                            length: number;
+                            inseam: number;
+                            rise: number;
+                            shoulder: number;
+                            sleeve: number;
+                            leg_opening: number;
+                            insole: number;
+                            width: number;
+                            height: number;
+                            strap_drop: number;
+                            depth: number;
+                        } | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            version: number;
+                            lifecycleState: string;
+                            title: string | null;
+                            brand: string | null;
+                            categoryId: string | null;
+                            category: {
+                                id: string;
+                                slug: string;
+                                name: string;
+                                parentId: string | null;
+                                parentSlug: string | null;
+                            } | null;
+                            size: string | null;
+                            sizeScale: string | null;
+                            colour: string | null;
+                            description: string | null;
+                            condition: string | null;
+                            conditionNotes: string | null;
+                            measurements: {
+                                [key: string]: number;
+                            } | null;
+                            measurementTemplate: {
+                                key: string;
+                                keys: string[];
+                                sizeExempt: boolean;
+                            };
+                            askingPriceCents: number | null;
+                            rrpCents: number | null;
+                            shippingOption: string | null;
+                            parcelSize: string | null;
+                            shippingClass: string | null;
+                            images: {
+                                id: string;
+                                url: string;
+                                contentType: string | null;
+                                sizeBytes: number | null;
+                                status: string;
+                                position: number;
+                                isPrimary: boolean;
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                thumbUrl: string;
+                            }[];
+                            strength: {
+                                score: number;
+                                band: string;
+                                breakdown: {
+                                    [key: string]: number;
+                                };
+                                missing: {
+                                    key: string;
+                                    label: string;
+                                    step: number;
+                                    points: number;
+                                }[];
+                                version: string;
+                            };
+                            aiTitle: string | null;
+                            aiDescription: string | null;
+                            aiSuggestedBrand: string | null;
+                            aiSuggestedCategory: string | null;
+                            aiSuggestedColour: string | null;
+                            aiConfidence: number | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}/price": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update price-step fields (asking price / RRP) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        version: number;
+                        askingPriceCents?: number | null;
+                        rrpCents?: number | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            version: number;
+                            lifecycleState: string;
+                            title: string | null;
+                            brand: string | null;
+                            categoryId: string | null;
+                            category: {
+                                id: string;
+                                slug: string;
+                                name: string;
+                                parentId: string | null;
+                                parentSlug: string | null;
+                            } | null;
+                            size: string | null;
+                            sizeScale: string | null;
+                            colour: string | null;
+                            description: string | null;
+                            condition: string | null;
+                            conditionNotes: string | null;
+                            measurements: {
+                                [key: string]: number;
+                            } | null;
+                            measurementTemplate: {
+                                key: string;
+                                keys: string[];
+                                sizeExempt: boolean;
+                            };
+                            askingPriceCents: number | null;
+                            rrpCents: number | null;
+                            shippingOption: string | null;
+                            parcelSize: string | null;
+                            shippingClass: string | null;
+                            images: {
+                                id: string;
+                                url: string;
+                                contentType: string | null;
+                                sizeBytes: number | null;
+                                status: string;
+                                position: number;
+                                isPrimary: boolean;
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                thumbUrl: string;
+                            }[];
+                            strength: {
+                                score: number;
+                                band: string;
+                                breakdown: {
+                                    [key: string]: number;
+                                };
+                                missing: {
+                                    key: string;
+                                    label: string;
+                                    step: number;
+                                    points: number;
+                                }[];
+                                version: string;
+                            };
+                            aiTitle: string | null;
+                            aiDescription: string | null;
+                            aiSuggestedBrand: string | null;
+                            aiSuggestedCategory: string | null;
+                            aiSuggestedColour: string | null;
+                            aiConfidence: number | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}/shipping": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update shipping-step fields (option/parcel — derives shipping class) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        version: number;
+                        /** @enum {string|null} */
+                        shippingOption?: "prepaid" | "buyer_pays" | "free" | "pickup" | null;
+                        /** @enum {string|null} */
+                        parcelSize?: "small" | "medium" | "large" | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            version: number;
+                            lifecycleState: string;
+                            title: string | null;
+                            brand: string | null;
+                            categoryId: string | null;
+                            category: {
+                                id: string;
+                                slug: string;
+                                name: string;
+                                parentId: string | null;
+                                parentSlug: string | null;
+                            } | null;
+                            size: string | null;
+                            sizeScale: string | null;
+                            colour: string | null;
+                            description: string | null;
+                            condition: string | null;
+                            conditionNotes: string | null;
+                            measurements: {
+                                [key: string]: number;
+                            } | null;
+                            measurementTemplate: {
+                                key: string;
+                                keys: string[];
+                                sizeExempt: boolean;
+                            };
+                            askingPriceCents: number | null;
+                            rrpCents: number | null;
+                            shippingOption: string | null;
+                            parcelSize: string | null;
+                            shippingClass: string | null;
+                            images: {
+                                id: string;
+                                url: string;
+                                contentType: string | null;
+                                sizeBytes: number | null;
+                                status: string;
+                                position: number;
+                                isPrimary: boolean;
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                thumbUrl: string;
+                            }[];
+                            strength: {
+                                score: number;
+                                band: string;
+                                breakdown: {
+                                    [key: string]: number;
+                                };
+                                missing: {
+                                    key: string;
+                                    label: string;
+                                    step: number;
+                                    points: number;
+                                }[];
+                                version: string;
+                            };
+                            aiTitle: string | null;
+                            aiDescription: string | null;
+                            aiSuggestedBrand: string | null;
+                            aiSuggestedCategory: string | null;
+                            aiSuggestedColour: string | null;
+                            aiConfidence: number | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}/images/upload-url": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request a presigned upload URL for a draft photo */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        contentType: "image/jpeg" | "image/png" | "image/webp";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            uploadUrl: string;
+                            imageId: string;
+                            expiresAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}/images/{imageId}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm a draft photo upload (enqueues variant generation) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    imageId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @default 0 */
+                        position?: number;
+                        /** @default false */
+                        isPrimary?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            url: string;
+                            contentType: string | null;
+                            sizeBytes: number | null;
+                            status: string;
+                            position: number;
+                            isPrimary: boolean;
+                            /** Format: date-time */
+                            confirmedAt: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish a draft — server-side gate, 422 with missing[] when not ready */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        version: number;
+                        legalAgree: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            listingId: string;
+                            handle: string;
+                            itemId: string;
+                            strength: {
+                                score: number;
+                                band: string;
+                                breakdown: {
+                                    [key: string]: number;
+                                };
+                                version: string;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** List another like this — new draft keeping brand/category/colour/shipping */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            version: number;
+                            lifecycleState: string;
+                            title: string | null;
+                            brand: string | null;
+                            categoryId: string | null;
+                            category: {
+                                id: string;
+                                slug: string;
+                                name: string;
+                                parentId: string | null;
+                                parentSlug: string | null;
+                            } | null;
+                            size: string | null;
+                            sizeScale: string | null;
+                            colour: string | null;
+                            description: string | null;
+                            condition: string | null;
+                            conditionNotes: string | null;
+                            measurements: {
+                                [key: string]: number;
+                            } | null;
+                            measurementTemplate: {
+                                key: string;
+                                keys: string[];
+                                sizeExempt: boolean;
+                            };
+                            askingPriceCents: number | null;
+                            rrpCents: number | null;
+                            shippingOption: string | null;
+                            parcelSize: string | null;
+                            shippingClass: string | null;
+                            images: {
+                                id: string;
+                                url: string;
+                                contentType: string | null;
+                                sizeBytes: number | null;
+                                status: string;
+                                position: number;
+                                isPrimary: boolean;
+                                /** Format: date-time */
+                                confirmedAt: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                thumbUrl: string;
+                            }[];
+                            strength: {
+                                score: number;
+                                band: string;
+                                breakdown: {
+                                    [key: string]: number;
+                                };
+                                missing: {
+                                    key: string;
+                                    label: string;
+                                    step: number;
+                                    points: number;
+                                }[];
+                                version: string;
+                            };
+                            aiTitle: string | null;
+                            aiDescription: string | null;
+                            aiSuggestedBrand: string | null;
+                            aiSuggestedCategory: string | null;
+                            aiSuggestedColour: string | null;
+                            aiConfidence: number | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}/ai-draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Request an AI listing draft (202; poll the returned jobId) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        trigger: "auto" | "regenerate";
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            jobId: string;
+                            /** @enum {string} */
+                            status: "pending";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/drafts/{id}/ai-draft/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Poll an AI draft generation job */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    jobId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            jobId: string;
+                            /** @enum {string} */
+                            status: "pending" | "completed" | "failed";
+                            trigger: string;
+                            suggestions: {
+                                title: string;
+                                brand: string;
+                                categoryLeaf: string;
+                                colour: string;
+                                description: string;
+                                confidence: number;
+                            } | null;
+                            confidence: number | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            completedAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/seller/listings": {
         parameters: {
             query?: never;
@@ -1475,6 +2598,7 @@ export interface paths {
                                 status: string;
                                 /** Format: date-time */
                                 publishedAt: string | null;
+                                primaryImageUrl?: string | null;
                                 version: number;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1529,6 +2653,7 @@ export interface paths {
                             status: string;
                             /** Format: date-time */
                             publishedAt: string | null;
+                            primaryImageUrl?: string | null;
                             version: number;
                             /** Format: date-time */
                             createdAt: string;
@@ -1582,6 +2707,7 @@ export interface paths {
                             status: string;
                             /** Format: date-time */
                             publishedAt: string | null;
+                            primaryImageUrl?: string | null;
                             version: number;
                             /** Format: date-time */
                             createdAt: string;
@@ -1637,6 +2763,7 @@ export interface paths {
                             status: string;
                             /** Format: date-time */
                             publishedAt: string | null;
+                            primaryImageUrl?: string | null;
                             version: number;
                             /** Format: date-time */
                             createdAt: string;
@@ -1700,6 +2827,7 @@ export interface paths {
                             status: string;
                             /** Format: date-time */
                             publishedAt: string | null;
+                            primaryImageUrl?: string | null;
                             version: number;
                             /** Format: date-time */
                             createdAt: string;
@@ -1743,6 +2871,10 @@ export interface paths {
                             descriptionScore: number;
                             completenessScore: number;
                             categoryScore: number;
+                            breakdown: {
+                                [key: string]: number;
+                            } | null;
+                            scoreVersion: string | null;
                             /** @enum {string} */
                             qualityTier: "bronze" | "silver" | "gold";
                             nudgeKey: string | null;
@@ -1890,6 +3022,7 @@ export interface paths {
                                 url: string;
                                 position: number;
                                 isPrimary: boolean;
+                                aspectRatio: number | null;
                             }[];
                             seller: {
                                 id: string;
@@ -2368,7 +3501,6 @@ export interface paths {
                             id: string;
                             buyerId: string;
                             channelId: string;
-                            sellerId: string;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -2420,7 +3552,6 @@ export interface paths {
                             id: string;
                             buyerId: string;
                             channelId: string;
-                            sellerId: string;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -2631,6 +3762,181 @@ export interface paths {
         get?: never;
         put?: never;
         /** Cancel a checkout session (created or payment_pending only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            cancelled: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/checkout-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a multi-vendor checkout group — reserve inventory + create Stripe PaymentIntent */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        shippingAddressId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            orderGroupId: string;
+                            clientSecret: string;
+                            /** @enum {string} */
+                            chargeType: "destination" | "sct";
+                            totals: {
+                                subtotalCents: number;
+                                shippingCents: number;
+                                platformFeeCents: number;
+                                sellerProceedsCents: number;
+                                totalCents: number;
+                                currency: string;
+                            };
+                            allocations: {
+                                allocationId: string;
+                                sellerId: string;
+                                /** @enum {string} */
+                                status: "pending" | "charge_reserved" | "transfer_pending" | "transfer_retrying" | "transferred" | "transfer_blocked" | "shipped" | "delivered" | "refunded" | "cancelled";
+                                subtotalCents: number;
+                                shippingCents: number;
+                                platformFeeCents: number;
+                                sellerProceedsCents: number;
+                                totalCents: number;
+                                itemIds: string[];
+                            }[];
+                            /** Format: date-time */
+                            expiresAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/checkout-groups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a checkout group by ID (buyer only) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            orderGroupId: string;
+                            /** @enum {string} */
+                            status: "created" | "payment_pending" | "requires_action" | "confirming" | "paid_unallocated" | "allocating" | "allocated" | "partially_failed" | "expired" | "payment_declined" | "cancelled";
+                            /** @enum {string} */
+                            chargeType: "destination" | "sct";
+                            totals: {
+                                subtotalCents: number;
+                                shippingCents: number;
+                                platformFeeCents: number;
+                                sellerProceedsCents: number;
+                                totalCents: number;
+                                currency: string;
+                            };
+                            allocations: {
+                                allocationId: string;
+                                sellerId: string;
+                                /** @enum {string} */
+                                status: "pending" | "charge_reserved" | "transfer_pending" | "transfer_retrying" | "transferred" | "transfer_blocked" | "shipped" | "delivered" | "refunded" | "cancelled";
+                                subtotalCents: number;
+                                shippingCents: number;
+                                platformFeeCents: number;
+                                sellerProceedsCents: number;
+                                totalCents: number;
+                                itemIds: string[];
+                            }[];
+                            /** Format: date-time */
+                            expiresAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/checkout-groups/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel a checkout group (created or payment_pending only) */
         post: {
             parameters: {
                 query?: never;

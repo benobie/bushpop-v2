@@ -6,7 +6,7 @@ import { inventoryItems, inventoryItemImages } from "@bushpop/db/schema";
 import { categories } from "@bushpop/db/schema";
 import { getRedis } from "../lib/redis.js";
 import { getClaudeClient } from "../lib/claude.js";
-import { getR2Client, createPresignedGetUrl } from "../lib/r2.js";
+import { createPresignedGetUrl } from "../lib/r2.js";
 import { buildEnrichmentRequest, PROMPT_VERSION, ENRICHMENT_MODEL } from "../lib/enrichment-prompt.js";
 import {
   parseModelOutput,
@@ -16,8 +16,6 @@ import {
 } from "../lib/enrichment-schema.js";
 import { ENRICHMENT_QUEUE, getEnrichmentQueue } from "../lib/enrichment-queue.js";
 import { dispatchEvent } from "../lib/events.js";
-import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
-import sharp from "sharp";
 
 export interface EnrichmentJobData {
   inventoryItemId: string;
@@ -72,86 +70,9 @@ class NonRetryableError extends Error {
   }
 }
 
-// ── Thumbnail generation (C4-RETROFIT FM-R2-4 + FM-R3-2) ──
-
-interface ThumbnailResult {
-  aspectRatio: number;
-}
-
-/**
- * Generate thumb-800 and hero-1200 WebP variants from an original image in R2.
- * storageKey format: `items/{itemId}/{imageId}.{ext}`
- * Writes:
- *   items/{itemId}/thumb-800/{imageId}.webp  — 800px longest-edge
- *   items/{itemId}/hero-1200/{imageId}.webp  — 1200px longest-edge
- * Returns the aspect ratio (width / height) for CLS prevention.
- */
-async function generateThumbnails(storageKey: string): Promise<ThumbnailResult> {
-  const r2 = getR2Client();
-  const bucket = process.env.R2_BUCKET_NAME!;
-
-  // Derive itemId and imageId from storage key: `items/{itemId}/{imageId}.{ext}`
-  const parts = storageKey.split("/");
-  const itemId = parts[1];
-  const filename = parts[parts.length - 1]!;
-  const imageId = filename.split(".")[0];
-
-  if (!itemId || !imageId) {
-    throw new Error(`[enrichment] Cannot derive itemId/imageId from storageKey: ${storageKey}`);
-  }
-
-  // Fetch original from R2
-  const getCmd = new GetObjectCommand({ Bucket: bucket, Key: storageKey });
-  const getRes = await r2.send(getCmd);
-  if (!getRes.Body) {
-    throw new Error(`[enrichment] Empty body for ${storageKey}`);
-  }
-
-  // Read body as Buffer
-  const chunks: Uint8Array[] = [];
-  for await (const chunk of getRes.Body as AsyncIterable<Uint8Array>) {
-    chunks.push(chunk);
-  }
-  const inputBuffer = Buffer.concat(chunks);
-
-  // Get metadata for aspect ratio
-  const metadata = await sharp(inputBuffer).metadata();
-  const width = metadata.width ?? 1;
-  const height = metadata.height ?? 1;
-  const aspectRatio = width / height;
-
-  // Generate thumb-800 (longest-edge 800, WebP, strip EXIF)
-  const thumb800Key = `items/${itemId}/thumb-800/${imageId}.webp`;
-  const thumb800Buffer = await sharp(inputBuffer)
-    .resize({ width: 800, height: 800, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 85 })
-    .toBuffer();
-
-  await r2.send(new PutObjectCommand({
-    Bucket: bucket,
-    Key: thumb800Key,
-    Body: thumb800Buffer,
-    ContentType: "image/webp",
-  }));
-
-  // Generate hero-1200 (longest-edge 1200, WebP, strip EXIF)
-  const hero1200Key = `items/${itemId}/hero-1200/${imageId}.webp`;
-  const hero1200Buffer = await sharp(inputBuffer)
-    .resize({ width: 1200, height: 1200, fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 85 })
-    .toBuffer();
-
-  await r2.send(new PutObjectCommand({
-    Bucket: bucket,
-    Key: hero1200Key,
-    Body: hero1200Buffer,
-    ContentType: "image/webp",
-  }));
-
-  console.info(`[enrichment] Thumbnails generated for ${storageKey} (aspect_ratio=${aspectRatio.toFixed(4)})`);
-
-  return { aspectRatio };
-}
+// Variant/thumbnail generation moved to workers/image-variants.ts (Phase 1
+// task 3) — enqueued unconditionally from confirmUpload so thumbnails exist
+// even when no AI key is configured.
 
 export async function processEnrichmentJob(
   data: EnrichmentJobData,
@@ -186,26 +107,6 @@ export async function processEnrichmentJob(
     .where(eq(inventoryItems.id, inventoryItemId));
 
   try {
-    // 5. Generate thumbnails (C4-RETROFIT FM-R2-4 + FM-R3-2): thumb-800 + hero-1200 + aspect_ratio
-    for (const img of images) {
-      try {
-        const { aspectRatio } = await generateThumbnails(img.storageKey);
-        // Store aspect_ratio on the image record (conditional write — don't clobber if already set)
-        await db
-          .update(inventoryItemImages)
-          .set({ aspectRatio: String(aspectRatio) })
-          .where(
-            and(
-              eq(inventoryItemImages.id, img.id),
-              isNull(inventoryItemImages.aspectRatio),
-            ),
-          );
-      } catch (thumbErr) {
-        // Non-fatal: thumbnail failure should not block AI enrichment
-        console.error(`[enrichment] Thumbnail generation failed for image ${img.id}:`, thumbErr);
-      }
-    }
-
     // 6. Generate presigned GET URLs
     const imageUrls = await Promise.all(
       images.map((img) => createPresignedGetUrl(img.storageKey)),

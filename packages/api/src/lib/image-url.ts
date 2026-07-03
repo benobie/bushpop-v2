@@ -2,11 +2,15 @@
  * Derive public image URLs from storage keys.
  * Single source of truth — no URL column in DB.
  *
- * Storage key layout (Sprint 1a — C4-RETROFIT FM-R2-4 + FM-R3-2):
+ * Storage key layout (Phase 1 task 3 — image-variants worker):
  *   items/{itemId}/{imageId}.{ext}              — original full-resolution
- *   items/{itemId}/thumb-800/{imageId}.webp     — 800px longest-edge WebP (browse cards + gallery thumbs)
- *   items/{itemId}/hero-1200/{imageId}.webp     — 1200px longest-edge WebP (PDP hero)
+ *   items/{itemId}/thumb-320/{imageId}.webp     — wizard/browse thumbs
+ *   items/{itemId}/card-800/{imageId}.webp      — shop cards + gallery
+ *   items/{itemId}/pdp-1600/{imageId}.webp      — PDP hero / zoom
  */
+
+export const IMAGE_VARIANT_NAMES = ["thumb-320", "card-800", "pdp-1600"] as const;
+export type ImageVariantName = (typeof IMAGE_VARIANT_NAMES)[number];
 
 function getPublicBase(): string {
   const publicUrl = process.env.R2_PUBLIC_URL;
@@ -21,21 +25,27 @@ export function getPublicImageUrl(storageKey: string): string {
 }
 
 /**
- * Derive the thumb-800 variant URL for an image.
- * Assumes the original storageKey is `items/{itemId}/{imageId}.{ext}`.
- * The thumbnail is stored at `items/{itemId}/thumb-800/{imageId}.webp`.
+ * Derive a variant URL for an image.
+ * Variants are stored at `items/{itemId}/{variant}/{imageId}.webp`.
  */
-export function thumbUrl(itemId: string, imageId: string): string {
-  return `${getPublicBase()}/items/${itemId}/thumb-800/${imageId}.webp`;
+export function variantUrl(
+  itemId: string,
+  imageId: string,
+  variant: ImageVariantName,
+): string {
+  return `${getPublicBase()}/items/${itemId}/${variant}/${imageId}.webp`;
 }
 
-/**
- * Derive the hero-1200 variant URL for an image.
- * Assumes the original storageKey is `items/{itemId}/{imageId}.{ext}`.
- * The hero is stored at `items/{itemId}/hero-1200/{imageId}.webp`.
- */
-export function heroUrl(itemId: string, imageId: string): string {
-  return `${getPublicBase()}/items/${itemId}/hero-1200/${imageId}.webp`;
+export function thumbUrl(itemId: string, imageId: string): string {
+  return variantUrl(itemId, imageId, "thumb-320");
+}
+
+export function cardUrl(itemId: string, imageId: string): string {
+  return variantUrl(itemId, imageId, "card-800");
+}
+
+export function pdpUrl(itemId: string, imageId: string): string {
+  return variantUrl(itemId, imageId, "pdp-1600");
 }
 
 /**

@@ -127,3 +127,15 @@ before committing.
 | API (Fastify) | 3333 | host 3334 ← `api.bushpop.xyz` (Caddy) |
 | Market (Next SSR) | 3002 (dev) | host 3210 ← `market.bushpop.xyz` (Caddy) |
 | Content site | 3000 (`apps/web` dev) | Cloudflare Pages (not this stack) |
+
+## Migration lineage divergence (Phase 1, 03/07/2026)
+
+Upstream piklo-v2 migrations ended at `0022` when Phase 1 landed. Bushpop's
+`0023_melted_havok.sql` (sell-flow draft columns + `ai_generations` +
+`listing_scores.breakdown`) is a **bushpop-local migration, not an upstream
+pick** — checked against `origin/main` per the fork-coordination rule before
+numbering. The `inventory_items.measurements` column in 0023 follows the
+shared W4 column contract exactly (nullable `jsonb`, numeric cm, vocabulary
+superset chest/waist/hip/length/inseam/rise/shoulder/sleeve, zod at the API
+edge). **When picking piklo's W4/F6-PR2 measurements migration later: the
+column already exists here — drop that hunk instead of re-adding it.**

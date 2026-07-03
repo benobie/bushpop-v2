@@ -9,7 +9,7 @@ import {
   getExtensionForContentType,
   type AllowedContentType,
 } from "../../../../lib/r2.js";
-import { getPublicImageUrl } from "../../../../lib/image-url.js";
+import { extractImageId, getPublicImageUrl, IMAGE_VARIANT_NAMES } from "../../../../lib/image-url.js";
 import { cascadeImageDeletionToListings } from "../../../../lib/inventory-invariants.js";
 import { NotFoundError, ConflictError, ValidationError } from "../../../../lib/errors.js";
 import { dispatchEvent } from "../../../../lib/events.js";
@@ -75,6 +75,26 @@ async function dispatchContentChangedForItem(itemId: string, actorId: string): P
     }).catch((err: unknown) => {
       console.error(`[images] Failed to dispatch content_changed for listing ${listing.id}:`, err);
     });
+  }
+}
+
+/**
+ * Bump the parent item's updatedAt on photo activity. The stale-draft sweep
+ * (workers/image-cleanup.ts) keys freshness on inventory_items.updatedAt —
+ * without this, a seller who only uploads photos (no field PATCH) looks
+ * idle and their draft gets reaped at 30 days (review finding). Deliberately
+ * does NOT bump `version`: photo routes are not optimistic-locked and a
+ * version bump here would 409 concurrent step PATCHes.
+ */
+async function touchItemActivity(itemId: string): Promise<void> {
+  try {
+    await db
+      .update(inventoryItems)
+      .set({ updatedAt: new Date() })
+      .where(eq(inventoryItems.id, itemId));
+  } catch (err) {
+    // Best-effort — never fail an image operation over the freshness bump.
+    console.error(`[images] Failed to touch item activity for ${itemId}:`, err);
   }
 }
 
@@ -200,12 +220,21 @@ export async function confirmUpload(
     .where(eq(inventoryItemImages.id, imageId))
     .returning();
 
-  // Fire-and-forget enrichment — worker owns all status transitions.
-  // Skip enqueue entirely if no API key — avoids dead queue backlog.
-  if (process.env.ANTHROPIC_API_KEY) {
-    const { enqueueEnrichment } = await import("../../../../lib/enrichment-queue.js");
-    enqueueEnrichment(itemId, ownerId);
-  }
+  // Image variants (thumb-320/card-800/pdp-1600) — enqueued UNCONDITIONALLY
+  // (Phase 1 task 3): variant generation must not depend on any AI key.
+  // Fire-and-forget; the worker retries with backoff.
+  const { enqueueImageVariants } = await import("../../../../workers/image-variants.js");
+  enqueueImageVariants(imageId, updated!.storageKey).catch((err: unknown) => {
+    console.error(`[images] Failed to enqueue image-variants for ${imageId}:`, err);
+  });
+
+  // Auto-enrichment enqueue DISABLED (Phase 1 task 6): the sell flow's
+  // ai-draft pipeline replaces it — drafts are generated on demand from the
+  // Details step (POST .../ai-draft), confirm-not-commit, never COALESCEd
+  // into canonical fields. The enrichment worker remains registered for any
+  // manually-enqueued legacy jobs.
+
+  await touchItemActivity(itemId);
 
   // Dispatch content_changed for all channel listings of this item
   await dispatchContentChangedForItem(itemId, ownerId);
@@ -300,12 +329,27 @@ export async function deleteImage(
     }
   });
 
-  // Delete from R2 (best-effort — orphan cleanup catches failures)
+  // Delete from R2 (best-effort — orphan cleanup catches failures).
+  // Derived variants too: once the row is gone nothing else knows their
+  // keys, so skipping them here leaks 3 objects per deleted photo
+  // (review finding).
   try {
     await deleteObject(image.storageKey);
   } catch {
     // Log but don't fail the request
   }
+  const variantImageId = extractImageId(image.storageKey);
+  if (variantImageId) {
+    for (const variant of IMAGE_VARIANT_NAMES) {
+      try {
+        await deleteObject(`items/${itemId}/${variant}/${variantImageId}.webp`);
+      } catch {
+        // Variant may never have been generated
+      }
+    }
+  }
+
+  await touchItemActivity(itemId);
 
   // Dispatch content_changed for all channel listings of this item
   await dispatchContentChangedForItem(itemId, ownerId);

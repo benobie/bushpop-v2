@@ -325,6 +325,9 @@ export async function getListingScore(id: string, ownerId: string) {
     descriptionScore,
     completenessScore,
     categoryScore,
+    // Strength-v3 per-component points (null until the worker rescopes the row)
+    breakdown: score?.breakdown ?? null,
+    scoreVersion: score?.scoreVersion ?? null,
     qualityTier,
     nudgeKey,
     nudgeMessage,

@@ -1,4 +1,5 @@
-import { pgTable, varchar, text, integer, boolean, real, numeric, timestamp, index, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, varchar, text, integer, boolean, real, numeric, timestamp, index, jsonb, check } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { ulid } from "ulid";
 import { user } from "./auth";
 import { categories } from "./categories";
@@ -21,10 +22,24 @@ export const inventoryItems = pgTable("inventory_items", {
   condition: varchar("condition", { length: 20 }),
   conditionNotes: text("condition_notes"),
 
+  // Sell-flow draft fields (Phase 1). Draft = inventoryItems row (D7);
+  // channel_listings is only created at publish, so price/shipping intent
+  // lives here while drafting.
+  askingPriceCents: integer("asking_price_cents"),
+  rrpCents: integer("rrp_cents"),
+  sizeScale: varchar("size_scale", { length: 20 }),
+  // Shared W4 column contract: nullable jsonb, numeric cm values, key
+  // vocabulary superset chest/waist/hip/length/inseam/rise/shoulder/sleeve
+  // (+ documented template extensions). Zod-validated at the API edge only.
+  measurements: jsonb("measurements").$type<Record<string, number>>(),
+  shippingOption: varchar("shipping_option", { length: 20 }),
+  parcelSize: varchar("parcel_size", { length: 10 }),
+
   // AI enrichment output (advisory — canonical fields filled via COALESCE, never overwritten)
   aiTitle: varchar("ai_title", { length: 255 }),
   aiDescription: text("ai_description"),
   aiTags: jsonb("ai_tags").$type<string[]>(),
+  aiSuggestedBrand: varchar("ai_suggested_brand", { length: 100 }),
   aiSuggestedCategory: varchar("ai_suggested_category", { length: 100 }),
   aiSuggestedColour: varchar("ai_suggested_colour", { length: 30 }),
   aiSuggestedMaterial: varchar("ai_suggested_material", { length: 50 }),
@@ -45,6 +60,7 @@ export const inventoryItems = pgTable("inventory_items", {
   index("inventory_items_owner_id_idx").on(table.ownerId),
   index("inventory_items_lifecycle_state_idx").on(table.lifecycleState),
   index("inventory_items_category_id_idx").on(table.categoryId),
+  check("inventory_items_asking_price_cents_check", sql`${table.askingPriceCents} IS NULL OR ${table.askingPriceCents} > 0`),
 ]);
 
 export const inventoryItemImages = pgTable("inventory_item_images", {

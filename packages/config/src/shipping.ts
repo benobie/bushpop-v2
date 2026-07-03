@@ -1,3 +1,5 @@
+import { PARCELS } from "./parcels";
+
 /**
  * Flat-rate shipping lookup by shipping class (cents, AUD).
  *
@@ -7,12 +9,17 @@
  *   m  — medium satchel (e.g. jeans, dresses)
  *   l  — large satchel (e.g. jackets, coats)
  *   xl — extra large / bulky (e.g. boots, bags)
+ *
+ * s/m/l are derived from the sell-flow parcel costs so what the buyer pays
+ * for shipping agrees with the prepaid-label cost deducted from the seller
+ * payout. xs/xl are legacy classes the sell flow never produces (parcel
+ * sizes are S/M/L only) — kept for pre-existing inventory rows.
  */
 export const FLAT_RATE_SHIPPING_CENTS: Record<string, number> = {
   xs: 970,
-  s: 1115,
-  m: 1525,
-  l: 1930,
+  s: PARCELS.small.costCents,
+  m: PARCELS.medium.costCents,
+  l: PARCELS.large.costCents,
   xl: 2330,
 };
 

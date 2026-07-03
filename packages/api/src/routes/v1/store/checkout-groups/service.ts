@@ -13,7 +13,7 @@ import {
   channels,
   sellerProfiles,
 } from "@bushpop/db/schema";
-import { calculateShipping } from "@bushpop/config/shipping";
+import { calculateOrderTotals, type OrderTotalsItem } from "../../../../lib/order-totals.js";
 import {
   AppError,
   ConflictError,
@@ -43,7 +43,6 @@ import type {
 // ── Constants ──
 
 const ORDER_GROUP_EXPIRY_MINUTES = 30;
-const PLATFORM_FEE_DEFAULT_BPS = 800; // 8% fallback
 
 // ── Internal types ──
 
@@ -56,6 +55,8 @@ interface SellerGroupData {
     inventoryVersion: number;
     priceCents: number;
     shippingClass: string | null;
+    shippingOption: string | null;
+    parcelSize: string | null;
   }>;
 }
 
@@ -80,11 +81,12 @@ function computeQuoteHash(
 }
 
 /**
- * Compute totals for one seller's items.
+ * Compute totals for one seller's items — shared money-math module (task 9):
+ * commission from @bushpop/config (30c fixed applies once per seller order),
+ * buyer-side shipping for buyer_pays items, prepaid label deduction.
  */
 function computeSellerTotals(
-  items: Array<{ priceCents: number; shippingClass: string | null }>,
-  platformFeeBps: number,
+  items: OrderTotalsItem[],
   currency: string,
 ): {
   subtotalCents: number;
@@ -94,20 +96,14 @@ function computeSellerTotals(
   totalCents: number;
   currency: string;
 } {
-  const subtotalCents = items.reduce((sum, item) => sum + item.priceCents, 0);
-  const shippingClasses = items.map((i) => i.shippingClass ?? "m");
-  const shippingCents = calculateShipping(shippingClasses);
-  const platformFeeCents = Math.round((subtotalCents * platformFeeBps) / 10_000);
-  const totalCents = subtotalCents + shippingCents;
-  const sellerProceedsCents = totalCents - platformFeeCents;
-
+  const totals = calculateOrderTotals(items, currency);
   return {
-    subtotalCents,
-    shippingCents,
-    platformFeeCents,
-    sellerProceedsCents,
-    totalCents,
-    currency: currency.toUpperCase(),
+    subtotalCents: totals.subtotalCents,
+    shippingCents: totals.shippingCents,
+    platformFeeCents: totals.platformFeeCents,
+    sellerProceedsCents: totals.sellerProceedsCents,
+    totalCents: totals.totalCents,
+    currency: totals.currency,
   };
 }
 
@@ -185,6 +181,8 @@ export async function createQuoteAndPaymentIntent(
       inventoryVersion: inventoryItems.version,
       availabilityStatus: inventoryItems.availabilityStatus,
       shippingClass: inventoryItems.shippingClass,
+      shippingOption: inventoryItems.shippingOption,
+      parcelSize: inventoryItems.parcelSize,
       ownerId: inventoryItems.ownerId,
     })
     .from(cartItems)
@@ -228,6 +226,8 @@ export async function createQuoteAndPaymentIntent(
         inventoryVersion: row.inventoryVersion,
         priceCents: row.listingPriceCents,
         shippingClass: row.shippingClass,
+        shippingOption: row.shippingOption,
+        parcelSize: row.parcelSize,
       });
     } else {
       sellerMap.set(row.ownerId, {
@@ -240,6 +240,8 @@ export async function createQuoteAndPaymentIntent(
             inventoryVersion: row.inventoryVersion,
             priceCents: row.listingPriceCents,
             shippingClass: row.shippingClass,
+            shippingOption: row.shippingOption,
+            parcelSize: row.parcelSize,
           },
         ],
       });
@@ -267,11 +269,10 @@ export async function createQuoteAndPaymentIntent(
 
   // 5. Load channel config
   const [channelRow] = await db
-    .select({ platformFeeBps: channels.platformFeeBps, currency: channels.currency })
+    .select({ currency: channels.currency })
     .from(channels)
     .where(eq(channels.id, channelId));
 
-  const platformFeeBps = channelRow?.platformFeeBps ?? PLATFORM_FEE_DEFAULT_BPS;
   const currency = channelRow?.currency ?? "AUD";
 
   // 6. Load seller Stripe accounts + assert ALL sellers checkout-ready
@@ -303,10 +304,14 @@ export async function createQuoteAndPaymentIntent(
     ReturnType<typeof computeSellerTotals>
   >();
   for (const [sellerId, sellerData] of sellerMap) {
-    sellerTotals.set(
-      sellerId,
-      computeSellerTotals(sellerData.items, platformFeeBps, currency),
-    );
+    const totals = computeSellerTotals(sellerData.items, currency);
+    if (totals.sellerProceedsCents < 0) {
+      // Prepaid label costs exceed the seller's take — unsettleable order.
+      throw new ValidationError(
+        "An item's price does not cover its shipping label costs. The seller needs to raise the price or change the shipping option.",
+      );
+    }
+    sellerTotals.set(sellerId, totals);
   }
 
   // Group-level totals
@@ -423,10 +428,15 @@ export async function createQuoteAndPaymentIntent(
 
   try {
     const singleSeller = chargeType === "destination" ? sellerMap.get(sellerIds[0]!) : undefined;
-    const singleAllocationPlatformFee =
-      chargeType === "destination"
-        ? sellerTotals.get(sellerIds[0]!)!.platformFeeCents
-        : undefined;
+    // application_fee_amount is everything the platform withholds from the
+    // destination transfer: commission PLUS prepaid label deductions
+    // (total - proceeds). Withholding only the commission would leak the
+    // label cost to the seller (cross-model review finding, task 9).
+    const singleAllocationPlatformFee = (() => {
+      if (chargeType !== "destination") return undefined;
+      const totals = sellerTotals.get(sellerIds[0]!)!;
+      return totals.totalCents - totals.sellerProceedsCents;
+    })();
 
     const paymentIntent = await stripe.paymentIntents.create(
       {

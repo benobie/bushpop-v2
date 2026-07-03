@@ -1,9 +1,13 @@
 import { Queue, Worker } from "bullmq";
-import { and, count, eq, lt } from "drizzle-orm";
+import { and, count, eq, lt, ne, or } from "drizzle-orm";
 import {
-  LISTING_SCORE_VERSION,
+  computeListingStrength,
+  LISTING_STRENGTH_VERSION,
   SCORE_NUDGE_MESSAGES,
   scoreToQualityTier,
+  strengthComponentToNudgeKey,
+  STRENGTH_MAX_POINTS,
+  type StrengthComponentKey,
 } from "@bushpop/config";
 import { db } from "@bushpop/db/client";
 import {
@@ -16,6 +20,7 @@ import { dispatchEvent } from "../lib/events.js";
 import { sendNotification } from "../lib/notification-service.js";
 import { getRedis } from "../lib/redis.js";
 import { shouldIndexListing } from "../lib/search-index.js";
+import { buildStrengthInput, resolveCategoryInfo } from "../lib/strength-input.js";
 
 export const LISTING_SCORE_QUEUE = "listing-score";
 export { SCORE_NUDGE_MESSAGES };
@@ -43,57 +48,46 @@ export function getListingScoreQueue(): Queue {
   return scoreQueue;
 }
 
-export function calcPhotoScore(imageCount: number): number {
-  if (imageCount >= 3) return 25;
-  if (imageCount === 2) return 16;
-  if (imageCount === 1) return 8;
-  return 0;
-}
+/**
+ * Strength v3 (task 7): scoring is delegated to the shared
+ * `computeListingStrength` module in @bushpop/config (D10) — the same
+ * function the drafts API and the web wizard use, so scores are identical
+ * client/server by construction. This worker adds only persistence, nudge
+ * mapping and event fan-out.
+ */
 
-export function calcDescriptionScore(description: string | null | undefined): number {
-  if (!description) return 0;
+/** Core components eligible for nudges — bonuses (rrp/offers) excluded. */
+const NUDGE_ELIGIBLE: readonly StrengthComponentKey[] = [
+  "photos",
+  "title",
+  "brand",
+  "category",
+  "size",
+  "colour",
+  "description",
+  "condition",
+  "measurements",
+  "price",
+];
 
-  const wordCount = description.trim().split(/\s+/).filter(Boolean).length;
-  if (wordCount >= 30) return 25;
-
-  return Math.round((wordCount / 30) * 25);
-}
-
-export function calcCompletenessScore(
-  hasMeasurements: boolean,
-  hasConditionNote: boolean,
-): number {
-  let score = 0;
-  if (hasMeasurements) score += 13;
-  if (hasConditionNote) score += 12;
-  return score;
-}
-
-export function calcCategoryScore(categoryId: string | null | undefined): number {
-  return categoryId ? 25 : 0;
-}
-
-export function calcNudgeKey(
-  photoScore: number,
-  descriptionScore: number,
-  completenessScore: number,
-  categoryScore: number,
+/**
+ * Pick the nudge for a v3 breakdown: the core component with the most
+ * points still on the table (first wins ties, in rubric order), mapped onto
+ * the existing 4-key nudge vocabulary so notification types are unchanged.
+ */
+export function strengthNudgeKey(
+  breakdown: Record<string, number>,
 ): keyof typeof SCORE_NUDGE_MESSAGES {
-  const dimensions: Array<{ key: keyof typeof SCORE_NUDGE_MESSAGES; score: number }> = [
-    { key: "photo", score: photoScore },
-    { key: "description", score: descriptionScore },
-    { key: "completeness", score: completenessScore },
-    { key: "category", score: categoryScore },
-  ];
-
-  let lowest = dimensions[0]!;
-  for (const dimension of dimensions.slice(1)) {
-    if (dimension.score < lowest.score) {
-      lowest = dimension;
+  let worst: StrengthComponentKey = NUDGE_ELIGIBLE[0]!;
+  let worstDeficit = -1;
+  for (const component of NUDGE_ELIGIBLE) {
+    const deficit = STRENGTH_MAX_POINTS[component] - (breakdown[component] ?? 0);
+    if (deficit > worstDeficit) {
+      worstDeficit = deficit;
+      worst = component;
     }
   }
-
-  return lowest.key;
+  return strengthComponentToNudgeKey(worst);
 }
 
 export const scoreToTier = scoreToQualityTier;
@@ -132,20 +126,31 @@ export async function processListingScoreJob(
     );
 
   const imageCount = imageCountRow?.count ?? 0;
-  const photoScore = calcPhotoScore(imageCount);
-  const descriptionScore = calcDescriptionScore(listing.description ?? item.description);
-  const hasMeasurements = !!item.size;
-  const hasConditionNote = !!(item.conditionNotes && item.conditionNotes.trim().length > 0);
-  const completenessScore = calcCompletenessScore(hasMeasurements, hasConditionNote);
-  const categoryScore = calcCategoryScore(item.categoryId);
-  const score = photoScore + descriptionScore + completenessScore + categoryScore;
-  const qualityTier = scoreToTier(score);
-  const nudgeKey = calcNudgeKey(
-    photoScore,
-    descriptionScore,
-    completenessScore,
-    categoryScore,
+
+  // Published listings carry canonical title/description/price on the
+  // channel_listings row — overlay them onto the item before scoring.
+  const category = await resolveCategoryInfo(item.categoryId);
+  const strength = computeListingStrength(
+    buildStrengthInput(
+      {
+        ...item,
+        title: listing.title ?? item.title,
+        description: listing.description ?? item.description,
+        askingPriceCents: listing.priceCents ?? item.askingPriceCents,
+      },
+      imageCount,
+      category,
+    ),
   );
+
+  const { score, breakdown } = strength;
+  // Legacy dimension columns kept for API compatibility, mapped from v3.
+  const photoScore = breakdown.photos;
+  const descriptionScore = breakdown.description;
+  const completenessScore = breakdown.condition + breakdown.measurements;
+  const categoryScore = breakdown.category;
+  const qualityTier = scoreToTier(score);
+  const nudgeKey = strengthNudgeKey(breakdown);
 
   let previousNudgeKey: string | null = null;
   const wroteFreshScore = await db.transaction(async (tx) => {
@@ -166,9 +171,10 @@ export async function processListingScoreJob(
         descriptionScore,
         completenessScore,
         categoryScore,
+        breakdown,
         nudgeKey,
         scoredFromVersion: listing.version,
-        scoreVersion: LISTING_SCORE_VERSION,
+        scoreVersion: LISTING_STRENGTH_VERSION,
       })
       .onConflictDoUpdate({
         target: listingScores.channelListingId,
@@ -178,12 +184,18 @@ export async function processListingScoreJob(
           descriptionScore,
           completenessScore,
           categoryScore,
+          breakdown,
           nudgeKey,
           scoredFromVersion: listing.version,
-          scoreVersion: LISTING_SCORE_VERSION,
+          scoreVersion: LISTING_STRENGTH_VERSION,
           updatedAt: new Date(),
         },
-        setWhere: lt(listingScores.scoredFromVersion, listing.version),
+        // Fresh version wins; a rubric-version change (v1 → v3 backfill)
+        // also overwrites even when the listing version is unchanged.
+        setWhere: or(
+          lt(listingScores.scoredFromVersion, listing.version),
+          ne(listingScores.scoreVersion, LISTING_STRENGTH_VERSION),
+        ),
       })
       .returning({ id: listingScores.id });
 
@@ -194,7 +206,10 @@ export async function processListingScoreJob(
     return;
   }
 
-  if (previousNudgeKey !== null && previousNudgeKey !== nudgeKey) {
+  // A perfect score has nothing to nudge — without this, completing the
+  // last missing field fires an "add more photos" nudge (the tie-break
+  // fallback of strengthNudgeKey) at the exact moment the listing hits 100.
+  if (score < 100 && previousNudgeKey !== null && previousNudgeKey !== nudgeKey) {
     const nudgeMessage = SCORE_NUDGE_MESSAGES[nudgeKey];
     await sendNotification(
       item.ownerId,

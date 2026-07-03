@@ -1,17 +1,11 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { categories } from "../schema/categories";
-import { GARMENT_TYPES, GARMENT_TYPE_LABELS } from "@bushpop/config/taxonomy";
+import { GARMENT_TYPES, GARMENT_TYPE_LABELS, CATEGORY_LEAVES } from "@bushpop/config/taxonomy";
 
-const SUBCATEGORIES: Partial<Record<string, string[]>> = {
-  tops: ["t-shirts", "shirts", "blouses", "knitwear", "tank-tops"],
-  bottoms: ["jeans", "trousers", "skirts", "shorts"],
-  dresses: ["mini-dresses", "midi-dresses", "maxi-dresses"],
-  outerwear: ["jackets", "coats", "blazers", "vests"],
-  footwear: ["sneakers", "boots", "heels", "sandals", "flats"],
-  bags: ["tote-bags", "crossbody", "clutches", "backpacks"],
-  accessories: ["jewellery", "belts", "scarves", "hats", "sunglasses"],
-};
+// Leaf slugs live in @bushpop/config CATEGORY_LEAVES — one source shared with
+// the AI draft prompt and resolve-time validation.
+const SUBCATEGORIES = CATEGORY_LEAVES;
 
 function slugToName(slug: string): string {
   return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());

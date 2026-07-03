@@ -145,6 +145,65 @@ describe("Checkout API", () => {
       expect(session!.stripePaymentIntentId).toBe("pi_test_mock123");
     });
 
+    // THE Phase-1 money acceptance criterion (task 9): $200 item on a
+    // Medium prepaid label → fee $3.80 (175bps + 30c) + label $10.95 →
+    // seller receives EXACTLY $185.25. Buyer pays no shipping on prepaid.
+    it("$200 Medium prepaid → sellerProceedsCents === 18525", async () => {
+      const listing = await createActiveTestListing(sellerId, { priceCents: 20_000 });
+      await db.execute(
+        `UPDATE inventory_items SET shipping_option = 'prepaid', parcel_size = 'medium', shipping_class = 'm'
+         WHERE id = '${listing.inventoryItemId}'`,
+      );
+      await addListingToCart(buyerToken, listing.id);
+
+      const addressId = await createBuyerAddress(buyerId);
+      const res = await authedRequest(buyerToken, "POST", "/api/v1/store/checkout", {
+        shippingAddressId: addressId,
+      });
+
+      expect(res.statusCode).toBe(200);
+      const { totals } = res.json();
+      expect(totals.subtotalCents).toBe(20_000);
+      expect(totals.shippingCents).toBe(0); // prepaid = free shipping for the buyer
+      expect(totals.totalCents).toBe(20_000);
+      expect(totals.platformFeeCents).toBe(380); // 175bps + 30c
+      expect(totals.sellerProceedsCents).toBe(18_525); // exactly $185.25
+    });
+
+    it("rejects checkout when prepaid label costs exceed the seller's take", async () => {
+      // $11 item on a Medium prepaid label: fee 49 + label 1095 > 1100
+      const listing = await createActiveTestListing(sellerId, { priceCents: 1100 });
+      await db.execute(
+        `UPDATE inventory_items SET shipping_option = 'prepaid', parcel_size = 'medium', shipping_class = 'm'
+         WHERE id = '${listing.inventoryItemId}'`,
+      );
+      await addListingToCart(buyerToken, listing.id);
+
+      const addressId = await createBuyerAddress(buyerId);
+      const res = await authedRequest(buyerToken, "POST", "/api/v1/store/checkout", {
+        shippingAddressId: addressId,
+      });
+      expect(res.statusCode).toBe(422);
+      expect(res.json().message).toMatch(/does not cover/i);
+    });
+
+    it("charges the config commission (175bps + 30c), not the old channel bps", async () => {
+      const listing = await createActiveTestListing(sellerId, { priceCents: 5000 });
+      await addListingToCart(buyerToken, listing.id);
+      const addressId = await createBuyerAddress(buyerId);
+      const res = await authedRequest(buyerToken, "POST", "/api/v1/store/checkout", {
+        shippingAddressId: addressId,
+      });
+
+      const { totals } = res.json();
+      // 5000 * 1.75% = 87.5 → 88 + 30 = 118 (old 8% model would say 400)
+      expect(totals.platformFeeCents).toBe(118);
+      // Legacy item (shipping_option NULL) = buyer_pays: seller keeps shipping
+      // m rate 1095: proceeds = 5000 + 1095 - 118 = 5977
+      expect(totals.shippingCents).toBe(1095);
+      expect(totals.sellerProceedsCents).toBe(5977);
+    });
+
     it("calculates multi-item shipping: highest class + $3 per additional item", async () => {
       // Create two listings for the same seller
       const listingM = await createActiveTestListing(sellerId, { priceCents: 3000 });
@@ -172,8 +231,8 @@ describe("Checkout API", () => {
 
       expect(res.statusCode).toBe(200);
       const body = res.json();
-      // m = 1525, + 300 surcharge = 1825
-      expect(body.totals.shippingCents).toBe(1825);
+      // m = 1095 (parcel-aligned, Phase 1 task 1), + 300 surcharge = 1395
+      expect(body.totals.shippingCents).toBe(1395);
       expect(body.totals.subtotalCents).toBe(5000);
     });
   });

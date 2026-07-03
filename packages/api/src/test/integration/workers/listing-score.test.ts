@@ -1,15 +1,15 @@
 /**
- * Listing Score Worker Tests
+ * Listing Score Worker Tests — strength v3 (task 7).
  *
- * Unit tests for pure scoring functions (no DB/Redis required):
- *   calcPhotoScore, calcDescriptionScore, calcCompletenessScore,
- *   calcCategoryScore, calcNudgeKey, scoreToTier
+ * Scoring itself is the shared computeListingStrength module
+ * (unit-tested in test/unit/listing-strength.test.ts). These tests cover
+ * the worker's wiring: overlay of listing fields, breakdown persistence,
+ * scoreVersion v3, legacy dimension mapping, nudge mapping, upsert
+ * semantics (incl. v1 → v3 rescoring), notifications and events.
  *
- * Integration tests for processListingScoreJob (requires Postgres):
- *   - creates/updates listing_scores row with correct values
- *   - sends score_nudge notification when nudgeKey changes
- *   - dispatches listing_score.calculated event when listing is indexable
- *   - skips archived listings
+ * v3 maths for the bare createActiveTestListing fixture:
+ *   1 photo (5) + title "Test Listing" (10) + condition "good" (10) +
+ *   price 5000c (10) = 35. Largest deficit = photos (15) → nudge "photo".
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
@@ -24,19 +24,14 @@ import {
   categories,
 } from "@bushpop/db/schema";
 import {
-  calcPhotoScore,
-  calcDescriptionScore,
-  calcCompletenessScore,
-  calcCategoryScore,
-  calcNudgeKey,
+  strengthNudgeKey,
   scoreToTier,
   processListingScoreJob,
 } from "../../../workers/listing-score.js";
 import { createTestUser } from "../../helpers/create-user.js";
 import { createActiveTestListing } from "../../helpers/create-listing.js";
 
-// ── Mock BullMQ queue (enqueueListingScore) and notification/event side-effects ──
-// Prevents Redis connections during unit/integration tests.
+// ── Mock notification/event side-effects (prevents Redis connections) ──
 
 const { hoistedEnqueueEmail, hoistedDispatchEvent } = vi.hoisted(() => ({
   hoistedEnqueueEmail: vi.fn().mockResolvedValue(undefined),
@@ -60,165 +55,35 @@ vi.mock("../../../lib/events.js", async (importOriginal) => {
   };
 });
 
-// ── Unit tests: pure scoring functions ────────────────────────────────────────
+// ── Unit tests: nudge mapping + tiers ──
 
-describe("calcPhotoScore", () => {
-  it("returns 0 for 0 images", () => {
-    expect(calcPhotoScore(0)).toBe(0);
+describe("strengthNudgeKey", () => {
+  const complete = {
+    photos: 20, title: 10, brand: 5, category: 10, size: 10, colour: 5,
+    description: 10, condition: 10, measurements: 10, price: 10,
+  };
+
+  it("maps the largest missing core component onto the 4-key vocabulary", () => {
+    expect(strengthNudgeKey({ ...complete, photos: 0 })).toBe("photo");
+    expect(strengthNudgeKey({ ...complete, description: 0 })).toBe("description");
+    expect(strengthNudgeKey({ ...complete, category: 0 })).toBe("category");
+    expect(strengthNudgeKey({ ...complete, measurements: 0 })).toBe("completeness");
+    expect(strengthNudgeKey({ ...complete, size: 0 })).toBe("completeness");
   });
 
-  it("returns 8 for 1 image", () => {
-    expect(calcPhotoScore(1)).toBe(8);
+  it("ignores rrp/offers bonuses", () => {
+    expect(strengthNudgeKey({ ...complete, photos: 15, rrp: 0, offers: 0 })).toBe("photo");
   });
 
-  it("returns 16 for 2 images", () => {
-    expect(calcPhotoScore(2)).toBe(16);
-  });
-
-  it("returns 25 for 3 images (full score)", () => {
-    expect(calcPhotoScore(3)).toBe(25);
-  });
-
-  it("returns 25 for more than 3 images", () => {
-    expect(calcPhotoScore(5)).toBe(25);
-    expect(calcPhotoScore(10)).toBe(25);
-  });
-});
-
-describe("calcDescriptionScore", () => {
-  it("returns 0 for null", () => {
-    expect(calcDescriptionScore(null)).toBe(0);
-  });
-
-  it("returns 0 for undefined", () => {
-    expect(calcDescriptionScore(undefined)).toBe(0);
-  });
-
-  it("returns 0 for empty string", () => {
-    expect(calcDescriptionScore("")).toBe(0);
-  });
-
-  it("returns 0 for whitespace-only string", () => {
-    expect(calcDescriptionScore("   ")).toBe(0);
-  });
-
-  it("returns partial score for 15-word description", () => {
-    const desc = "one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen";
-    const score = calcDescriptionScore(desc);
-    // 15/30 * 25 = 12.5 → rounded to 13
-    expect(score).toBe(13);
-  });
-
-  it("returns 25 for exactly 30-word description (full score)", () => {
-    const words = Array.from({ length: 30 }, (_, i) => `word${i + 1}`).join(" ");
-    expect(calcDescriptionScore(words)).toBe(25);
-  });
-
-  it("returns 25 for more than 30 words", () => {
-    const words = Array.from({ length: 50 }, (_, i) => `word${i + 1}`).join(" ");
-    expect(calcDescriptionScore(words)).toBe(25);
-  });
-
-  it("returns proportional score for short descriptions", () => {
-    // 1 word: Math.round(1/30 * 25) = Math.round(0.833) = 1
-    expect(calcDescriptionScore("hello")).toBe(1);
-  });
-});
-
-describe("calcCompletenessScore", () => {
-  it("returns 0 when both measurements and condition note absent", () => {
-    expect(calcCompletenessScore(false, false)).toBe(0);
-  });
-
-  it("returns 13 for measurements only", () => {
-    expect(calcCompletenessScore(true, false)).toBe(13);
-  });
-
-  it("returns 12 for condition note only", () => {
-    expect(calcCompletenessScore(false, true)).toBe(12);
-  });
-
-  it("returns 25 for both measurements and condition note (full score)", () => {
-    expect(calcCompletenessScore(true, true)).toBe(25);
-  });
-});
-
-describe("calcCategoryScore", () => {
-  it("returns 0 for null categoryId", () => {
-    expect(calcCategoryScore(null)).toBe(0);
-  });
-
-  it("returns 0 for undefined categoryId", () => {
-    expect(calcCategoryScore(undefined)).toBe(0);
-  });
-
-  it("returns 0 for empty string categoryId", () => {
-    expect(calcCategoryScore("")).toBe(0);
-  });
-
-  it("returns 25 for a non-empty categoryId", () => {
-    expect(calcCategoryScore("cat-123")).toBe(25);
-    expect(calcCategoryScore("01HZXYZ")).toBe(25);
-  });
-});
-
-describe("calcNudgeKey", () => {
-  it("returns 'photo' when photo score is lowest", () => {
-    // photo=0, others all higher
-    expect(calcNudgeKey(0, 25, 25, 25)).toBe("photo");
-  });
-
-  it("returns 'description' when description score is lowest", () => {
-    expect(calcNudgeKey(25, 0, 25, 25)).toBe("description");
-  });
-
-  it("returns 'completeness' when completeness score is lowest", () => {
-    expect(calcNudgeKey(25, 25, 0, 25)).toBe("completeness");
-  });
-
-  it("returns 'category' when category score is lowest", () => {
-    expect(calcNudgeKey(25, 25, 25, 0)).toBe("category");
-  });
-
-  it("tie-breaks to 'photo' when photo and description are equally lowest", () => {
-    // photo and description both 0, others higher — photo wins tie
-    expect(calcNudgeKey(0, 0, 25, 25)).toBe("photo");
-  });
-
-  it("tie-breaks to 'photo' when all scores are equal (all zero)", () => {
-    expect(calcNudgeKey(0, 0, 0, 0)).toBe("photo");
-  });
-
-  it("tie-breaks to 'description' when description and completeness are equal and lowest (photo higher)", () => {
-    // photo=25, description=0, completeness=0, category=25
-    // description appears before completeness in array — description wins
-    expect(calcNudgeKey(25, 0, 0, 25)).toBe("description");
-  });
-
-  it("tie-breaks to 'completeness' when completeness and category are equal and lowest", () => {
-    // photo=25, description=25, completeness=0, category=0
-    // completeness appears before category — completeness wins
-    expect(calcNudgeKey(25, 25, 0, 0)).toBe("completeness");
+  it("photos wins the everything-missing tie (largest deficit)", () => {
+    expect(strengthNudgeKey({})).toBe("photo");
   });
 });
 
 describe("scoreToTier", () => {
-  it("returns 'bronze' for score below 50", () => {
-    expect(scoreToTier(0)).toBe("bronze");
+  it("bronze < 50 ≤ silver < 75 ≤ gold", () => {
     expect(scoreToTier(49)).toBe("bronze");
-  });
-
-  it("returns 'silver' for score between 50 and 74 inclusive", () => {
     expect(scoreToTier(50)).toBe("silver");
-    expect(scoreToTier(74)).toBe("silver");
-  });
-
-  it("returns 'gold' for score 75 and above", () => {
-    expect(scoreToTier(75)).toBe("gold");
-    expect(scoreToTier(100)).toBe("gold");
-  });
-
-  it("boundary: score 74 is silver, 75 is gold", () => {
     expect(scoreToTier(74)).toBe("silver");
     expect(scoreToTier(75)).toBe("gold");
   });
@@ -233,7 +98,7 @@ describe("SCORE_NUDGE_MESSAGES", () => {
   });
 });
 
-// ── Integration tests: processListingScoreJob ─────────────────────────────────
+// ── Integration tests: processListingScoreJob ──
 
 describe("processListingScoreJob", () => {
   let userId: string;
@@ -246,9 +111,7 @@ describe("processListingScoreJob", () => {
     userId = user.id;
   });
 
-  it("creates a listing_scores row with correct dimension scores for a bare listing", async () => {
-    // Bare listing: 1 image (from createActiveTestListing), no description,
-    // no size, no conditionNotes, no categoryId
+  it("scores a bare listing with the v3 rubric and persists the breakdown", async () => {
     const listing = await createActiveTestListing(userId);
 
     await processListingScoreJob({ channelListingId: listing.id });
@@ -260,57 +123,58 @@ describe("processListingScoreJob", () => {
       .limit(1);
 
     expect(scoreRow).toBeDefined();
-    // 1 ready image → photoScore=8
-    expect(scoreRow!.photoScore).toBe(8);
-    // no description → descriptionScore=0
-    expect(scoreRow!.descriptionScore).toBe(0);
-    // no size, no conditionNotes → completenessScore=0
-    expect(scoreRow!.completenessScore).toBe(0);
-    // no categoryId → categoryScore=0
-    expect(scoreRow!.categoryScore).toBe(0);
-    // total = 8
-    expect(scoreRow!.score).toBe(8);
-    expect(scoreRow!.scoreVersion).toBe("v1");
+    // 1 photo (5) + title (10) + condition (10) + price (10) = 35
+    expect(scoreRow!.score).toBe(35);
+    expect(scoreRow!.scoreVersion).toBe("v3");
     expect(scoreRow!.scoredFromVersion).toBe(1);
-    expect(scoreRow!.nudgeKey).toBe("description");
+    expect(scoreRow!.breakdown).toMatchObject({
+      photos: 5,
+      title: 10,
+      condition: 10,
+      price: 10,
+      brand: 0,
+      category: 0,
+      description: 0,
+    });
+    // Legacy dimension mapping
+    expect(scoreRow!.photoScore).toBe(5);
+    expect(scoreRow!.descriptionScore).toBe(0);
+    expect(scoreRow!.completenessScore).toBe(10); // condition 10 + measurements 0
+    expect(scoreRow!.categoryScore).toBe(0);
+    // Largest deficit = photos (15 missing)
+    expect(scoreRow!.nudgeKey).toBe("photo");
   });
 
-  it("calculates a higher score for a well-filled listing", async () => {
+  it("scores a well-filled listing higher (overlaying item fields)", async () => {
     const listing = await createActiveTestListing(userId);
 
-    // Insert a real category (categories have a FK constraint — can't use arbitrary strings)
     const [testCategory] = await db
       .insert(categories)
-      .values({ name: "Tops", slug: `tops-${listing.id}` })
+      .values({ name: "Tops", slug: `tops-${listing.id.toLowerCase()}` })
       .returning();
 
-    // Enrich the inventory item with description, size, conditionNotes, categoryId
-    const thirtyWords = Array.from({ length: 30 }, (_, i) => `word${i + 1}`).join(" ");
     await db
       .update(inventoryItems)
       .set({
-        description: thirtyWords,
+        description:
+          "Classic tee in soft cotton, relaxed fit, no marks or pilling anywhere.",
         size: "M",
-        conditionNotes: "Very good condition, minor wear.",
+        brand: "adidas",
+        colour: "black",
+        measurements: { chest: 55, length: 70 },
         categoryId: testCategory!.id,
       })
       .where(eq(inventoryItems.id, listing.inventoryItemId));
 
-    // Add 2 more ready images (total 3)
-    await db.insert(inventoryItemImages).values([
-      {
+    // 3 more ready images (total 4 → full photo points)
+    await db.insert(inventoryItemImages).values(
+      [2, 3, 4].map((n) => ({
         inventoryItemId: listing.inventoryItemId,
-        storageKey: `items/${listing.inventoryItemId}/img2.jpg`,
+        storageKey: `items/${listing.inventoryItemId}/img${n}.jpg`,
         status: "ready",
         confirmedAt: new Date(),
-      },
-      {
-        inventoryItemId: listing.inventoryItemId,
-        storageKey: `items/${listing.inventoryItemId}/img3.jpg`,
-        status: "ready",
-        confirmedAt: new Date(),
-      },
-    ]);
+      })),
+    );
 
     await processListingScoreJob({ channelListingId: listing.id });
 
@@ -320,82 +184,102 @@ describe("processListingScoreJob", () => {
       .where(eq(listingScores.channelListingId, listing.id))
       .limit(1);
 
-    expect(scoreRow).toBeDefined();
-    expect(scoreRow!.photoScore).toBe(25);       // 3 images
-    expect(scoreRow!.descriptionScore).toBe(25); // 30 words
-    expect(scoreRow!.completenessScore).toBe(25); // size + conditionNotes
-    expect(scoreRow!.categoryScore).toBe(25);    // categoryId set
+    // photos 20 + title 10 + brand 5 + category 10 + size 10 + colour 5 +
+    // description 10 + condition 10 + measurements 10 + price 10 = 100
     expect(scoreRow!.score).toBe(100);
+    expect(scoreRow!.breakdown!.measurements).toBe(10);
+    expect(scoreRow!.completenessScore).toBe(20);
   });
 
-  it("upserts listing_scores on repeated calls (updates existing row)", async () => {
+  it("upserts on repeated calls (updates the single existing row)", async () => {
     const listing = await createActiveTestListing(userId);
 
-    // First run — bare listing
     await processListingScoreJob({ channelListingId: listing.id });
 
-    const [firstRow] = await db
-      .select()
-      .from(listingScores)
-      .where(eq(listingScores.channelListingId, listing.id))
-      .limit(1);
-
-    expect(firstRow!.score).toBe(8);
-
-    // Update the listing description and version, then run again
-    const thirtyWords = Array.from({ length: 30 }, (_, i) => `word${i + 1}`).join(" ");
+    const longDescription =
+      "Vintage denim jacket with a soft broken-in feel, brass buttons intact.";
     await db
       .update(channelListings)
-      .set({ description: thirtyWords, version: 2 })
+      .set({ description: longDescription, version: 2 })
       .where(eq(channelListings.id, listing.id));
 
     await processListingScoreJob({ channelListingId: listing.id });
 
-    // Check the score updated (not a second row)
     const allRows = await db
       .select()
       .from(listingScores)
       .where(eq(listingScores.channelListingId, listing.id));
 
     expect(allRows).toHaveLength(1);
-    expect(allRows[0]!.score).toBe(33); // 8 + 25
-    expect(allRows[0]!.descriptionScore).toBe(25);
+    expect(allRows[0]!.score).toBe(45); // 35 + description 10
+    expect(allRows[0]!.descriptionScore).toBe(10);
     expect(allRows[0]!.scoredFromVersion).toBe(2);
   });
 
-  it("sends score_nudge notification when nudgeKey changes on second run", async () => {
+  it("rescopes a v1 row to v3 even when the listing version is unchanged (backfill)", async () => {
     const listing = await createActiveTestListing(userId);
 
-    // First run — inserts the row with some nudgeKey (previousNudgeKey is null → no notification)
+    // Simulate a leftover v1 score for the same listing version
+    await db.insert(listingScores).values({
+      channelListingId: listing.id,
+      score: 8,
+      photoScore: 8,
+      descriptionScore: 0,
+      completenessScore: 0,
+      categoryScore: 0,
+      nudgeKey: "description",
+      scoredFromVersion: 1,
+      scoreVersion: "v1",
+    });
+
+    await processListingScoreJob({ channelListingId: listing.id });
+
+    const [scoreRow] = await db
+      .select()
+      .from(listingScores)
+      .where(eq(listingScores.channelListingId, listing.id))
+      .limit(1);
+
+    expect(scoreRow!.scoreVersion).toBe("v3");
+    expect(scoreRow!.score).toBe(35);
+    expect(scoreRow!.breakdown).not.toBeNull();
+  });
+
+  it("sends score_nudge notification when nudgeKey changes", async () => {
+    const listing = await createActiveTestListing(userId);
+
+    // First run — nudge = photo (largest deficit); no notification on insert
     await processListingScoreJob({ channelListingId: listing.id });
     expect(hoistedEnqueueEmail).not.toHaveBeenCalled();
 
-    // Change the listing so nudgeKey shifts after the description gap is fixed
-    const thirtyWords = Array.from({ length: 30 }, (_, i) => `word${i + 1}`).join(" ");
+    // Fix photos: add 3 ready images → largest deficit shifts to category
+    await db.insert(inventoryItemImages).values(
+      [2, 3, 4].map((n) => ({
+        inventoryItemId: listing.inventoryItemId,
+        storageKey: `items/${listing.inventoryItemId}/img${n}.jpg`,
+        status: "ready",
+        confirmedAt: new Date(),
+      })),
+    );
     await db
       .update(channelListings)
-      .set({ description: thirtyWords, version: 2 })
+      .set({ version: 2 })
       .where(eq(channelListings.id, listing.id));
 
     hoistedEnqueueEmail.mockClear();
-
-    // Second run — nudgeKey changes
     await processListingScoreJob({ channelListingId: listing.id });
 
-    // enqueueEmail is called by sendNotification internally — nudge sent
     expect(hoistedEnqueueEmail).toHaveBeenCalledTimes(1);
     expect(hoistedEnqueueEmail).toHaveBeenCalledWith(
       expect.objectContaining({ type: "score_nudge" }),
     );
-  });
 
-  it("does NOT send notification on first score (no previousNudgeKey)", async () => {
-    const listing = await createActiveTestListing(userId);
-
-    await processListingScoreJob({ channelListingId: listing.id });
-
-    // No prior nudgeKey → notification is NOT sent on first insert
-    expect(hoistedEnqueueEmail).not.toHaveBeenCalled();
+    const [scoreRow] = await db
+      .select()
+      .from(listingScores)
+      .where(eq(listingScores.channelListingId, listing.id))
+      .limit(1);
+    expect(scoreRow!.nudgeKey).toBe("category");
   });
 
   it("does NOT send notification when the nudgeKey stays the same", async () => {
@@ -419,7 +303,6 @@ describe("processListingScoreJob", () => {
 
     await processListingScoreJob({ channelListingId: listing.id });
 
-    // shouldIndexListing returns true for active listings → event dispatched
     expect(hoistedDispatchEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         eventName: "listing_score.calculated",
@@ -432,7 +315,6 @@ describe("processListingScoreJob", () => {
   it("skips archived listings without creating a score row", async () => {
     const listing = await createActiveTestListing(userId);
 
-    // Archive the listing
     await db
       .update(channelListings)
       .set({ status: "archived" })
@@ -450,7 +332,6 @@ describe("processListingScoreJob", () => {
   });
 
   it("no-ops gracefully for a non-existent channelListingId", async () => {
-    // Should not throw — returns early when row not found
     await expect(
       processListingScoreJob({ channelListingId: "01HZNONEXISTENTLISTINGID" }),
     ).resolves.toBeUndefined();
@@ -458,13 +339,14 @@ describe("processListingScoreJob", () => {
 
   it("does not let a stale listing version overwrite a newer score", async () => {
     const listing = await createActiveTestListing(userId);
-    const thirtyWords = Array.from({ length: 30 }, (_, i) => `word${i + 1}`).join(" ");
+    const longDescription =
+      "Vintage denim jacket with a soft broken-in feel, brass buttons intact.";
 
     await processListingScoreJob({ channelListingId: listing.id });
 
     await db
       .update(channelListings)
-      .set({ description: thirtyWords, version: 2 })
+      .set({ description: longDescription, version: 2 })
       .where(eq(channelListings.id, listing.id));
 
     await processListingScoreJob({ channelListingId: listing.id });
@@ -482,8 +364,8 @@ describe("processListingScoreJob", () => {
       .where(eq(listingScores.channelListingId, listing.id))
       .limit(1);
 
-    expect(scoreRow!.score).toBe(33);
-    expect(scoreRow!.descriptionScore).toBe(25);
+    expect(scoreRow!.score).toBe(45);
+    expect(scoreRow!.descriptionScore).toBe(10);
     expect(scoreRow!.scoredFromVersion).toBe(2);
   });
 });
