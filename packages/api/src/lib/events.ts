@@ -3,6 +3,7 @@ import { marketplaceEvents } from "@bushpop/db/schema";
 import { eq } from "drizzle-orm";
 import { Queue } from "bullmq";
 import { getRedis } from "./redis";
+import { recordProgressionEvent } from "./progression-events";
 
 const QUEUE_NAME = "marketplace-events";
 
@@ -65,6 +66,12 @@ export async function dispatchEvent(input: DispatchEventInput): Promise<string> 
     // Log but don't throw — daily re-index catches gaps
     console.error("Failed to enqueue event:", err);
   }
+
+  // Retention-engine Phase A capture (docs/BRIEF-retention-engine.md §4) —
+  // best-effort, never blocks or fails the caller's own event dispatch.
+  recordProgressionEvent(event.id, input).catch((err) => {
+    console.error("Failed to record progression event:", err);
+  });
 
   return event.id;
 }
