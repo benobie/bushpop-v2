@@ -149,6 +149,11 @@ describe("Checkout API", () => {
     // Medium prepaid label → fee $3.80 (175bps + 30c) + label $10.95 →
     // seller receives EXACTLY $185.25. Buyer pays no shipping on prepaid.
     it("$200 Medium prepaid → sellerProceedsCents === 18525", async () => {
+      const { getStripe } = await import("../../../lib/stripe.js");
+      const stripe = getStripe() as unknown as {
+        paymentIntents: { create: ReturnType<typeof vi.fn> };
+      };
+
       const listing = await createActiveTestListing(sellerId, { priceCents: 20_000 });
       await db.execute(
         `UPDATE inventory_items SET shipping_option = 'prepaid', parcel_size = 'medium', shipping_class = 'm'
@@ -165,9 +170,19 @@ describe("Checkout API", () => {
       const { totals } = res.json();
       expect(totals.subtotalCents).toBe(20_000);
       expect(totals.shippingCents).toBe(0); // prepaid = free shipping for the buyer
-      expect(totals.totalCents).toBe(20_000);
-      expect(totals.platformFeeCents).toBe(380); // 175bps + 30c
-      expect(totals.sellerProceedsCents).toBe(18_525); // exactly $185.25
+      // prepaid is a posted order → Buyer Protection fee applies: 4% of 20000 + 50 = 850
+      expect(totals.buyerProtectionFeeCents).toBe(850);
+      expect(totals.totalCents).toBe(20_850);
+      expect(totals.platformFeeCents).toBe(380); // 175bps + 30c, UNCHANGED
+      expect(totals.sellerProceedsCents).toBe(18_525); // exactly $185.25, BP fee never touches this
+
+      // The buyer must actually be CHARGED totalCents (incl. BP fee), not
+      // just have it reported back in the response — assert the real Stripe
+      // PaymentIntent call amount, not just the API response body.
+      expect(stripe.paymentIntents.create).toHaveBeenCalledWith(
+        expect.objectContaining({ amount: 20_850 }),
+        expect.anything(),
+      );
     });
 
     it("rejects checkout when prepaid label costs exceed the seller's take", async () => {

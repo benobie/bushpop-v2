@@ -169,6 +169,13 @@
       "when": 1783022821033,
       "tag": "0023_melted_havok",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1783173347712,
+      "tag": "0024_loud_agent_zero",
+      "breakpoints": true
     }
   ]
 }

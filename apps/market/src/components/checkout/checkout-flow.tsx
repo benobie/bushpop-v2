@@ -41,6 +41,7 @@ interface CheckoutSession {
   totals: {
     subtotalCents: number;
     shippingCents: number;
+    buyerProtectionFeeCents: number;
     totalCents: number;
     currency: string;
   };
@@ -227,6 +228,12 @@ export function CheckoutFlow({ addresses }: CheckoutFlowProps) {
               <span className="text-brand-600">Shipping</span>
               <span>{formatMoney(session.totals.shippingCents, session.totals.currency)}</span>
             </div>
+            {session.totals.buyerProtectionFeeCents > 0 && (
+              <div className="flex justify-between">
+                <span className="text-brand-600">Buyer Protection</span>
+                <span>{formatMoney(session.totals.buyerProtectionFeeCents, session.totals.currency)}</span>
+              </div>
+            )}
             <div className="flex justify-between border-t border-brand-100 pt-2 font-semibold">
               <span>Total</span>
               <span>{formatMoney(session.totals.totalCents, session.totals.currency)}</span>

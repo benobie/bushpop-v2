@@ -136,6 +136,33 @@ Also recorded:
 | "our support team is based in Australia" | `guides/how-to-buy-secondhand-clothes-online` | Same as the §11 "team" wording fix above (§5). Now whitelist form: "human support, based in Australia". | Headcount > 1 (§5). |
 | "**Check seller ratings** and read recent reviews." | `guides/vinted-australia` | Platform-agnostic tip (Vinted/eBay/Depop have real ratings) sitting on a Bushpop page with no attribution. Reworded to "Check seller ratings and reviews on platforms that have them." | n/a — already platform-neutral wording, no Bushpop-specific claim involved. |
 
+## 12. Fee Model D copy sweep (04/07/2026, task `8ecbbbcf`)
+
+**Supersedes §11's "kept as approved" line** ("the 7% Buyer Protection fee ... free to sell / no seller commission / keep your full asking price") — Fee Model D (`docs/handoffs/HANDOFF-fee-model-D-implementation-2026-07-04.md`) overturns the no-buyer-fee/no-seller-commission model that was live in copy. New locked facts: seller commission 1.75% + 30¢ (unchanged); buyer Buyer Protection fee 4% of item subtotal + 50¢ on posted orders, $0 on local pickup, no cap, never fee-gated.
+
+| Original copy | Where | Why removed or rewritten | Reinstate when |
+|---|---|---|---|
+| "Keep what you make" / "No seller commission on anything you sell." | `page.tsx` `SELLER_BENEFITS` | False under Fee Model D — seller commission is 1.75% + 30¢, always charged on sale. | n/a — Fee Model D is the locked model. |
+| "Buyers pay the item price plus a 7% Buyer Protection fee at checkout." | `page.tsx` `HOW_IT_WORKS` | Rate changed under Fee Model D. | n/a. |
+| "No listing fees and no seller commission. Keep what you make." | `page.tsx` `FACTS` | Same as row 1. | n/a. |
+| "A 7% Buyer Protection fee is added at checkout, so every purchase is covered." | `page.tsx` `FACTS` | Rate changed. | n/a. |
+| "List for free, post it straight to the buyer and keep what you make. Selling on Bushpop costs nothing." | `page.tsx` seller-acquisition panel | "Costs nothing" false under Fee Model D. | n/a. |
+| "Free to sell" (trust microbar label, `FACTS` title) | `page.tsx` | Ambiguous/false standalone — reworded to "Free to list" (true: listing itself is free). | n/a. |
+| "Start selling free" (CTA button) | `page.tsx` | Could misread as "selling costs nothing". Reworded to "Start listing free". | n/a. |
+| "Free to sell, with Buyer Protection on every order." (meta description) | `shop/page.tsx` | Same "free to sell" ambiguity. Reworded to "Free to list". | n/a. |
+| "A small Buyer Protection fee applies at checkout" / "You keep your full asking price; the buyer pays the Bushpop fee, not you." | `about/how-it-works/page.mdx` | Vague-then-false under Fee Model D. | n/a. |
+| "## Fees" section: "Selling is free... Sellers keep their full asking price." / "Buyer Protection fee of 7% (with a small minimum)" | `about/how-it-works/page.mdx` | Rewritten with the real seller (1.75% + 30¢) and buyer (4% + 50¢ posted, $0 pickup) numbers. | n/a. |
+| "Free to sell. No listing fees, no monthly fees, and you keep your full asking price. The buyer pays the Bushpop fee, not you." | `about/selling/page.mdx` | Same false no-commission claim. | n/a. |
+| "Get paid. Selling is free, so you keep your full asking price." | `about/selling/page.mdx` | Same. Rewritten: "We deduct 1.75% + 30¢ before your payout lands." | n/a. |
+| "Selling is free. Buyers pay a small Buyer Protection fee... Bushpop lets you keep the full value of your sale." | `about/selling/page.mdx` "What it costs" | Same. Rewritten with real numbers; kept the approved "marketplaces that charge sellers around 10% or more" comparison (verified, §11). | n/a. |
+| "Selling on Bushpop is free and takes minutes to start." | complete selling guide | "Selling ... free" reworded to "Listing ... free" (listing is free; selling is not). | n/a. |
+| "Selling is free, so there is nothing deducted from your sale: you keep your full asking price, and the buyer pays a small Buyer Protection fee at checkout, not you." | complete selling guide "Getting paid" | Same false claim. | n/a. |
+| "Is it free to list? Yes. Listing and selling are free..." / "What are Bushpop's fees for sellers? None. The buyer pays a Buyer Protection fee at checkout; you keep your full asking price." | complete selling guide FAQ | Same false claim, in FAQ form. Rewritten with the real 1.75% + 30¢ seller fee. | n/a. |
+| "Selling is free, with no listing fees, and buyers pay a Buyer Protection fee of 7 per cent on every order." | `guides/how-to-buy-secondhand-clothes-online/page.mdx` | Rate changed; "selling is free" reworded to "listing is free". | n/a. |
+| Vinted comparison table: "Seller fees: Free to list and sell" (Bushpop row) / "Buyer fee: 7% Buyer Protection fee" | `guides/vinted-australia/page.mdx` | Rewritten with real seller (1.75% + 30¢) and buyer (4% + 50¢) numbers. Added the verified "undercuts Vinted at every price point" claim (4% + 50¢ < 5% + 70¢ for all prices — per-order maths, never "lowest fees"). | n/a. |
+
+Also recorded: `docs/handoffs/build-week-carry-page-copy.md` (out-of-repo `~/projects/Bushpop/docs/handoffs/`, source copy for these same pages) updated in step — its four `7%`/pickup-parity spots now match Fee Model D, and its "locked model facts" header line is corrected. `design/home/fees.html`, `design/brand/voice-guide.md` and `design/home/content-ledger.md` (also out-of-repo) were already swept for Fee Model D by the same Cowork session that authored the implementation handoff (see their own `04/07` change-log entries) — verified clean, not re-edited here.
+
 ## Known remaining issues (outside the homepage fix)
 
 - ~~`about/how-it-works`, `about/buying` and the selling guide MDX pages describe seller ratings/reviews as a current feature.~~ CLOSED 03/07/2026 — see §11.

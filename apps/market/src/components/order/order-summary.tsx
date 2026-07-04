@@ -41,6 +41,7 @@ interface OrderSummaryProps {
   subtotalCents: number;
   shippingCents: number;
   platformFeeCents: number;
+  buyerProtectionFeeCents: number;
   totalCents: number;
   currency: string;
   items: OrderItem[];
@@ -81,6 +82,7 @@ export function OrderSummary({
   status,
   subtotalCents,
   shippingCents,
+  buyerProtectionFeeCents,
   totalCents,
   currency,
   items,
@@ -127,6 +129,12 @@ export function OrderSummary({
             <span className="text-brand-600">Shipping</span>
             <span>{formatMoney(shippingCents, currency)}</span>
           </div>
+          {buyerProtectionFeeCents > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-brand-600">Buyer Protection</span>
+              <span>{formatMoney(buyerProtectionFeeCents, currency)}</span>
+            </div>
+          )}
           <div className="flex justify-between border-t border-brand-100 pt-2 text-sm font-bold">
             <span>Total</span>
             <span>{formatMoney(totalCents, currency)}</span>

@@ -3677,6 +3677,7 @@ export interface paths {
                                 subtotalCents: number;
                                 shippingCents: number;
                                 platformFeeCents: number;
+                                buyerProtectionFeeCents: number;
                                 sellerProceedsCents: number;
                                 totalCents: number;
                                 currency: string;
@@ -3727,6 +3728,7 @@ export interface paths {
                             subtotalCents: number;
                             shippingCents: number;
                             platformFeeCents: number;
+                            buyerProtectionFeeCents: number;
                             sellerProceedsCents: number;
                             totalCents: number;
                             currency: string;
@@ -4386,6 +4388,7 @@ export interface paths {
                                 subtotalCents: number;
                                 shippingCents: number;
                                 platformFeeCents: number;
+                                buyerProtectionFeeCents: number;
                                 sellerProceedsCents: number;
                                 totalCents: number;
                                 currency: string;
@@ -4472,6 +4475,7 @@ export interface paths {
                             subtotalCents: number;
                             shippingCents: number;
                             platformFeeCents: number;
+                            buyerProtectionFeeCents: number;
                             sellerProceedsCents: number;
                             totalCents: number;
                             currency: string;
@@ -4559,6 +4563,7 @@ export interface paths {
                                 subtotalCents: number;
                                 shippingCents: number;
                                 platformFeeCents: number;
+                                buyerProtectionFeeCents: number;
                                 sellerProceedsCents: number;
                                 totalCents: number;
                                 currency: string;
@@ -4645,6 +4650,7 @@ export interface paths {
                             subtotalCents: number;
                             shippingCents: number;
                             platformFeeCents: number;
+                            buyerProtectionFeeCents: number;
                             sellerProceedsCents: number;
                             totalCents: number;
                             currency: string;
@@ -4742,6 +4748,7 @@ export interface paths {
                             subtotalCents: number;
                             shippingCents: number;
                             platformFeeCents: number;
+                            buyerProtectionFeeCents: number;
                             sellerProceedsCents: number;
                             totalCents: number;
                             currency: string;

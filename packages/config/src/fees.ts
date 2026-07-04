@@ -35,6 +35,58 @@ export function commissionRateAt(at: Date = new Date()): CommissionRate {
 }
 
 /**
+ * Buyer Protection fee — effective-dated config (Fee Model D, decided
+ * 04/07/2026, task 8ecbbbcf). Charged to the BUYER on top of item subtotal +
+ * shipping; never deducted from seller proceeds (seller commission above is
+ * fully independent of this fee).
+ *
+ * Posted orders: 4% (400 bps) of the posted-items subtotal + AU$0.50 flat,
+ * no cap. Pickup orders: $0 — narrowed cover is included free, never
+ * fee-gated. Revisited only at the monthly metrics review with real data.
+ */
+export interface BuyerProtectionRate {
+  /** ISO date (Australia/Sydney intent) this rate applies from, inclusive. */
+  effectiveFrom: string;
+  /** Percentage component in basis points (400 = 4%). */
+  bps: number;
+  /** Flat component in cents, added once per order — only when the order has posted items. */
+  fixedCents: number;
+}
+
+/** Ordered oldest → newest. Append new entries; never mutate history. */
+export const BUYER_PROTECTION_SCHEDULE: readonly BuyerProtectionRate[] = [
+  { effectiveFrom: "2026-07-04", bps: 400, fixedCents: 50 },
+] as const;
+
+/** The rate in force at `at` (defaults to now). Falls back to the oldest entry. */
+export function buyerProtectionRateAt(at: Date = new Date()): BuyerProtectionRate {
+  let current = BUYER_PROTECTION_SCHEDULE[0]!;
+  for (const rate of BUYER_PROTECTION_SCHEDULE) {
+    if (new Date(rate.effectiveFrom).getTime() <= at.getTime()) {
+      current = rate;
+    }
+  }
+  return current;
+}
+
+/**
+ * Buyer Protection fee for a posted-items subtotal, in cents. Returns 0 when
+ * there is no posted subtotal (pure pickup order) — the fixed component only
+ * applies when the order actually has something being posted.
+ * $50.00 (5000c) posted → round(5000*400/10000) + 50 = 200 + 50 = 250c ($2.50).
+ */
+export function calcBuyerProtectionFeeCents(postedSubtotalCents: number, at?: Date): number {
+  if (!Number.isInteger(postedSubtotalCents) || postedSubtotalCents < 0) {
+    throw new Error(
+      `calcBuyerProtectionFeeCents: postedSubtotalCents must be a non-negative integer, got ${postedSubtotalCents}`,
+    );
+  }
+  if (postedSubtotalCents === 0) return 0;
+  const rate = buyerProtectionRateAt(at);
+  return Math.round((postedSubtotalCents * rate.bps) / 10_000) + rate.fixedCents;
+}
+
+/**
  * Bushpop fee for a sale price, in cents.
  * $200.00 (20000c) → 350 + 30 = 380c ($3.80).
  */

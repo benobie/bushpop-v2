@@ -57,6 +57,7 @@ interface Order {
   subtotalCents: number;
   shippingCents: number;
   platformFeeCents: number;
+  buyerProtectionFeeCents: number;
   sellerProceedsCents: number;
   totalCents: number;
   currency: string;
@@ -131,6 +132,7 @@ export function OrderPoller({ sessionId }: OrderPollerProps) {
           subtotalCents={order.subtotalCents}
           shippingCents={order.shippingCents}
           platformFeeCents={order.platformFeeCents}
+          buyerProtectionFeeCents={order.buyerProtectionFeeCents}
           totalCents={order.totalCents}
           currency={order.currency}
           items={order.items}

@@ -457,6 +457,7 @@ async function createOrderForSession(
         subtotalCents: session.subtotalCents,
         shippingCents: session.shippingCents,
         platformFeeCents: session.platformFeeCents,
+        buyerProtectionFeeCents: session.buyerProtectionFeeCents,
         sellerProceedsCents: session.sellerProceedsCents,
         totalCents: session.totalCents,
         currency: session.currency,

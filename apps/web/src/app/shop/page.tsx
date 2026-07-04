@@ -17,7 +17,7 @@ import { WaitlistForm } from "@/components/waitlist-form";
 
 const TITLE = "Shop Secondhand Fashion in Australia";
 const DESCRIPTION =
-  "Browse secondhand clothing, shoes, bags and accessories on Bushpop, Australia's peer-to-peer preloved fashion marketplace. Free to sell, with Buyer Protection on every order.";
+  "Browse secondhand clothing, shoes, bags and accessories on Bushpop, Australia's peer-to-peer preloved fashion marketplace. Free to list, with Buyer Protection on every order.";
 const PATH = "/shop/";
 
 export const metadata = pageMeta({

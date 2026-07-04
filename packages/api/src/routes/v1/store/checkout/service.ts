@@ -29,6 +29,7 @@ export interface CheckoutTotals {
   subtotalCents: number;
   shippingCents: number;
   platformFeeCents: number;
+  buyerProtectionFeeCents: number;
   sellerProceedsCents: number;
   totalCents: number;
   currency: string;
@@ -47,7 +48,8 @@ export interface CheckoutResult {
 /**
  * Calculate totals for a cart — delegates to the shared money-math module
  * (commission from @bushpop/config COMMISSION_SCHEDULE, buyer-side shipping
- * for buyer_pays items only, prepaid label deduction). Task 9.
+ * for buyer_pays items only, prepaid label deduction, Buyer Protection fee
+ * from Fee Model D). Task 9.
  */
 function calculateTotals(
   items: OrderTotalsItem[],
@@ -58,6 +60,7 @@ function calculateTotals(
     subtotalCents: totals.subtotalCents,
     shippingCents: totals.shippingCents,
     platformFeeCents: totals.platformFeeCents,
+    buyerProtectionFeeCents: totals.buyerProtectionFeeCents,
     sellerProceedsCents: totals.sellerProceedsCents,
     totalCents: totals.totalCents,
     currency: totals.currency,
@@ -132,6 +135,7 @@ export async function initiateCheckout(
         subtotalCents: existingSession.subtotalCents,
         shippingCents: existingSession.shippingCents,
         platformFeeCents: existingSession.platformFeeCents,
+        buyerProtectionFeeCents: existingSession.buyerProtectionFeeCents,
         sellerProceedsCents: existingSession.sellerProceedsCents,
         totalCents: existingSession.totalCents,
         currency: existingSession.currency,
@@ -252,6 +256,7 @@ export async function initiateCheckout(
         subtotalCents: totals.subtotalCents,
         shippingCents: totals.shippingCents,
         platformFeeCents: totals.platformFeeCents,
+        buyerProtectionFeeCents: totals.buyerProtectionFeeCents,
         sellerProceedsCents: totals.sellerProceedsCents,
         totalCents: totals.totalCents,
         currency: totals.currency,
@@ -577,13 +582,19 @@ export async function handlePaymentAfterExpiry(
   // Auto-refund
   //
   // LB-F7-REFUND-FLAGS (GPT-Council phase-4-checkout-slice R1 post-research,
-  // research-285 verified): Piklo uses Stripe Connect destination charges,
-  // for which `stripe.refunds.create` defaults both `reverse_transfer` and
-  // `refund_application_fee` to `false`. Without these flags the buyer is
-  // refunded from the platform's balance but the seller keeps the transferred
-  // funds AND Piklo keeps the application fee as a stranded liability — the
-  // platform account eats the full refund as negative balance. This is a
-  // silent money-leak that would fire on every late-success recovery.
+  // research-285 verified): `stripe.refunds.create` defaults both
+  // `reverse_transfer` and `refund_application_fee` to `false`. NOTE: this
+  // direct-mode checkout path never sets `transfer_data.destination` on its
+  // own PaymentIntent (see the plain `stripe.paymentIntents.create` call
+  // above) — only the separate checkout-groups path conditionally uses
+  // Stripe Connect destination charges (single-seller `chargeType:
+  // "destination"`). The dynamic per-charge check below is a defensive
+  // guardrail, not evidence this path uses destination charges today; if it
+  // ever does, getting either flag wrong means the buyer is refunded from
+  // the platform's balance but the seller keeps the transferred funds AND
+  // Piklo keeps the application fee as a stranded liability — the platform
+  // account eats the full refund as negative balance. This is a silent
+  // money-leak that would fire on every late-success recovery.
   //
   // Guardrail: the two flags are independent and gated on different conditions.
   // `reverse_transfer` is needed whenever `transfer_data.destination` is set,
