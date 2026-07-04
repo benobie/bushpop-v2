@@ -1,4 +1,4 @@
-> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@bushpop/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
+> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@piklo/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
 
 # Piklo V2
 
@@ -118,7 +118,7 @@ docker compose -f infra/docker-compose.yml down
 ## Gotchas
 
 - `drizzle-kit push` is interactive for certain constraint changes. `--force` does not bypass all prompts.
-- For test schema drift, update both `piklo` and `piklo_test` before running API tests.
+- For test schema drift, update both `bushpop` and `bushpop_test` before running API tests.
 - BullMQ `jobId` dedup is not a debounce mechanism. Re-enqueue flows may need `getJob()` -> `remove()` -> `add()`.
 - Drizzle 0.45.x does not natively support filtered unique indexes. Use raw SQL in the generated migration where needed.
 - The API dev process starts workers too, so queue/search side effects are part of normal local boot.

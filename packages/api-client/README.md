@@ -1,6 +1,6 @@
-# Piklo API Client
+# Bushpop API Client
 
-Auto-generated TypeScript client from the Piklo API's OpenAPI 3.1 spec.
+Auto-generated TypeScript client from the Bushpop engine API's OpenAPI 3.1 spec.
 
 Uses `openapi-typescript` + `openapi-fetch` for type-safe API calls.
 

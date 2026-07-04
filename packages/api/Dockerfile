@@ -1,4 +1,4 @@
-# Piklo API — Fastify + 13 in-process BullMQ workers.
+# Bushpop API — Fastify + 17 in-process BullMQ workers.
 # Runs via `tsx src/index.ts` (NOT `node dist`): @bushpop/config and @bushpop/types
 # export raw ./src/index.ts with no build script, so a compiled dist can't
 # resolve its workspace imports at runtime. See docs/OPS-RUNBOOK.md.

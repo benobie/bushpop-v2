@@ -1,4 +1,4 @@
-> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@bushpop/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
+> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@piklo/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
 
 ---
 last-verified: 2026-05-03
@@ -18,9 +18,9 @@ Run through this checklist before doing anything else.
 
 1. Docker services are healthy:
    ```bash
-   docker compose -f infra/docker-compose.yml ps
+   docker compose -f infra/docker-compose.dev.yml ps
    ```
-   Expect three containers (`piklo-db`, `piklo-redis`, `piklo-meilisearch`) with status `healthy`.
+   Expect three containers (`bushpop-db`, `bushpop-redis`, `bushpop-meilisearch`) with status `healthy`.
 
 2. Start the full stack:
    ```bash
@@ -30,15 +30,15 @@ Run through this checklist before doing anything else.
 
 3. API is up: http://localhost:3333/docs — Swagger UI with 55+ endpoints.
 
-4. Web is up: http://localhost:3000 — Piklo storefront.
+4. Web is up: http://localhost:3002 — the market storefront (`apps/market`). Port 3000 in this fork is `apps/web`, the separate Launch-1 content/SEO site, not the engine storefront.
 
-5. Test database exists. The test suite targets `piklo_test` (not `piklo`). If `pnpm db:seed` has not been run yet:
+5. Test database exists. The test suite targets `bushpop_test` (not `bushpop`). If `pnpm db:seed` has not been run yet:
    ```bash
-   createdb -p 5433 -h localhost -U piklo piklo_test
+   createdb -p 5435 -h localhost -U bushpop bushpop_test
    ```
    Then run migrations against it:
    ```bash
-   DATABASE_URL=postgres://piklo:piklo_dev@localhost:5433/piklo_test pnpm db:migrate
+   DATABASE_URL=postgres://bushpop:bushpop_dev@localhost:5435/bushpop_test pnpm db:migrate
    ```
 
 ---
@@ -220,9 +220,9 @@ For ground-truth queue topology, sharp edges, and the reasoning behind shared qu
    pnpm db:migrate
    ```
 
-4. Apply to the **test** database separately (test suite uses `piklo_test`):
+4. Apply to the **test** database separately (test suite uses `bushpop_test`):
    ```bash
-   DATABASE_URL=postgres://piklo:piklo_dev@localhost:5433/piklo_test pnpm db:migrate
+   DATABASE_URL=postgres://bushpop:bushpop_dev@localhost:5435/bushpop_test pnpm db:migrate
    ```
 
 5. **Drizzle 0.45.x caveat:** filtered/partial indexes are supported, but do not introduce Drizzle v1 beta patterns — they are not compatible. Stay on the 0.45.x API surface.
@@ -304,7 +304,7 @@ pnpm --filter @bushpop/api test -- --watch
 - Tests are **integration tests** — they hit a live Postgres, Redis, and MeiliSearch. Docker services must be running.
 - Tests are **not in CI** for this reason. Run them locally before opening a PR.
 - Test env vars are defined in `packages/api/vitest.config.ts` under `test.env`. They are not in `.env` or `package.json` scripts (this is deliberate — prevents gitleaks flagging placeholder secrets).
-- Test database is `piklo_test` at `postgres://piklo:piklo_dev@localhost:5433/piklo_test`.
+- Test database is `bushpop_test` at `postgres://bushpop:bushpop_dev@localhost:5435/bushpop_test`.
 - `fileParallelism: false` — tests run serially to avoid Postgres/Redis contention.
 - Workers are automatically disabled in `NODE_ENV=test`.
 
