@@ -56,10 +56,10 @@
   --radius-card-lg: 26px;
 
   /* type — wired to next/font variables set on <html> in layout.tsx.
-     ⚠ Prototype heads = DM Sans; this repo ships Hanken Grotesk (PR #18).
-     Flagged for Ben in the PR — not resolved here (don't ship two heading
-     fonts across surfaces past cutover). */
-  --font-head: var(--font-hanken), -apple-system, system-ui, sans-serif;
+     DM Sans for headings/buttons/prices (Ben, 05/07, B11 PR #61 — adopted
+     for parity with the prototype, replacing the PR #18 Hanken Grotesk
+     stand-in). Stand-in for licensed Roc Grotesk. */
+  --font-head: var(--font-dm-sans), -apple-system, system-ui, sans-serif;
   --font-body: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
