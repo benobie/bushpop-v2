@@ -191,7 +191,18 @@ export async function buildServer() {
   await app.register(addressRoutes);
   await app.register(cartRoutes);
   await app.register(checkoutRoutes);
-  await app.register(checkoutGroupRoutes);
+  // Multi-seller checkout is GATED OFF by default. The /checkout-groups path can create
+  // a real Stripe Connect PaymentIntent, but its Phase-2 legs are unbuilt: the Stripe
+  // webhook has no order_group handling, checkout-expiry doesn't sweep order_groups, and
+  // reconcile-indeterminate-ops explicitly skips order-group ops (W3+). It also charges
+  // $0 Buyer Protection fee (Fee Model D excluded BP to avoid Connect over-withholding).
+  // Leaving it mounted = a live, authenticated, Swagger-discoverable money path with no
+  // order/payout/reconciliation record. Do NOT un-gate until those legs exist (Phase 2).
+  // Mirrors the PAYOUT_RELEASE_ENABLED precedent (workers/index.ts). See §7 debt register
+  // + docs/HANDOFF-ZERO-CONTEXT.md §3.5/§9.
+  if (process.env.MULTI_VENDOR_CHECKOUT_ENABLED === "true") {
+    await app.register(checkoutGroupRoutes);
+  }
   await app.register(sellerStripeRoutes);
   await app.register(sellerProfileRoutes);
   await app.register(stripeWebhookRoutes);
