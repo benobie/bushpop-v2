@@ -160,7 +160,10 @@ describe("Seller Bulk Listing API", () => {
         `/api/v1/seller/bulk/batches/${batch.id}/drafts`,
         { count: 2 },
       );
-      const [itemA, itemB] = draftsRes.json().items as Array<{ id: string; version: number }>;
+      const [itemA, itemB] = draftsRes.json().items as [
+        { id: string; version: number },
+        { id: string; version: number },
+      ];
 
       // itemA: fully complete. itemB: missing price (left as-is).
       const versionA = await completeItem(itemA.id, itemA.version);
@@ -195,6 +198,36 @@ describe("Seller Bulk Listing API", () => {
       expect(events[0]!.entityId).not.toBe(itemB.id);
       void versionA;
     });
+
+    it("retries a stranded for_sale item with no active listing yet (cross-model review finding)", async () => {
+      // publishDraft() treats for_sale-with-no-active-listing as resumable
+      // (a prior publish flipped the lifecycle then failed downstream —
+      // its own rollback is best-effort). A batch retry query that only
+      // looked at "owned" items would silently strand these forever.
+      const batch = (await createBatch()).json();
+      const draftsRes = await authedRequest(
+        sessionToken,
+        "POST",
+        `/api/v1/seller/bulk/batches/${batch.id}/drafts`,
+        { count: 1 },
+      );
+      const [item] = draftsRes.json().items as [{ id: string; version: number }];
+      await completeItem(item.id, item.version);
+
+      // Simulate the stranded state directly — no channel_listings row exists.
+      await db.update(inventoryItems).set({ lifecycleState: "for_sale" }).where(eq(inventoryItems.id, item.id));
+
+      const res = await authedRequest(
+        sessionToken,
+        "POST",
+        `/api/v1/seller/bulk/batches/${batch.id}/publish`,
+        { legalAgree: true },
+      );
+      expect(res.statusCode).toBe(200);
+      const body = res.json();
+      expect(body.published).toHaveLength(1);
+      expect(body.published[0].itemId).toBe(item.id);
+    });
   });
 
   describe("GET /api/v1/seller/bulk/batches/:id/export.csv", () => {
@@ -206,7 +239,7 @@ describe("Seller Bulk Listing API", () => {
         `/api/v1/seller/bulk/batches/${batch.id}/drafts`,
         { count: 1 },
       );
-      const [item] = draftsRes.json().items as Array<{ id: string; version: number }>;
+      const [item] = draftsRes.json().items as [{ id: string; version: number }];
       await completeItem(item.id, item.version);
       await authedRequest(sessionToken, "POST", `/api/v1/seller/bulk/batches/${batch.id}/publish`, {
         legalAgree: true,

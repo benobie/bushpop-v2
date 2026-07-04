@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray } from "drizzle-orm";
+import { and, count, desc, eq, inArray, notExists, or, sql } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
 import { bulkBatches, channelListings, inventoryItems } from "@bushpop/db/schema";
 import { NotFoundError, PublishNotReadyError, AppError } from "../../../../lib/errors.js";
@@ -109,13 +109,36 @@ export async function publishBatch(
 ) {
   await findOwnedBatch(batchId, ownerId);
 
+  // "owned" = never attempted. "for_sale" WITHOUT an active listing = a prior
+  // publish flipped the lifecycle then failed downstream (publishDraft's own
+  // rollback is best-effort) — publishDraft() treats that as resumable
+  // (publish-service.ts's `resuming` branch), so retry it too, or it's
+  // stranded forever (Codex review finding, cross-model review this PR).
+  // "for_sale" WITH an active listing is genuinely done — never re-touch it.
   const readyItems = await db
     .select({ id: inventoryItems.id, version: inventoryItems.version })
     .from(inventoryItems)
     .where(
       and(
         eq(inventoryItems.batchId, batchId),
-        eq(inventoryItems.lifecycleState, "owned"),
+        or(
+          eq(inventoryItems.lifecycleState, "owned"),
+          and(
+            eq(inventoryItems.lifecycleState, "for_sale"),
+            notExists(
+              db
+                .select({ one: sql`1` })
+                .from(channelListings)
+                .where(
+                  and(
+                    eq(channelListings.inventoryItemId, inventoryItems.id),
+                    eq(channelListings.channelId, channelId),
+                    eq(channelListings.status, "active"),
+                  ),
+                ),
+            ),
+          ),
+        ),
       ),
     )
     .orderBy(inventoryItems.createdAt);
