@@ -59,6 +59,9 @@ export const checkoutSessions = pgTable("checkout_sessions", {
   subtotalCents: integer("subtotal_cents").notNull(),
   shippingCents: integer("shipping_cents").notNull(),
   platformFeeCents: integer("platform_fee_cents").notNull(),
+  // Fee Model D (04/07/2026, task 8ecbbbcf) — buyer-side fee, 0 on pure-pickup
+  // orders. Never deducted from sellerProceedsCents.
+  buyerProtectionFeeCents: integer("buyer_protection_fee_cents").notNull().default(0),
   sellerProceedsCents: integer("seller_proceeds_cents").notNull(),
   totalCents: integer("total_cents").notNull(),
   currency: varchar("currency", { length: 3 }).notNull().default("AUD"),
@@ -103,6 +106,9 @@ export const orders = pgTable("orders", {
   subtotalCents: integer("subtotal_cents").notNull(),
   shippingCents: integer("shipping_cents").notNull(),
   platformFeeCents: integer("platform_fee_cents").notNull(),
+  // Fee Model D (04/07/2026, task 8ecbbbcf) — buyer-side fee, 0 on pure-pickup
+  // orders. Never deducted from sellerProceedsCents.
+  buyerProtectionFeeCents: integer("buyer_protection_fee_cents").notNull().default(0),
   sellerProceedsCents: integer("seller_proceeds_cents").notNull(),
   totalCents: integer("total_cents").notNull(),
   currency: varchar("currency", { length: 3 }).notNull().default("AUD"),

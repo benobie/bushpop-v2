@@ -39,6 +39,7 @@ export const orderResponseSchema = z.object({
   subtotalCents: z.number().int().nonnegative(),
   shippingCents: z.number().int().nonnegative(),
   platformFeeCents: z.number().int().nonnegative(),
+  buyerProtectionFeeCents: z.number().int().nonnegative(),
   sellerProceedsCents: z.number().int().nonnegative(),
   totalCents: z.number().int().nonnegative(),
   currency: z.string().length(3),

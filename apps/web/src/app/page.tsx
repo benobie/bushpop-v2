@@ -46,27 +46,27 @@ const HERO_CHIPS = ["Women", "Men", "Vintage", "Streetwear", "Sneakers", "Under 
 // whitelist there before adding any trust or social-proof copy back.
 const TRUST = [
   { Icon: Shield, label: "Buyer Protection on every order" },
-  { Icon: Tag, label: "Free to sell" },
+  { Icon: Tag, label: "Free to list" },
   { Icon: Package, label: "Sellers ship direct" },
   { Icon: MapPin, label: "Human support, based in Australia" },
 ];
 
 const SELLER_BENEFITS = [
   { Icon: Zap, title: "List for free", body: "Photograph your pieces, set a price and publish. No listing fees." },
-  { Icon: Tag, title: "Keep what you make", body: "No seller commission on anything you sell." },
+  { Icon: Tag, title: "Free to list", body: "1.75% + 30¢ only when it sells — nothing until then." },
   { Icon: Package, title: "You ship direct", body: "Post the order straight to the buyer once it sells." },
   { Icon: MapPin, title: "Human support", body: "Real people, based in Australia, at support@bushpop.com.au." },
 ];
 
 const HOW_IT_WORKS = [
   { step: "1", title: "List for free.", body: "Sellers photograph their preloved pieces and list them at no cost." },
-  { step: "2", title: "Buy with protection.", body: "Buyers pay the item price plus a 7% Buyer Protection fee at checkout." },
+  { step: "2", title: "Buy with protection.", body: "Buyers pay the item price plus a 4% + 50¢ Buyer Protection fee on posted orders — free for local pickup." },
   { step: "3", title: "Shipped direct.", body: "The seller posts your order straight to you." },
 ];
 
 const FACTS = [
-  { title: "Free to sell", body: "No listing fees and no seller commission. Keep what you make." },
-  { title: "Buyer Protection on every order", body: "A 7% Buyer Protection fee is added at checkout, so every purchase is covered." },
+  { title: "Free to list", body: "No listing fees — 1.75% + 30¢ only when it sells." },
+  { title: "Buyer Protection on every order", body: "A 4% + 50¢ Buyer Protection fee is added at checkout on posted orders — free for local pickup, and every purchase is covered." },
   { title: "Sellers ship direct", body: "Your order comes straight from the seller's wardrobe to your door." },
   { title: "Australian owned and based", body: "A P2P marketplace for preloved fashion, trading since 2024." },
 ];
@@ -238,9 +238,9 @@ export default function HomePage() {
             <div className="eyebrow !text-[#79e0a0]">Sell with Bushpop</div>
             <h2 className="font-head text-3xl font-extrabold text-white">Turn your wardrobe into cash</h2>
             <p className="mt-3 max-w-md text-[#a9b1ac]">
-              List for free, post it straight to the buyer and keep what you make. Selling on Bushpop costs nothing.
+              List for free and post it straight to the buyer. Just 1.75% + 30¢ when it sells.
             </p>
-            <Button href={SELL_SOON} variant="green" size="lg" className="mt-6">Start selling free</Button>
+            <Button href={SELL_SOON} variant="green" size="lg" className="mt-6">Start listing free</Button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {SELLER_BENEFITS.map(({ Icon, title, body }) => (

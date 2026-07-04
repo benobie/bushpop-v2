@@ -84,6 +84,22 @@ function computeQuoteHash(
  * Compute totals for one seller's items — shared money-math module (task 9):
  * commission from @bushpop/config (30c fixed applies once per seller order),
  * buyer-side shipping for buyer_pays items, prepaid label deduction.
+ *
+ * Fee Model D divergence (task 8ecbbbcf, deliberately NOT fixed here — this
+ * multi-seller quote path predates Model D and is out of scope, Phase 2):
+ * `calculateOrderTotals`'s `totalCents` now includes the Buyer Protection
+ * fee, computed once per call. This function calls it PER SELLER GROUP, so
+ * using `totals.totalCents` as-is would (a) charge the 50c flat component
+ * once per seller instead of once per order (the same pre-existing pattern
+ * the 30c commission fixed component already has here) and (b) inflate
+ * `application_fee_amount` on the destination-charge path below, which
+ * derives from `totalCents - sellerProceedsCents` — silently over-
+ * withholding from the seller's Stripe transfer by the BP fee amount. Both
+ * would be real money bugs if this path were wired for live traffic today.
+ * Recomputing `totalCents` locally (subtotal + shipping, no BP fee) keeps
+ * this path's pre-existing invariants intact: it simply does not charge
+ * Buyer Protection yet. Direct-mode checkout (checkout/service.ts) is the
+ * only live path and is fully Model D-compliant.
  */
 function computeSellerTotals(
   items: OrderTotalsItem[],
@@ -102,7 +118,7 @@ function computeSellerTotals(
     shippingCents: totals.shippingCents,
     platformFeeCents: totals.platformFeeCents,
     sellerProceedsCents: totals.sellerProceedsCents,
-    totalCents: totals.totalCents,
+    totalCents: totals.subtotalCents + totals.shippingCents,
     currency: totals.currency,
   };
 }

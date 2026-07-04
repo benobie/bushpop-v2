@@ -331,6 +331,14 @@ describe("createQuoteAndPaymentIntent", () => {
     const piCallArgs = piCreate.mock.calls[0]![0] as Record<string, unknown>;
     // Buyer pays 20000 (no shipping on prepaid); platform withholds fee 380
     // + label 1095 = 1475 so the seller's auto-transfer nets exactly 18525.
+    // Fee Model D regression lock: this item is "prepaid" (posted, not
+    // pickup), so it WOULD attract a 4%+50c = 850c Buyer Protection fee under
+    // the shared calculateOrderTotals() — if computeSellerTotals() ever
+    // reverts to using its totalCents as-is instead of recomputing
+    // subtotal+shipping locally, `amount` becomes 20850 and/or
+    // `application_fee_amount` balloons to 2325, over-withholding 850c from
+    // the seller's Stripe Connect transfer. Both assertions below fail loudly
+    // if that regression is reintroduced.
     expect(piCallArgs["amount"]).toBe(20000);
     expect(piCallArgs["application_fee_amount"]).toBe(1475);
 

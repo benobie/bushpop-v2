@@ -30,6 +30,7 @@ export function formatOrder(
     subtotalCents: order.subtotalCents,
     shippingCents: order.shippingCents,
     platformFeeCents: order.platformFeeCents,
+    buyerProtectionFeeCents: order.buyerProtectionFeeCents,
     sellerProceedsCents: order.sellerProceedsCents,
     totalCents: order.totalCents,
     currency: order.currency,
