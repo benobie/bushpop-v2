@@ -1,3 +1,9 @@
 @import "tailwindcss";
 @import "@bushpop/config/tailwind/tokens";
 @import "@bushpop/config/tailwind/bushpop-overrides";
+
+/* @bushpop/ui is a separate workspace package — Tailwind v4's automatic
+   content detection doesn't cross package boundaries, so classes used
+   only inside its components (e.g. bg-brand, bg-interactive) never get
+   compiled unless explicitly scanned here. */
+@source "../../../../packages/ui/src";
