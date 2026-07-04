@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "@bushpop/config/tailwind/tokens";
 @import "@bushpop/config/tailwind/bushpop-overrides";
+@import "@bushpop/ui/styles/lit-glass";
 
 /* @bushpop/ui is a separate workspace package — Tailwind v4's automatic
    content detection doesn't cross package boundaries, so classes used

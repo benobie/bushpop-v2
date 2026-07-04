@@ -76,4 +76,87 @@
   /* Shadows */
   --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
   --shadow-card-hover: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+  /* =====================================================================
+     BRG DESIGN SYSTEM (U0, 05/07/2026) — ported byte-exact from
+     design/home/bushpop.css (Bushpop/design repo). This is the single
+     token source for @bushpop/ui's new "Lit Glass" primitives (Button,
+     Chip, FoilBadge, Pcard, Rail, SiteNav, SiteFooter, mobile bottom bar).
+
+     Deliberately ADDITIVE, not a replacement of the --color-brand-* /
+     --color-trust-* / --color-interactive scale above: dozens of already
+     -shipped surfaces (browse, checkout, bag, dashboard, sell wizard)
+     consume that scale today and are explicitly out of this session's
+     scope (page rebuilds are U1; sell-wizard restyle is W6). Migrating a
+     surface onto the tokens below happens page-by-page in later phases.
+     ===================================================================== */
+
+  /* ink / hairline / surface ladder */
+  --color-bp-ink: #1d1d1f;
+  --color-bp-ink-2: #6e6e73;
+  --color-bp-ink-3: #86868b;
+  --color-bp-line: rgba(0, 0, 0, 0.08);
+  --color-bp-line-2: rgba(0, 0, 0, 0.12);
+  --color-bp-surface: #ffffff;
+  --color-bp-surface-2: #f5f5f7;
+  --color-bp-surface-3: #fafafa;
+
+  /* brand green — LOCKED 02/07/2026: British racing green #004225.
+     green-ink = text/rest · green = lit/hover. */
+  --color-bp-green: #0d6b3f;
+  --color-bp-green-ink: #004225;
+  --color-bp-green-cta: #004225;
+  --color-bp-green-cta-hover: #005c30;
+  --color-bp-on-cta: #ffffff;
+
+  /* flat primary — LOCKED 04/07/2026 (palette-direction sign-off ②):
+     anything "primary colour" but FLAT (links, hover text-lights, flat
+     labels) uses BRG BRIGHT — classic #004225 doesn't separate from dark
+     text. Gradients/fills/CTAs keep the classic family above. */
+  --color-bp-green-bright: #0b5c35;
+
+  /* F2 subtle depth CTA gradient stack (Ben 02/07 — a whisper of top-lit
+     gradient, not candy) */
+  --color-bp-cta-top: #0b5231;
+  --color-bp-cta-mid: #004225;
+  --color-bp-cta-bot: #00341d;
+
+  /* impact palette — SIGNED OFF 04/07: dashboard/impact DARK surfaces
+     ONLY, semantic (one hue = one metric), NEVER buttons/nav/marketing/
+     product UI. AA-verified on dashboard dark: 11.1/9.9/10.4/5.7:1. */
+  --color-bp-impact-money: #3ce87a;
+  --color-bp-impact-water: #2fd4e0;
+  --color-bp-impact-co2: #8fd694;
+  --color-bp-impact-neutral: #8a938c;
+
+  /* brand dark — LOCKED 02/07/2026: neutral OBSIDIAN (green-black
+     rejected). One dark family everywhere: buttons, footer, sellpanel. */
+  --color-bp-obsidian: #0a0c0b;
+  --color-bp-obsidian-2: #141615;
+
+  /* deal red — ONLY ever the deal (sale badges/pricing). Never reused
+     for destructive/danger UI — that stays on --color-red-600..800
+     above, a distinct neutral-danger semantic. */
+  --color-bp-red: #e0362f;
+  --color-bp-red-2: #c62822;
+
+  /* foil badge extras */
+  --color-bp-gold: #ffc400;
+  --color-bp-gold-2: #e8a900;
+
+  /* radii — pill = money CTAs + chips; 12px rect = everything else;
+     card radii per prototype .pimg/.pcard */
+  --radius-bp-pill: 980px;
+  --radius-bp-rect: 12px;
+  --radius-bp-card: 18px;
+  --radius-bp-card-lg: 26px;
+
+  /* shadows */
+  --shadow-bp: 0 4px 24px -8px rgba(20, 30, 24, 0.14);
+  --shadow-bp-lg: 0 24px 60px -24px rgba(20, 30, 24, 0.3);
+
+  /* type — prototype heads = DM Sans; body = Inter (matches apps/web's
+     porting decision, HANDOFF-styling-rollout.md §5) */
+  --font-bp-head: "DM Sans", -apple-system, system-ui, sans-serif;
+  --font-bp-body: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }

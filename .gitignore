@@ -34,3 +34,12 @@ drizzle-out/
 
 # wrangler local state (pages dev cache)
 .wrangler/
+
+# design-parity-screenshots.mjs output (local-only tool; comparison target
+# is the non-git ~/projects/Bushpop workspace, not present in CI)
+.design-parity/
+
+# Playwright local run artifacts
+test-results/
+playwright-report/
+blob-report/

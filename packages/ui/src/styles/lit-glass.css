@@ -1,0 +1,1322 @@
+/* =====================================================================
+   Lit Glass — @bushpop/ui component recipes (U0, 05/07/2026).
+   Ported byte-exact from design/home/bushpop.css (Bushpop/design repo,
+   HANDOFF-styling-rollout.md §§2-3). Class names are prefixed `bp-` to
+   avoid colliding with any other CSS in a consuming app; the VISUAL
+   recipes (gradients, masks, timings) are copied verbatim — only
+   selectors/tokens were renamed.
+
+   Imported once via @bushpop/ui/styles/lit-glass in an app's globals.css,
+   alongside @bushpop/config/tailwind/tokens (the token source these
+   recipes read from via var(--color-bp-*) etc).
+   ===================================================================== */
+
+@property --bp-arc-a {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes bp-arc-orbit {
+  to {
+    --bp-arc-a: 360deg;
+  }
+}
+
+/* premium sheen: one graceful pass (~1.9s), then rest — recurs each 4.8s cycle */
+@keyframes bp-btn-sheen {
+  0% {
+    background-position: 150% 0, 0 0;
+  }
+  40% {
+    background-position: -150% 0, 0 0;
+  }
+  100% {
+    background-position: -150% 0, 0 0;
+  }
+}
+
+@keyframes bp-gspark {
+  to {
+    transform: translate(var(--bp-dx), var(--bp-dy)) scale(0.15);
+    opacity: 0;
+  }
+}
+
+@keyframes bp-badge-sheen {
+  0% {
+    background-position: 128% 0, 0 0;
+  }
+  62% {
+    background-position: -128% 0, 0 0;
+  }
+  100% {
+    background-position: -128% 0, 0 0;
+  }
+}
+
+@keyframes bp-heart-pop {
+  0% {
+    transform: scale(0.72);
+  }
+  55% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bp-mh-float {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(calc(-50% + var(--bp-hx, 0px)), calc(-50% - 30px)) scale(1.15);
+    opacity: 0;
+  }
+}
+
+@keyframes bp-trust-bloom {
+  0% {
+    background-color: rgba(255, 255, 255, 0.62);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+  40% {
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1), 0 1px 6px rgba(0, 0, 0, 0.09);
+  }
+  100% {
+    background-color: rgba(255, 255, 255, 0.62);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+}
+
+@keyframes bp-trust-mark {
+  0% {
+    filter: none;
+  }
+  35% {
+    filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-bp-green-bright) 55%, transparent));
+  }
+  100% {
+    filter: none;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Buttons — primary = F2 subtle-glass BRG pill (the dopamine accent,
+   add-to-cart/buy/sell CTAs only). Secondary = 12px glass rects.
+   Shape rule: pill = money CTA, rect = everything else.
+   --------------------------------------------------------------------- */
+.bp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-bp-head);
+  font-weight: 600;
+  border-radius: var(--radius-bp-rect);
+  font-size: 15px;
+  padding: 12px 24px;
+  transition: transform 0.12s ease, box-shadow 0.25s ease, background 0.2s, border-color 0.2s, filter 0.2s;
+}
+.bp-btn:active {
+  transform: scale(0.98);
+}
+.bp-btn:focus-visible {
+  outline: 2px solid var(--color-bp-green);
+  outline-offset: 2px;
+}
+.bp-btn-block {
+  width: 100%;
+}
+.bp-btn-lg {
+  padding: 15px 26px;
+  font-size: 16px;
+}
+.bp-btn-sm {
+  padding: 8px 15px;
+  font-size: 13.5px;
+  gap: 6px;
+}
+.bp-btn-nav {
+  height: 38px;
+  padding: 0 15px;
+  border-radius: var(--radius-bp-rect);
+}
+.bp-btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* PRIMARY — F2 subtle glass (supersedes candy-glass). Near-flat top-lit
+   BRG fill + specular top rim + hairline edge; always-on orbit ring.
+   Hover = light: interior cursor glow + ONE slow premium sheen pass. */
+.bp-btn-green {
+  border-radius: var(--radius-bp-pill);
+  position: relative;
+  overflow: visible;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(115deg, transparent 36%, rgba(255, 255, 255, 0.1) 44%, rgba(255, 255, 255, 0.3) 50%, rgba(255, 255, 255, 0.1) 56%, transparent 64%) no-repeat,
+    linear-gradient(180deg, var(--color-bp-cta-top) 0%, var(--color-bp-cta-mid) 55%, var(--color-bp-cta-bot) 100%);
+  background-size: 250% 100%, 100% 100%;
+  background-position: 150% 0, 0 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 1px 2px rgba(0, 0, 0, 0.22), 0 6px 18px -10px rgba(0, 45, 25, 0.55);
+  transition: transform 0.14s ease, box-shadow 0.18s ease, background 0.18s ease, filter 0.2s ease;
+}
+/* ring sits ON the hairline border (inset:-1px) so the lit glass edge
+   covers it — inset:0 leaves the translucent border exposed as a dark
+   outline (Ben caught it 02/07). NEVER change this to inset:0. */
+.bp-btn-green::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.2px;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(90px circle at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(255, 255, 255, 0.95), transparent 75%),
+    conic-gradient(from var(--bp-arc-a), rgba(255, 255, 255, 0.2) 0deg, rgba(255, 255, 255, 0.95) 40deg, rgba(170, 255, 205, 0.55) 82deg, rgba(255, 255, 255, 0.2) 150deg, rgba(255, 255, 255, 0.2) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: bp-arc-orbit 4s linear infinite;
+}
+.bp-btn-green::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(120px circle at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(255, 255, 255, 0.24), transparent 70%);
+}
+.bp-btn-green:hover::after {
+  opacity: 1;
+}
+.bp-btn-green:hover {
+  transform: none;
+  filter: brightness(1.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 1px 3px rgba(0, 0, 0, 0.25), 0 0 18px -4px rgba(45, 190, 115, 0.75), 0 0 46px -10px rgba(30, 160, 95, 0.45);
+  animation: bp-btn-sheen 4.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+.bp-btn-green:active {
+  transform: scale(0.97, 0.95);
+  filter: brightness(1.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25), 0 0 22px -2px rgba(60, 210, 135, 0.85), 0 0 56px -8px rgba(30, 160, 95, 0.5);
+}
+/* liquid sparkle click-burst — spawned by useSparkleBurst() */
+.bp-gspark {
+  position: absolute;
+  z-index: 4;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, #fff, rgba(190, 255, 220, 0.9) 55%, transparent 75%);
+  animation: bp-gspark 0.6s cubic-bezier(0.1, 0.7, 0.3, 1) forwards;
+}
+
+/* SECONDARY — glass rects. Resting = flat fill + hairline glass edge.
+   Hover = the button becomes a light source under the cursor. */
+.bp-btn-ghost,
+.bp-btn-olite,
+.bp-btn-dark {
+  position: relative;
+}
+.bp-btn-ghost::after,
+.bp-btn-olite::after,
+.bp-btn-dark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.bp-btn-ghost::before,
+.bp-btn-olite::before,
+.bp-btn-dark::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.bp-btn-ghost:hover::after,
+.bp-btn-olite:hover::after,
+.bp-btn-dark:hover::after,
+.bp-btn-ghost:hover::before,
+.bp-btn-olite:hover::before,
+.bp-btn-dark:hover::before {
+  opacity: 1;
+}
+.bp-btn .bp-pic {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.bp-btn-dark:hover .bp-pic {
+  transform: rotate(90deg);
+}
+
+.bp-btn-ghost {
+  color: var(--color-bp-ink);
+  background: rgba(29, 31, 30, 0.06);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.bp-btn-ghost::after {
+  background: radial-gradient(110px circle at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(29, 31, 30, 0.09), transparent 70%);
+}
+.bp-btn-ghost::before {
+  background: radial-gradient(90px circle at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.12) 75%);
+}
+.bp-btn-ghost:hover {
+  background: rgba(29, 31, 30, 0.08);
+}
+.bp-btn-ghost:active {
+  transform: scale(0.96);
+}
+
+.bp-btn-olite {
+  color: var(--color-bp-ink);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.bp-btn-olite::after {
+  background: radial-gradient(110px circle at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(29, 31, 30, 0.06), transparent 70%);
+}
+.bp-btn-olite::before {
+  background: radial-gradient(90px circle at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.06) 75%);
+}
+.bp-btn-olite:hover {
+  background: #f7f8fa;
+}
+.bp-btn-olite:active {
+  transform: scale(0.96);
+}
+
+.bp-btn-dark {
+  color: #fff;
+  background: linear-gradient(180deg, var(--color-bp-obsidian-2), var(--color-bp-obsidian));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.bp-btn-dark::after {
+  background: radial-gradient(120px circle at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(255, 255, 255, 0.22), transparent 70%);
+}
+.bp-btn-dark::before {
+  background:
+    radial-gradient(90px circle at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(255, 255, 255, 0.95), transparent 75%),
+    conic-gradient(from var(--bp-arc-a), rgba(255, 255, 255, 0.14) 0deg, rgba(255, 255, 255, 0.85) 40deg, rgba(200, 255, 220, 0.45) 82deg, rgba(255, 255, 255, 0.14) 150deg, rgba(255, 255, 255, 0.14) 360deg);
+  animation: bp-arc-orbit 3.2s linear infinite;
+}
+.bp-btn-dark:hover {
+  background: linear-gradient(180deg, #1d201f, #0e100f);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.bp-btn-dark:active {
+  transform: scale(0.96);
+  filter: brightness(1.12);
+}
+.bp-btn-ghost:active,
+.bp-btn-olite:active {
+  filter: brightness(0.97);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bp-btn-green::before,
+  .bp-btn-dark::before {
+    animation: none;
+  }
+  .bp-btn-green:hover {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Chip · toggle · text link — cursor-light philosophy, small scale.
+   --------------------------------------------------------------------- */
+.bp-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-bp-head);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 8px 15px;
+  border-radius: var(--radius-bp-pill);
+  background: var(--color-bp-surface-2);
+  color: #33343a;
+  border: 1px solid transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.bp-chip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(70px circle at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(29, 31, 30, 0.09), transparent 70%);
+}
+.bp-chip:hover {
+  background: #ececef;
+}
+.bp-chip:hover::after {
+  opacity: 1;
+}
+.bp-chip:active {
+  transform: scale(0.96);
+}
+.bp-chip:focus-visible {
+  outline: 2px solid var(--color-bp-green);
+  outline-offset: 2px;
+}
+.bp-chip-on {
+  background: var(--color-bp-ink);
+  color: #fff;
+  font-weight: 600;
+}
+.bp-chip-on::after {
+  background: radial-gradient(70px circle at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(255, 255, 255, 0.18), transparent 70%);
+}
+
+.bp-tgl {
+  position: relative;
+  width: 46px;
+  height: 28px;
+  flex: none;
+  border-radius: var(--radius-bp-pill);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(29, 31, 30, 0.12);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+.bp-tgl::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-bp-pill);
+  background: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 0 0 0.5px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.28);
+  transition: left 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2), width 0.12s ease;
+}
+.bp-tgl:hover {
+  background: rgba(29, 31, 30, 0.18);
+}
+.bp-tgl:active::before {
+  width: 25px;
+}
+.bp-tgl-on {
+  background: linear-gradient(180deg, var(--color-bp-cta-top), var(--color-bp-cta-bot));
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.bp-tgl-on::before {
+  left: 20px;
+}
+.bp-tgl-on:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 14px -3px rgba(45, 190, 115, 0.6);
+}
+.bp-tgl-on:active::before {
+  left: 17px;
+}
+.bp-tgl:focus-visible {
+  outline: 2px solid var(--color-bp-green);
+  outline-offset: 2px;
+}
+
+.bp-tlink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-bp-head);
+  font-weight: 600;
+  color: var(--color-bp-green-bright);
+  cursor: pointer;
+  padding-bottom: 1px;
+  background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1.5px;
+  transition: color 0.15s ease, background-size 0.28s ease;
+  border: none;
+}
+.bp-tlink:hover {
+  color: var(--color-bp-green);
+  background-size: 100% 1.5px;
+}
+.bp-tlink .bp-pic {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.bp-tlink:hover .bp-pic {
+  transform: translateX(3px);
+}
+.bp-tlink-ink {
+  color: var(--color-bp-ink);
+}
+.bp-tlink-ink:hover {
+  color: #000;
+}
+.bp-tlink:focus-visible {
+  outline: 2px solid var(--color-bp-green);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------------
+   Foil badges — one anatomy, semantic colours. Deal = red (discount,
+   "N% OFF"). Gold = SAVE $N, black text. Fresh = BRG. Default/obsidian
+   = scarcity/info. Trust = frosted glass, no sheen.
+   --------------------------------------------------------------------- */
+.bp-badge {
+  position: absolute;
+  left: 9px;
+  top: 9px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #fff;
+  font-family: var(--font-bp-head);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  background:
+    linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.3) 50%, transparent 66%) no-repeat,
+    linear-gradient(135deg, #20231f, #0e100f 60%, var(--color-bp-obsidian));
+  background-size: 230% 100%, 100% 100%;
+  background-position: 128% 0, 0 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+.bp-badge-deal {
+  background:
+    linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.38) 50%, transparent 66%) no-repeat,
+    linear-gradient(135deg, #f5473b, #d92c25 55%, #b8211b);
+  background-size: 230% 100%, 100% 100%;
+  background-position: 128% 0, 0 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  text-shadow: 0 1px 1px rgba(110, 10, 5, 0.35);
+}
+.bp-badge-gold {
+  color: #1d1d1f;
+  background:
+    linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.45) 50%, transparent 66%) no-repeat,
+    linear-gradient(135deg, #ffd54a, var(--color-bp-gold) 55%, var(--color-bp-gold-2));
+  background-size: 230% 100%, 100% 100%;
+  background-position: 128% 0, 0 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+.bp-badge-fresh {
+  background:
+    linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.32) 50%, transparent 66%) no-repeat,
+    linear-gradient(135deg, var(--color-bp-green), var(--color-bp-green-ink) 60%, #00341d);
+  background-size: 230% 100%, 100% 100%;
+  background-position: 128% 0, 0 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+.bp-badge-trust {
+  color: var(--color-bp-ink);
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 3px rgba(0, 0, 0, 0.12);
+  /* trust reads a touch SMALLER than state badges — a quiet certification,
+     not a competing rank */
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: 7px;
+  gap: 3.5px;
+}
+.bp-badge-trust .bp-pic {
+  width: 12px;
+  height: 12px;
+  transition: color 0.35s ease;
+}
+.bp-badge-bl {
+  top: auto;
+  bottom: 9px;
+}
+.bp-badge-inline {
+  position: static;
+}
+/* sheen sweep fires when the parent .bp-pcard is hovered — foil badges
+   only, never trust (trust gets the bloom treatment below) */
+.bp-pcard:hover .bp-badge:not(.bp-badge-trust) {
+  animation: bp-badge-sheen 1.6s cubic-bezier(0.4, 0, 0.2, 1) 1;
+}
+.bp-pcard:hover .bp-badge-trust {
+  animation: bp-trust-bloom 1.5s ease 1;
+}
+.bp-pcard:hover .bp-badge-trust .bp-pic {
+  color: var(--color-bp-green-bright);
+  animation: bp-trust-mark 1.2s ease 1;
+}
+
+/* ---------------------------------------------------------------------
+   Product card — treatment D (LOCKED). Rest: flat photo + 1px glass
+   edge. Hover: quiet zoom 1.03 + brighten 1.07, MONOTONE WHITE cursor
+   light + travelling orbit on one hover-only ring (a green ring was
+   built and rejected), title lights BRG. At-rest light = buttons only.
+   --------------------------------------------------------------------- */
+.bp-pcard {
+  display: block;
+  cursor: pointer;
+}
+.bp-pimg {
+  position: relative;
+  border-radius: var(--radius-bp-card);
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  background: #eceef0;
+}
+.bp-pimg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s ease, filter 0.3s ease;
+}
+.bp-pcard:hover .bp-pimg img {
+  transform: scale(1.03);
+  filter: brightness(1.07);
+}
+.bp-pimg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.bp-pimg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background:
+    radial-gradient(150px circle at var(--bp-cx, 50%) var(--bp-cy, 50%), rgba(255, 255, 255, 0.95), transparent 78%),
+    conic-gradient(from var(--bp-arc-a), rgba(255, 255, 255, 0.18) 0deg, rgba(255, 255, 255, 0.92) 40deg, rgba(255, 255, 255, 0.45) 82deg, rgba(255, 255, 255, 0.18) 150deg, rgba(255, 255, 255, 0.18) 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: bp-arc-orbit 4s linear infinite;
+}
+.bp-pcard:hover .bp-pimg::before {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bp-pimg::before {
+    animation: none;
+  }
+}
+
+/* heart — outline only at rest (white + shadow, readable on any photo);
+   frosted disc on card-hover; click fills it red with a pop */
+.bp-fav {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.2s ease, transform 0.12s ease, box-shadow 0.25s ease;
+}
+.bp-pcard:hover .bp-fav {
+  color: var(--color-bp-ink);
+  filter: none;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-color: rgba(255, 255, 255, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 4px rgba(0, 0, 0, 0.14);
+}
+.bp-fav:hover {
+  background: rgba(255, 255, 255, 0.82);
+}
+.bp-fav:active {
+  transform: scale(0.9);
+}
+.bp-fav-on {
+  color: var(--color-bp-red);
+  animation: bp-heart-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.bp-pcard:hover .bp-fav-on {
+  color: var(--color-bp-red);
+}
+/* mini hearts float up on like */
+.bp-mh {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: 40%;
+  font-size: 10px;
+  color: var(--color-bp-red);
+  pointer-events: none;
+  animation: bp-mh-float 0.7s ease-out forwards;
+}
+
+.bp-pcard .bp-pname {
+  font-size: 13.5px;
+  font-weight: 500;
+  margin: 10px 0 3px;
+  color: var(--color-bp-ink);
+  transition: color 0.18s ease;
+}
+.bp-pcard:hover .bp-pname {
+  color: var(--color-bp-green-bright);
+}
+/* SAVE badge — YELLOW foil, black text; same sheen sweep on card hover */
+.bp-psave {
+  display: inline-block;
+  color: #1d1d1f;
+  font-family: var(--font-bp-head);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background:
+    linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.45) 50%, transparent 66%) no-repeat,
+    linear-gradient(135deg, #ffd54a, var(--color-bp-gold) 55%, var(--color-bp-gold-2));
+  background-size: 230% 100%, 100% 100%;
+  background-position: 128% 0, 0 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+.bp-pcard:hover .bp-psave {
+  animation: bp-badge-sheen 1.6s cubic-bezier(0.4, 0, 0.2, 1) 1;
+}
+.bp-prrp {
+  font-size: 11.5px;
+  color: var(--color-bp-ink-3);
+  text-decoration: line-through;
+  margin-top: 4px;
+}
+.bp-pprice {
+  font-family: var(--font-bp-head);
+  font-weight: 800;
+  font-size: 17px;
+  margin-top: 2px;
+}
+.bp-pprice sup {
+  font-size: 10px;
+  font-weight: 700;
+  vertical-align: top;
+  margin-left: 1px;
+}
+.bp-psize {
+  font-size: 12px;
+  color: var(--color-bp-ink-2);
+  margin-top: 4px;
+}
+.bp-pbrand {
+  font-size: 12.5px;
+  color: var(--color-bp-ink);
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------------------
+   Rail — ALWAYS single row, horizontal scroll-snap, hidden scrollbars,
+   fractional peek at phone width. FLEX, NEVER GRID — grid+overflow-x
+   silently enables vertical scroll (shipped 3x in the prototype).
+   --------------------------------------------------------------------- */
+.bp-rail {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.bp-rail::-webkit-scrollbar {
+  display: none;
+}
+.bp-rail-item {
+  flex: none;
+  scroll-snap-align: start;
+}
+
+/* ---------------------------------------------------------------------
+   Nav — global shared component (spec LOCKED, HANDOFF-nav.md).
+   Borderless at top of page; hairline fades in past 8px scroll.
+   --------------------------------------------------------------------- */
+.bp-nav {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.25s ease;
+}
+.bp-nav-scrolled {
+  border-bottom-color: var(--color-bp-line);
+}
+.bp-nav-inner {
+  position: relative;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.bp-nav-wm {
+  height: 18px;
+  width: auto;
+}
+.bp-nav-search {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(520px, 38vw);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #fff;
+  border: 1px solid var(--color-bp-line-2);
+  border-radius: var(--radius-bp-pill);
+  padding: 9px 16px;
+  font-size: 13.5px;
+  color: var(--color-bp-ink-3);
+  transition: opacity 0.22s ease, visibility 0.22s, background 0.2s;
+}
+.bp-nav-search:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+.bp-nav-search-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.bp-nav-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.bp-nav-right a:not(.bp-btn) {
+  color: #33343a;
+}
+.bp-nav-ic {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #33343a;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.bp-nav-ic:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+.bp-nav-dt {
+  display: inline-flex;
+}
+.bp-nav-mb {
+  display: none;
+}
+@media (max-width: 900px) {
+  .bp-nav-search {
+    display: none;
+  }
+  .bp-nav-dt {
+    display: none !important;
+  }
+  .bp-nav-mb {
+    display: inline-flex;
+  }
+}
+
+/* bag — price + bag are ONE link; hovering either lights both */
+.bp-baglink {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.bp-bagtot {
+  font-family: var(--font-bp-head);
+  font-weight: 500;
+  font-size: 13px;
+  transition: color 0.15s ease, text-shadow 0.2s ease;
+}
+.bp-bagic {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+.bp-bagic svg {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+.bp-bagic .bp-bag-fill {
+  display: none;
+  color: var(--color-bp-cta-mid);
+}
+.bp-bagic .bp-bct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 4px;
+  font-family: var(--font-bp-head);
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--color-bp-ink);
+  pointer-events: none;
+  transition: color 0.15s ease;
+}
+.bp-baglink:hover .bp-bag-fill {
+  display: block;
+}
+.bp-baglink:hover .bp-bag-outline {
+  color: var(--color-bp-cta-bot);
+}
+.bp-bagic::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  background: conic-gradient(from var(--bp-arc-a), rgba(0, 66, 37, 0.2) 0deg, rgba(255, 255, 255, 0.98) 40deg, rgba(140, 255, 190, 0.7) 82deg, rgba(0, 66, 37, 0.2) 150deg, rgba(0, 66, 37, 0.2) 360deg);
+  animation: bp-arc-orbit 4s linear infinite;
+}
+.bp-baglink:hover .bp-bagic::before {
+  opacity: 1;
+}
+.bp-baglink:hover .bp-bagic {
+  filter: brightness(1.14) saturate(1.28) drop-shadow(0 0 7px color-mix(in srgb, color-mix(in srgb, var(--color-bp-green) 45%, #fff) 90%, transparent)) drop-shadow(0 0 18px color-mix(in srgb, color-mix(in srgb, var(--color-bp-green) 55%, #fff) 50%, transparent));
+}
+.bp-baglink:hover .bp-bct {
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 36, 13, 0.8);
+}
+.bp-baglink:hover .bp-bagtot {
+  color: var(--color-bp-green-ink);
+  text-shadow: 0 0 14px color-mix(in srgb, color-mix(in srgb, var(--color-bp-green) 55%, #fff) 55%, transparent);
+}
+.bp-baglink:active .bp-bagic {
+  transform: scale(0.94);
+}
+.bp-acct {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--color-bp-ink-3);
+}
+.bp-acct-av {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7ac46a, #3aa0e8);
+  border: 1px solid var(--color-bp-line);
+}
+
+/* ---------------------------------------------------------------------
+   Mobile burger + nav drawer. Burger LEFT of the logo, mobile only.
+   Two levels: L1 = visitor/logged-in; L2 = per-category submenu.
+   --------------------------------------------------------------------- */
+.bp-burger {
+  display: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-bp-ink);
+  cursor: pointer;
+  flex: none;
+  padding: 0;
+}
+.bp-burger:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+@media (max-width: 900px) {
+  .bp-burger {
+    display: inline-flex;
+  }
+}
+.bp-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  pointer-events: none;
+}
+.bp-drawer-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 11, 0.42);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.bp-drawer-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(320px, 88vw);
+  background: #fff;
+  transform: translateX(-103%);
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 20px 24px;
+  box-shadow: 0 0 60px rgba(10, 12, 11, 0.18);
+}
+.bp-drawer-open {
+  pointer-events: auto;
+}
+.bp-drawer-open .bp-drawer-scrim {
+  opacity: 1;
+}
+.bp-drawer-open .bp-drawer-panel {
+  transform: none;
+}
+.bp-drawer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+}
+.bp-drawer-head .bp-nav-wm {
+  height: 16px;
+}
+.bp-drawer-head button {
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-bp-ink);
+  cursor: pointer;
+  padding: 0;
+}
+.bp-drawer-head button:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+.bp-drawer-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 6px;
+}
+/* buttons always match — drawer CTAs are BOTH 12px rects */
+.bp-drawer-cta .bp-btn {
+  width: 100%;
+  border-radius: var(--radius-bp-rect);
+}
+.bp-drawer-login {
+  text-align: center;
+  font-family: var(--font-bp-head);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-bp-ink);
+  padding: 10px 0 4px;
+}
+.bp-drawer-title {
+  font-family: var(--font-bp-head);
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  padding: 12px 0 6px;
+}
+.bp-drawer-list {
+  display: flex;
+  flex-direction: column;
+}
+.bp-drawer-list a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--color-bp-line);
+  font-family: var(--font-bp-head);
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--color-bp-ink);
+  transition: color 0.18s ease;
+}
+.bp-drawer-list a .bp-pic {
+  color: var(--color-bp-ink-2);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.18s ease;
+}
+.bp-drawer-list a.bp-sale {
+  color: var(--color-bp-red);
+}
+.bp-drawer-list a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(110px 50px at var(--bp-mx, 50%) var(--bp-my, 50%), rgba(29, 31, 30, 0.07), transparent 72%);
+}
+.bp-drawer-list a::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1.5px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(90px 1.5px at var(--bp-mx, 50%) 50%, var(--color-bp-green), rgba(0, 66, 37, 0.3) 55%, transparent 80%);
+}
+@media (hover: hover) {
+  .bp-drawer-list a:hover {
+    color: var(--color-bp-green-ink);
+  }
+  .bp-drawer-list a:hover::after,
+  .bp-drawer-list a:hover::before {
+    opacity: 1;
+  }
+  .bp-drawer-list a:hover .bp-pic {
+    transform: translateX(4px);
+    color: var(--color-bp-green-ink);
+  }
+  .bp-drawer-list a.bp-sale:hover {
+    color: var(--color-bp-red-2);
+  }
+  .bp-drawer-list a.bp-sale:hover::before {
+    background: radial-gradient(90px 1.5px at var(--bp-mx, 50%) 50%, var(--color-bp-red), rgba(198, 40, 34, 0.3) 55%, transparent 80%);
+  }
+  .bp-drawer-list a.bp-sale:hover .bp-pic {
+    color: var(--color-bp-red-2);
+  }
+}
+.bp-drawer-list a:active {
+  background: rgba(0, 0, 0, 0.04);
+}
+.bp-drawer-list a.bp-seeall {
+  border-bottom: 2px solid var(--color-bp-line-2);
+}
+.bp-drawer-list-quiet a {
+  font-weight: 500;
+  font-size: 14px;
+  color: #33343a;
+  padding: 11px 2px;
+}
+.bp-drawer-list-terms a {
+  font-weight: 400;
+  font-size: 13.5px;
+  color: var(--color-bp-ink-2);
+  padding: 9px 2px;
+}
+.bp-drawer-who {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.bp-drawer-out {
+  margin-top: auto;
+  padding-top: 22px;
+  font-size: 14px;
+  color: #33343a;
+}
+.bp-drawer-out a {
+  display: block;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--color-bp-line);
+}
+.bp-drawer-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0 4px;
+}
+.bp-drawer-cards .bp-ph,
+.bp-drawer-cards a {
+  height: 120px;
+  border-radius: 14px;
+  background: #aab3bd;
+  display: block;
+}
+
+/* ---------------------------------------------------------------------
+   Footer
+   --------------------------------------------------------------------- */
+.bp-footer {
+  background: var(--color-bp-obsidian);
+  color: #cfd2d0;
+  margin-top: 60px;
+}
+.bp-footer-top {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 52px 24px 28px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr;
+  gap: 30px;
+}
+.bp-footer-wm {
+  height: 22px;
+  width: auto;
+}
+.bp-footer-brandcol p {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #8a8f8c;
+  max-width: 230px;
+}
+.bp-footer-socials {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+}
+.bp-footer-socials a {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+.bp-footer-col h5 {
+  font-family: var(--font-bp-head);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7e837f;
+  margin-bottom: 14px;
+}
+.bp-footer-col a {
+  display: block;
+  font-size: 13.5px;
+  color: #cfd2d0;
+  margin-bottom: 10px;
+}
+.bp-footer-col a:hover {
+  color: #fff;
+}
+.bp-footer-legal {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 20px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #7e837f;
+}
+@media (max-width: 900px) {
+  .bp-footer-top {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Mobile bottom bar — new (not in the prototype, which relies on the
+   drawer for mobile chrome). Same Lit Glass language: flat at rest,
+   active tab lights BRG.
+   --------------------------------------------------------------------- */
+.bp-bottombar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: none;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  border-top: 1px solid var(--color-bp-line);
+}
+@media (max-width: 900px) {
+  .bp-bottombar {
+    display: flex;
+  }
+}
+.bp-bottombar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 60px;
+  width: 100%;
+  padding: 0 8px;
+}
+.bp-bottombar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-bp-head);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--color-bp-ink-2);
+  padding: 6px 10px;
+  border-radius: var(--radius-bp-rect);
+  transition: color 0.18s ease;
+}
+.bp-bottombar a:active {
+  background: rgba(0, 0, 0, 0.04);
+}
+.bp-bottombar a.bp-active {
+  color: var(--color-bp-green-ink);
+}

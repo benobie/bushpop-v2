@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./cn": "./src/lib/cn.ts"
+    "./cn": "./src/lib/cn.ts",
+    "./styles/lit-glass": "./src/styles/lit-glass.css"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.2",
