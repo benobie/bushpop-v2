@@ -47,6 +47,34 @@ export interface EmailJobData {
   notificationLeaseHeld?: boolean;
 }
 
+export interface FailedEmailJob {
+  jobId: string;
+  type: EmailJobType;
+  orderId: string;
+  failedReason: string | undefined;
+  attemptsMade: number;
+}
+
+/**
+ * Surfaces the email queue's dead-lettered jobs — those that exhausted all
+ * retry attempts. This is the "is the DLQ empty?" check for the G5
+ * support-readiness smoke: a failed send must be queryable here, never
+ * silently dropped. BullMQ keeps the most recent `removeOnFail` count
+ * (currently 3) of these per queue.
+ */
+export async function getFailedEmailJobs(): Promise<FailedEmailJob[]> {
+  const queue = getEmailQueue();
+  const jobs = await queue.getFailed();
+
+  return jobs.map((job) => ({
+    jobId: job.id ?? "",
+    type: job.data.type,
+    orderId: job.data.orderId,
+    failedReason: job.failedReason,
+    attemptsMade: job.attemptsMade,
+  }));
+}
+
 export async function enqueueEmail(data: EmailJobData): Promise<void> {
   const queue = getEmailQueue();
   const jobId = data.notificationId ?? `${data.type}-${data.orderId}`;
