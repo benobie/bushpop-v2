@@ -299,6 +299,20 @@ async function processNotificationEmail(job: Job<EmailJobData>): Promise<void> {
   console.info(`[email] Sent ${type} for entity ${entityId}`);
 }
 
+/**
+ * Idempotency-Key sent to Resend on every order-triggered send. Without this,
+ * a BullMQ retry of an already-sent job (e.g. the worker crashes after Resend
+ * accepts the message but before the job is marked complete) re-sends the
+ * same email — Resend dedupes repeated sends with the same key. Falls back
+ * to the same `type-orderId` string already used as the BullMQ jobId when no
+ * notificationId is present, so every direct order-lifecycle send (order
+ * confirmation, shipping confirmation, refund confirmation, admin alert) is
+ * covered, not just the notification-outbox-tracked types.
+ */
+function resendIdempotencyKey(type: EmailJobType, orderId: string, notificationId?: string): string {
+  return notificationId ?? `${type}-${orderId}`;
+}
+
 async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
   const { type, orderId, notificationId, notificationLeaseHeld = false } = job.data;
 
@@ -354,7 +368,7 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         to: order.buyerEmail,
         subject,
         text,
-        headers: notificationId ? { "Idempotency-Key": notificationId } : undefined,
+        headers: { "Idempotency-Key": resendIdempotencyKey(type, orderId, notificationId) },
       });
 
       if (notificationId) {
@@ -380,7 +394,7 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         to: order.sellerEmail,
         subject,
         text,
-        headers: notificationId ? { "Idempotency-Key": notificationId } : undefined,
+        headers: { "Idempotency-Key": resendIdempotencyKey(type, orderId, notificationId) },
       });
 
       if (notificationId) {
@@ -403,7 +417,7 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         to: order.buyerEmail,
         subject,
         text,
-        headers: notificationId ? { "Idempotency-Key": notificationId } : undefined,
+        headers: { "Idempotency-Key": resendIdempotencyKey(type, orderId, notificationId) },
       });
 
       if (notificationId) {
@@ -433,7 +447,7 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         to: order.buyerEmail,
         subject,
         text,
-        headers: notificationId ? { "Idempotency-Key": notificationId } : undefined,
+        headers: { "Idempotency-Key": resendIdempotencyKey(type, orderId, notificationId) },
       });
 
       if (notificationId) {
@@ -452,7 +466,7 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         to: adminEmail,
         subject,
         text,
-        headers: notificationId ? { "Idempotency-Key": notificationId } : undefined,
+        headers: { "Idempotency-Key": resendIdempotencyKey(type, orderId, notificationId) },
       });
 
       if (notificationId) {

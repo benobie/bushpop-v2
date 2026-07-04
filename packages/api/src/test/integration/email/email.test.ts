@@ -391,6 +391,23 @@ describe("Email worker — processEmailJob", () => {
 
     expect(getSentEmails()).toHaveLength(0);
   });
+
+  it("refund_confirmation_buyer — sends a deterministic Idempotency-Key even without a notificationId", async () => {
+    // Without this, a BullMQ retry of an already-sent job (e.g. the worker
+    // crashes after Resend accepts the message but before the job is marked
+    // complete) would re-send the same refund email — Resend dedupes on
+    // this header. Order-triggered sends never carry a notificationId (only
+    // the notification-outbox types do), so it must fall back to a stable
+    // type+orderId key, not go header-less.
+    const { order } = await createMinimalOrder({ status: "refunded" });
+    await createProcessedRefund(order.id, order.totalCents);
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "refund_confirmation_buyer", orderId: order.id });
+
+    const sent = getSentEmails();
+    expect(sent[0]!.headers).toEqual({ "Idempotency-Key": `refund_confirmation_buyer-${order.id}` });
+  });
 });
 
 // ── 3. Rate limiting — worker configured at 2/sec ─────────────────────────────

@@ -198,6 +198,23 @@ describe("processRefund — pre-transfer path (held)", () => {
     // Buyer refund confirmation email enqueued
     expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
   });
+
+  it("still completes the refund (order refunded, hold refunded) even when enqueueEmail rejects", async () => {
+    // The email send is a side channel — a Redis outage or queue rejection
+    // must never unwind or fail the money-critical refund itself. Every call
+    // site wraps enqueueEmail in .catch(); this proves that holds in practice,
+    // not just by reading the source.
+    vi.mocked(enqueueEmail).mockRejectedValueOnce(new Error("redis unavailable"));
+    const { orderId, sellerId, holdId } = await createOrderFixture({ holdStatus: "held" });
+
+    await expect(processRefund(orderId, sellerId, "buyer request")).resolves.not.toThrow();
+
+    const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+    expect(order!.status).toBe("refunded");
+
+    const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+    expect(hold!.status).toBe("refunded");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -404,6 +421,55 @@ describe("resumePendingRefunds", () => {
     expect(op!.providerObjectId).toBe("re_test_stripe_123");
 
     // Order recovered to refunded → buyer confirmation enqueued
+    const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+    expect(order!.status).toBe("refunded");
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
+  });
+
+  it("completes a stale pending reversal op by re-calling Stripe with the same idempotency key", async () => {
+    // Mirrors the refund-op resume test above, but for the post-transfer
+    // (reversal) crash-recovery branch — this path had zero test coverage
+    // before this PR added the refund-confirmation enqueue to it.
+    const { orderId } = await createOrderFixture({
+      orderStatus: "refund_in_progress",
+      holdStatus: "released",
+    });
+
+    const staleOpId = ulid();
+    const staleKey = `reversal_${ulid()}`;
+    await db.insert(paymentOperations).values({
+      id: staleOpId,
+      orderId,
+      type: "reversal",
+      idempotencyKey: staleKey,
+      amountCents: 5500,
+      status: "pending",
+    });
+    await db.execute(sql`
+      UPDATE payment_operations
+      SET created_at = now() - interval '10 minutes'
+      WHERE id = ${staleOpId}
+    `);
+
+    await resumePendingRefunds();
+
+    const stripe = vi.mocked(getStripe)();
+
+    expect(stripe.transfers.createReversal).toHaveBeenCalledWith(
+      "tr_test_123",
+      expect.objectContaining({
+        metadata: expect.objectContaining({ piklo_payment_op_id: staleOpId }),
+      }),
+      { idempotencyKey: staleKey },
+    );
+
+    const [op] = await db
+      .select()
+      .from(paymentOperations)
+      .where(eq(paymentOperations.id, staleOpId));
+    expect(op!.status).toBe("succeeded");
+    expect(op!.providerObjectId).toBe("trr_test_stripe_123");
+
     const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
     expect(order!.status).toBe("refunded");
     expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
