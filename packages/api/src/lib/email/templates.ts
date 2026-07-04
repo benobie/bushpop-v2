@@ -273,3 +273,59 @@ export function listingPublishedSellerTemplate(params: ListingPublishedSellerPar
     ].join("\n"),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Account emails (better-auth: email verification + password reset)
+// ---------------------------------------------------------------------------
+
+export interface AccountVerificationEmailParams {
+  url: string;
+  channelName: string;
+}
+
+export function accountVerificationEmailTemplate(params: AccountVerificationEmailParams): {
+  subject: string;
+  text: string;
+} {
+  return {
+    subject: `Confirm your email for ${params.channelName}`,
+    text: [
+      "Hi,",
+      "",
+      `Please confirm your email address to finish setting up your ${params.channelName} account.`,
+      "",
+      params.url,
+      "",
+      "If you didn't create this account, you can safely ignore this email.",
+      "",
+      "Thanks,",
+      `The ${params.channelName} Team`,
+    ].join("\n"),
+  };
+}
+
+export interface PasswordResetEmailParams {
+  url: string;
+  channelName: string;
+}
+
+export function passwordResetEmailTemplate(params: PasswordResetEmailParams): {
+  subject: string;
+  text: string;
+} {
+  return {
+    subject: `Reset your ${params.channelName} password`,
+    text: [
+      "Hi,",
+      "",
+      `We received a request to reset your ${params.channelName} password. Click the link below to choose a new one:`,
+      "",
+      params.url,
+      "",
+      "If you didn't request this, you can safely ignore this email — your password won't change.",
+      "",
+      "Thanks,",
+      `The ${params.channelName} Team`,
+    ].join("\n"),
+  };
+}

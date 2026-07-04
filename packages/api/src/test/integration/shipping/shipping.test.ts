@@ -341,6 +341,56 @@ describe("ShippingLabelWorker — processJob", () => {
     expect(updated!.trackingNumber).toMatch(/^MOCK-/);
     expect(updated!.trackingCarrier).toBe("mock");
   });
+
+  it("transitions paid → shipped and dispatches order.shipped (drives shipping_confirmation_buyer)", async () => {
+    const order = await createMinimalOrder({ status: "paid" });
+
+    // setup.ts defaults STARSHIPIT_API_KEY so getShippingProvider() would
+    // otherwise pick the real Starshipit HTTP provider — force the mock for
+    // this test, matching how the rest of the suite exercises the label flow.
+    const { _resetShippingProvider } = await import("../../../lib/shipping/index.js");
+    const originalKey = process.env.STARSHIPIT_API_KEY;
+    delete process.env.STARSHIPIT_API_KEY;
+    _resetShippingProvider();
+
+    try {
+      const { processShippingLabelJobForTest } = await import("../../../workers/shipping-label.js");
+      await processShippingLabelJobForTest({ orderId: order.id });
+    } finally {
+      if (originalKey !== undefined) process.env.STARSHIPIT_API_KEY = originalKey;
+      _resetShippingProvider();
+    }
+
+    const [updated] = await db.select().from(orders).where(eq(orders.id, order.id));
+    expect(updated!.status).toBe("shipped");
+    expect(updated!.trackingNumber).toMatch(/^MOCK-/);
+    expect(updated!.trackingCarrier).toBe("mock");
+
+    const events = await db
+      .select()
+      .from(marketplaceEvents)
+      .where(and(eq(marketplaceEvents.entityId, order.id), eq(marketplaceEvents.eventName, "order.shipped")));
+    expect(events).toHaveLength(1);
+  });
+
+  it("does not dispatch order.shipped when the seller already marked it shipped concurrently", async () => {
+    // Simulate the manual mark-shipped path having already won the race:
+    // status is "shipped" with tracking already set, so the idempotency
+    // guard (trackingNumber present) short-circuits before any DB write.
+    const order = await createMinimalOrder({
+      status: "shipped",
+      trackingNumber: "MANUAL-TRACK-123",
+    });
+
+    const { processShippingLabelJobForTest } = await import("../../../workers/shipping-label.js");
+    await processShippingLabelJobForTest({ orderId: order.id });
+
+    const events = await db
+      .select()
+      .from(marketplaceEvents)
+      .where(and(eq(marketplaceEvents.entityId, order.id), eq(marketplaceEvents.eventName, "order.shipped")));
+    expect(events).toHaveLength(0);
+  });
 });
 
 // ── 3. Worker no-ops when order is cancelled ──────────────────────────────────
