@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Hanken_Grotesk, Inter } from "next/font/google";
+import { DM_Sans, Inter } from "next/font/google";
 import "./globals.css";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { Analytics } from "@/components/analytics";
 
-// Headings/buttons/prices. Stand-in for licensed Roc Grotesk (swap later).
-const hanken = Hanken_Grotesk({
+// Headings/buttons/prices — matches the prototype for parity (Ben, 05/07,
+// B11 PR #61 ask). Stand-in for licensed Roc Grotesk (swap later).
+const dmSans = DM_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
-  variable: "--font-hanken",
+  variable: "--font-dm-sans",
   display: "swap",
 });
 // Body / UI text.
@@ -46,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en-AU" className={`${hanken.variable} ${inter.variable}`}>
+    <html lang="en-AU" className={`${dmSans.variable} ${inter.variable}`}>
       <body className="antialiased flex min-h-screen flex-col">
         <script
           type="application/ld+json"

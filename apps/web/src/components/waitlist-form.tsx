@@ -52,7 +52,7 @@ export function WaitlistForm({
 
   if (state === "done") {
     return (
-      <p className="text-green-ink font-medium" role="status">
+      <p className="text-green-bright font-medium" role="status">
         You&apos;re on the list — we&apos;ll email you when the first drops land.
       </p>
     );

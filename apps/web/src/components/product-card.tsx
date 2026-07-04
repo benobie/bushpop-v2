@@ -23,7 +23,7 @@ export function ProductCard({
     <Link href={COMING_SOON} className="pcard">
       <div className="pimg">
         {product.rrp && (
-          <span className="sale">-{pct}%</span>
+          <span className="sale">{pct}% OFF</span>
         )}
         {product.flag && <span className="flag">{product.flag}</span>}
         <Image
