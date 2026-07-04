@@ -1,0 +1,2150 @@
+.sell-wizard {
+  --sell-ink: #1d1d1f;
+  --sell-ink-2: #6e6e73;
+  --sell-ink-3: #86868b;
+  --sell-paper: #ffffff;
+  --sell-surface: #f5f5f7;
+  --sell-surface-alt: #fafafa;
+  --sell-green: #16b34a;
+  --sell-green-ink: #0a7d33;
+  --sell-green-cta: #15c250;
+  --sell-red: #e0362f;
+  --sell-red-2: #c62822;
+  --sell-line: rgba(0, 0, 0, 0.08);
+  --sell-line-2: rgba(0, 0, 0, 0.12);
+  --sell-radius-card: 18px;
+  --sell-radius-card-lg: 26px;
+}
+
+.sell-wizard {
+  color: var(--sell-ink);
+}
+
+.sell-wizard .muted {
+  color: var(--sell-ink-2);
+}
+
+.sell-wizard .green-t {
+  color: var(--sell-green-ink);
+}
+
+.sell-wizard .eyebrow {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sell-green-ink);
+}
+
+.sell-wizard h1.page {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.6vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.sell-wizard .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-weight: 600;
+  border-radius: 12px;
+  font-size: 15px;
+  padding: 12px 24px;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.25s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    filter 0.2s ease;
+}
+
+.sell-wizard .btn:active {
+  transform: scale(0.98);
+}
+
+.sell-wizard .btn:focus-visible {
+  outline: 2px solid var(--sell-green);
+  outline-offset: 2px;
+}
+
+.sell-wizard .btn.green {
+  border-radius: 980px;
+  color: var(--sell-paper);
+  border: 1px solid color-mix(in srgb, var(--sell-paper) 18%, transparent);
+  background: linear-gradient(180deg, var(--sell-green-cta), var(--sell-green));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--sell-paper) 24%, transparent),
+    0 1px 2px color-mix(in srgb, var(--sell-ink) 22%, transparent),
+    0 10px 24px color-mix(in srgb, var(--sell-green-ink) 26%, transparent);
+}
+
+.sell-wizard .btn.green:hover {
+  filter: brightness(1.06);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--sell-paper) 30%, transparent),
+    0 1px 3px color-mix(in srgb, var(--sell-ink) 24%, transparent),
+    0 0 22px color-mix(in srgb, var(--sell-green) 28%, transparent);
+}
+
+.sell-wizard .btn.green:active {
+  transform: scale(0.97, 0.95);
+  filter: brightness(1.1);
+}
+
+.sell-wizard .btn.ghost {
+  color: var(--sell-ink);
+  background: color-mix(in srgb, var(--sell-ink) 6%, var(--sell-paper));
+  border: 1px solid color-mix(in srgb, var(--sell-paper) 42%, var(--sell-ink) 12%);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--sell-paper) 45%, transparent);
+}
+
+.sell-wizard .btn.ghost:hover {
+  background: color-mix(in srgb, var(--sell-ink) 8%, var(--sell-paper));
+}
+
+.sell-wizard .btn.block {
+  width: 100%;
+}
+
+.sell-wizard .btn.lg {
+  padding: 15px 26px;
+  font-size: 16px;
+}
+
+.sell-wizard .btn.sm {
+  padding: 8px 15px;
+  font-size: 13.5px;
+  gap: 6px;
+}
+
+.sell-wizard .btn.rect {
+  border-radius: 12px;
+}
+
+.sell-wizard .btn.pill {
+  border-radius: 980px;
+}
+
+.sell-wizard .btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+  box-shadow: none;
+  animation: none;
+  pointer-events: none;
+}
+
+.sell-wizard .sellwrap {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 44px;
+  padding: var(--page-gap, 12px) 0 60px;
+  align-items: start;
+}
+
+@media (max-width: 920px) {
+  .sell-wizard .sellwrap {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding-bottom: 92px;
+  }
+}
+
+.sell-wizard .draftbar {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  background: color-mix(in srgb, var(--sell-green) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sell-green) 25%, transparent);
+  border-radius: 14px;
+  padding: 13px 16px;
+  margin: 16px 0 0;
+}
+
+.sell-wizard .draftbar.on {
+  display: flex;
+}
+
+.sell-wizard .draftbar .dt {
+  flex: 1;
+  font-size: 13.5px;
+  color: var(--sell-ink);
+}
+
+.sell-wizard .draftbar .dt b {
+  font-family: var(--font-display);
+}
+
+.sell-wizard .draftbar button {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  border-radius: 980px;
+  border: none;
+  cursor: pointer;
+  padding: 8px 15px;
+}
+
+.sell-wizard .draftbar .resume {
+  background: var(--sell-ink);
+  color: var(--sell-paper);
+}
+
+.sell-wizard .draftbar .fresh {
+  background: transparent;
+  color: var(--sell-ink-2);
+}
+
+.sell-wizard .steps {
+  display: flex;
+  gap: 6px;
+  margin: 16px 0 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.sell-wizard .step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sell-ink-3);
+  cursor: pointer;
+}
+
+.sell-wizard .step .num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--sell-surface);
+  color: var(--sell-ink-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12.5px;
+  flex-shrink: 0;
+  transition: 0.2s;
+}
+
+.sell-wizard .step.on,
+.sell-wizard .step.done {
+  color: var(--sell-ink);
+}
+
+.sell-wizard .step.on .num {
+  background: var(--sell-ink);
+  color: var(--sell-paper);
+}
+
+.sell-wizard .step.done .num {
+  background: var(--sell-green);
+  color: var(--sell-paper);
+}
+
+.sell-wizard .steps .bar {
+  width: 22px;
+  height: 2px;
+  background: var(--sell-line-2);
+  border-radius: 2px;
+}
+
+@media (max-width: 640px) {
+  .sell-wizard .step .label {
+    display: none;
+  }
+
+  .sell-wizard .steps .bar {
+    width: 12px;
+  }
+}
+
+.sell-wizard .progressline {
+  height: 4px;
+  background: var(--sell-surface);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.sell-wizard .progressline i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--sell-green), var(--sell-green-cta));
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.sell-wizard .savestate {
+  font-size: 11.5px;
+  color: var(--sell-ink-3);
+  height: 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: 0.2s;
+}
+
+.sell-wizard .savestate b {
+  color: var(--sell-green-ink);
+  font-weight: 600;
+}
+
+.sell-wizard .strengthmini {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  color: var(--sell-ink-2);
+}
+
+.sell-wizard .strengthmini .bar {
+  flex: 1;
+  height: 6px;
+  background: var(--sell-surface);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.sell-wizard .strengthmini .bar i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--sell-green), var(--sell-green-cta));
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+@media (max-width: 920px) {
+  .sell-wizard .strengthmini {
+    display: flex;
+  }
+}
+
+.sell-wizard .panel {
+  display: none;
+  animation: sell-fade 0.3s ease;
+}
+
+.sell-wizard .panel.on {
+  display: block;
+}
+
+.sell-wizard .panel h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.sell-wizard .panel .hint {
+  color: var(--sell-ink-2);
+  font-size: 14px;
+  margin: 6px 0 22px;
+}
+
+.sell-wizard .guides {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+}
+
+.sell-wizard .guide {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--sell-ink-2);
+  background: var(--sell-surface);
+  border-radius: 980px;
+  padding: 6px 12px;
+}
+
+.sell-wizard .guide.have {
+  background: color-mix(in srgb, var(--sell-green) 10%, transparent);
+  color: var(--sell-green-ink);
+}
+
+.sell-wizard .guide .tick {
+  font-size: 11px;
+}
+
+.sell-wizard .dropzone {
+  border: 2px dashed var(--sell-line-2);
+  border-radius: var(--sell-radius-card);
+  padding: 34px 24px;
+  text-align: center;
+  background: var(--sell-surface-alt);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.sell-wizard .dropzone:hover {
+  border-color: var(--sell-green);
+  background: color-mix(in srgb, var(--sell-green) 4%, transparent);
+}
+
+.sell-wizard .dropzone .big {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.sell-wizard .dropzone b {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.sell-wizard .dropzone p {
+  color: var(--sell-ink-3);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.sell-wizard .dropzone .cam {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  background: var(--sell-ink);
+  color: var(--sell-paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13.5px;
+  padding: 10px 18px;
+  border-radius: 980px;
+}
+
+@media (min-width: 760px) {
+  .sell-wizard .dropzone .cam {
+    display: none;
+  }
+}
+
+.sell-wizard .thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.sell-wizard .thumb {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--sell-surface);
+  border: 1px solid var(--sell-line);
+}
+
+.sell-wizard .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sell-wizard .thumb .cover {
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  background: var(--sell-ink);
+  color: var(--sell-paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  z-index: 2;
+}
+
+.sell-wizard .thumb .del {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sell-ink) 55%, transparent);
+  color: var(--sell-paper);
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.sell-wizard .thumb .mv {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+  justify-content: space-between;
+  z-index: 2;
+  opacity: 0;
+  transition: 0.15s;
+}
+
+.sell-wizard .thumb:hover .mv,
+.sell-wizard .thumb:hover .setcover {
+  opacity: 1;
+}
+
+.sell-wizard .thumb .mv button {
+  flex: 1;
+  background: color-mix(in srgb, var(--sell-ink) 55%, transparent);
+  color: var(--sell-paper);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 3px 0;
+}
+
+.sell-wizard .thumb .setcover {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  background: color-mix(in srgb, var(--sell-paper) 85%, transparent);
+  color: var(--sell-ink);
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10.5px;
+  cursor: pointer;
+  padding: 4px 0;
+  z-index: 2;
+  opacity: 0;
+  transition: 0.15s;
+}
+
+.sell-wizard .thumb .warn {
+  position: absolute;
+  top: 34px;
+  left: 6px;
+  background: color-mix(in srgb, var(--sell-red) 92%, transparent);
+  color: var(--sell-paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9.5px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  z-index: 2;
+}
+
+.sell-wizard .thumb .okc {
+  position: absolute;
+  top: 34px;
+  left: 6px;
+  background: color-mix(in srgb, var(--sell-green-ink) 90%, transparent);
+  color: var(--sell-paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 9.5px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  z-index: 2;
+}
+
+.sell-wizard .thumb.up img {
+  filter: blur(3px);
+  opacity: 0.6;
+}
+
+.sell-wizard .thumb .spin {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+}
+
+.sell-wizard .thumb.drag {
+  opacity: 0.4;
+}
+
+.sell-wizard .thumb.over {
+  outline: 2px solid var(--sell-green);
+  outline-offset: 2px;
+}
+
+.sell-wizard .addmore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 4 / 5;
+  border: 2px dashed var(--sell-line-2);
+  border-radius: 12px;
+  color: var(--sell-ink-3);
+  font-size: 28px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.sell-wizard .addmore:hover {
+  border-color: var(--sell-green);
+  color: var(--sell-green-ink);
+}
+
+.sell-wizard .spinner {
+  width: 26px;
+  height: 26px;
+  border: 3px solid color-mix(in srgb, var(--sell-ink) 12%, transparent);
+  border-top-color: var(--sell-green);
+  border-radius: 50%;
+  animation: sell-spin 0.7s linear infinite;
+}
+
+.sell-wizard .examples {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.sell-wizard .eg {
+  border: 1px solid var(--sell-line);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.sell-wizard .eg .egh {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.sell-wizard .eg.good .egh {
+  color: var(--sell-green-ink);
+}
+
+.sell-wizard .eg.bad .egh {
+  color: var(--sell-red);
+}
+
+.sell-wizard .eg ul {
+  list-style: none;
+  font-size: 12.5px;
+  color: var(--sell-ink-2);
+}
+
+.sell-wizard .eg li {
+  padding: 3px 0 3px 18px;
+  position: relative;
+}
+
+.sell-wizard .eg.good li::before,
+.sell-wizard .eg.bad li::before {
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+}
+
+.sell-wizard .eg.good li::before {
+  content: "✓";
+  color: var(--sell-green-ink);
+}
+
+.sell-wizard .eg.bad li::before {
+  content: "✕";
+  color: var(--sell-red);
+}
+
+@media (max-width: 520px) {
+  .sell-wizard .examples {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sell-wizard .airec {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid color-mix(in srgb, var(--sell-green) 25%, transparent);
+  background: color-mix(in srgb, var(--sell-green) 5%, transparent);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 13px;
+  margin: 14px 0 0;
+}
+
+.sell-wizard .airec.on {
+  display: flex;
+}
+
+.sell-wizard .field {
+  margin-bottom: 18px;
+}
+
+.sell-wizard .field > label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.sell-wizard .field > label span {
+  color: var(--sell-ink-3);
+  font-weight: 500;
+}
+
+.sell-wizard .inp,
+.sell-wizard .sel,
+.sell-wizard .ta {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14.5px;
+  color: var(--sell-ink);
+  border: 1px solid var(--sell-line-2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--sell-paper);
+  transition: 0.15s;
+}
+
+.sell-wizard .inp:focus,
+.sell-wizard .sel:focus,
+.sell-wizard .ta:focus {
+  outline: none;
+  border-color: var(--sell-green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sell-green) 12%, transparent);
+}
+
+.sell-wizard .ta {
+  resize: vertical;
+  min-height: 110px;
+  line-height: 1.55;
+}
+
+.sell-wizard .row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 520px) {
+  .sell-wizard .row2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sell-wizard .charc {
+  font-size: 11.5px;
+  color: var(--sell-ink-3);
+  text-align: right;
+  margin-top: 5px;
+}
+
+.sell-wizard .field.aifill .inp,
+.sell-wizard .field.aifill .ta {
+  border-color: color-mix(in srgb, var(--sell-green) 50%, transparent);
+  background: color-mix(in srgb, var(--sell-green) 3%, transparent);
+}
+
+.sell-wizard .aichip {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10.5px;
+  color: var(--sell-green-ink);
+  background: color-mix(in srgb, var(--sell-green) 12%, transparent);
+  border-radius: 980px;
+  padding: 2px 8px;
+  margin-left: 8px;
+}
+
+.sell-wizard .field.aifill .aichip {
+  display: inline-flex;
+}
+
+.sell-wizard .aicard {
+  border: 1px solid color-mix(in srgb, var(--sell-green) 30%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--sell-green) 6%, transparent),
+    color-mix(in srgb, var(--sell-green) 2%, transparent)
+  );
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 22px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.sell-wizard .aicard .ai-ic {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--sell-paper);
+  border: 1px solid color-mix(in srgb, var(--sell-green) 25%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.sell-wizard .aicard .ai-tx {
+  flex: 1;
+}
+
+.sell-wizard .aicard h4 {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 800;
+}
+
+.sell-wizard .aicard p {
+  font-size: 12.5px;
+  color: var(--sell-ink-2);
+  margin-top: 2px;
+}
+
+.sell-wizard .aicard.done {
+  border-color: var(--sell-line);
+  background: var(--sell-surface-alt);
+}
+
+.sell-wizard .ai-btn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  border: none;
+  border-radius: 980px;
+  cursor: pointer;
+  padding: 10px 18px;
+  background: var(--sell-green);
+  color: var(--sell-paper);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sell-wizard .ai-btn.sub {
+  background: transparent;
+  color: var(--sell-ink-2);
+  padding: 8px 4px;
+}
+
+.sell-wizard .ai-thinking {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  color: var(--sell-green-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.sell-wizard .ai-thinking .dots span {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--sell-green);
+  margin: 0 1px;
+  animation: sell-blink 1s infinite;
+}
+
+.sell-wizard .ai-thinking .dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.sell-wizard .ai-thinking .dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.sell-wizard .catpick {
+  border: 1px solid var(--sell-line-2);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.sell-wizard .catcols {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+}
+
+@media (max-width: 520px) {
+  .sell-wizard .catcols {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sell-wizard .catparents {
+  background: var(--sell-surface-alt);
+  border-right: 1px solid var(--sell-line);
+  padding: 6px;
+}
+
+@media (max-width: 520px) {
+  .sell-wizard .catparents {
+    border-right: none;
+    border-bottom: 1px solid var(--sell-line);
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+  }
+}
+
+.sell-wizard .catp {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--sell-ink-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 9px;
+  white-space: nowrap;
+}
+
+.sell-wizard .catp:hover {
+  background: var(--sell-surface);
+}
+
+.sell-wizard .catp.on {
+  background: var(--sell-ink);
+  color: var(--sell-paper);
+}
+
+.sell-wizard .catleaves {
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+  min-height: 120px;
+}
+
+.sell-wizard .pick {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sell-wizard .pk {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 9px 15px;
+  border: 1px solid var(--sell-line-2);
+  border-radius: 980px;
+  background: var(--sell-paper);
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.sell-wizard .pk:hover {
+  border-color: var(--sell-ink);
+}
+
+.sell-wizard .pk.on {
+  background: var(--sell-ink);
+  color: var(--sell-paper);
+  border-color: var(--sell-ink);
+  animation: sell-select-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sell-wizard .pk .sw {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: -1px;
+  border: 1px solid color-mix(in srgb, var(--sell-ink) 15%, transparent);
+}
+
+.sell-wizard .scaletoggle {
+  font-size: 12px;
+  color: var(--sell-green-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.sell-wizard .conds,
+.sell-wizard .ship {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sell-wizard .cond,
+.sell-wizard .shipopt {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  padding: 15px 16px;
+  border: 1px solid var(--sell-line-2);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.sell-wizard .cond {
+  align-items: flex-start;
+}
+
+.sell-wizard .cond:hover,
+.sell-wizard .shipopt:hover {
+  border-color: var(--sell-ink);
+}
+
+.sell-wizard .cond.on,
+.sell-wizard .shipopt.on {
+  border-color: var(--sell-green);
+  background: color-mix(in srgb, var(--sell-green) 5%, transparent);
+  box-shadow: 0 0 0 1px var(--sell-green) inset;
+  animation: sell-select-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sell-wizard .cond .dot,
+.sell-wizard .shipopt .dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--sell-line-2);
+  flex-shrink: 0;
+  transition: 0.15s;
+}
+
+.sell-wizard .cond .dot {
+  margin-top: 2px;
+}
+
+.sell-wizard .cond.on .dot,
+.sell-wizard .shipopt.on .dot {
+  border-color: var(--sell-green);
+  background: var(--sell-green);
+  box-shadow: inset 0 0 0 3px var(--sell-paper);
+}
+
+.sell-wizard .cond h4,
+.sell-wizard .shipopt h4,
+.sell-wizard .switchrow h4 {
+  font-family: var(--font-display);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.sell-wizard .switchrow h4 {
+  font-size: 14px;
+}
+
+.sell-wizard .cond p,
+.sell-wizard .shipopt p,
+.sell-wizard .switchrow p {
+  font-size: 12.5px;
+  color: var(--sell-ink-2);
+  margin-top: 2px;
+}
+
+.sell-wizard .cond p {
+  font-size: 13px;
+}
+
+.sell-wizard .shipopt .txt,
+.sell-wizard .switchrow .sx {
+  flex: 1;
+}
+
+.sell-wizard .shipopt .tag {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sell-green-ink);
+}
+
+.sell-wizard .mreward {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: color-mix(in srgb, var(--sell-green) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sell-green) 20%, transparent);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 12.5px;
+  color: var(--sell-green-ink);
+  margin: 10px 0 14px;
+}
+
+.sell-wizard .measgrid {
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 600px) {
+  .sell-wizard .measgrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sell-wizard .measure,
+.sell-wizard .mdiagram {
+  background: var(--sell-surface-alt);
+  border: 1px solid var(--sell-line);
+  border-radius: 14px;
+}
+
+.sell-wizard .measure {
+  padding: 16px;
+}
+
+.sell-wizard .measure .mrow {
+  display: grid;
+  grid-template-columns: 24px 1fr 108px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 11px;
+}
+
+.sell-wizard .measure .mrow:last-child {
+  margin-bottom: 0;
+}
+
+.sell-wizard .measure .mrow .mn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--sell-ink);
+  color: var(--sell-paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sell-wizard .measure .mrow label {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.sell-wizard .msuffix {
+  position: relative;
+}
+
+.sell-wizard .msuffix input {
+  padding-right: 34px;
+}
+
+.sell-wizard .msuffix span {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--sell-ink-3);
+}
+
+.sell-wizard .mdiagram {
+  padding: 14px;
+  position: sticky;
+  top: 80px;
+}
+
+.sell-wizard .mdiagram svg {
+  width: 100%;
+  height: auto;
+}
+
+.sell-wizard .mdiagram .mcap {
+  font-size: 11px;
+  color: var(--sell-ink-3);
+  text-align: center;
+  margin-top: 6px;
+}
+
+.sell-wizard .pricebox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sell-wizard .bigprice {
+  position: relative;
+}
+
+.sell-wizard .bigprice .dollar {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--sell-ink);
+}
+
+.sell-wizard .bigprice input {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  padding: 16px 16px 16px 34px;
+}
+
+.sell-wizard .suggest {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: color-mix(in srgb, var(--sell-green) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sell-green) 20%, transparent);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--sell-green-ink);
+  margin-top: 12px;
+}
+
+.sell-wizard .suggest b {
+  font-family: var(--font-display);
+}
+
+.sell-wizard .suggest .use {
+  margin-left: auto;
+  font-weight: 700;
+  color: var(--sell-green-ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sell-wizard .payout {
+  margin-top: 16px;
+  border: 1px solid var(--sell-line);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.sell-wizard .payout .pr {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  padding: 5px 0;
+  color: var(--sell-ink-2);
+}
+
+.sell-wizard .payout .pr b {
+  color: var(--sell-ink);
+}
+
+.sell-wizard .payout .tot {
+  border-top: 1px solid var(--sell-line);
+  margin-top: 8px;
+  padding-top: 12px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--sell-ink);
+}
+
+.sell-wizard .payout .tot span:last-child,
+.sell-wizard .payout .pcomp {
+  color: var(--sell-green-ink);
+}
+
+.sell-wizard .payout .pcomp {
+  font-size: 12px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px dashed var(--sell-line);
+}
+
+.sell-wizard .switchrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sell-wizard .switch {
+  position: relative;
+  width: 46px;
+  height: 27px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.sell-wizard .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.sell-wizard .switch .sl {
+  position: absolute;
+  inset: 0;
+  background: var(--sell-line-2);
+  border-radius: 980px;
+  transition: 0.2s;
+}
+
+.sell-wizard .switch .sl::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 21px;
+  height: 21px;
+  background: var(--sell-paper);
+  border-radius: 50%;
+  transition: 0.2s;
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--sell-ink) 20%, transparent);
+}
+
+.sell-wizard .switch input:checked + .sl {
+  background: var(--sell-green);
+}
+
+.sell-wizard .switch input:checked + .sl::before {
+  transform: translateX(19px);
+}
+
+.sell-wizard .postest {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--sell-surface-alt);
+  border: 1px solid var(--sell-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: var(--sell-ink-2);
+  margin-top: 18px;
+}
+
+.sell-wizard .postest b {
+  font-family: var(--font-display);
+  color: var(--sell-ink);
+}
+
+.sell-wizard .rtabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.sell-wizard .rtab {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid var(--sell-line-2);
+  background: var(--sell-paper);
+  border-radius: 980px;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--sell-ink-2);
+}
+
+.sell-wizard .rtab.on {
+  background: var(--sell-ink);
+  color: var(--sell-paper);
+  border-color: var(--sell-ink);
+}
+
+.sell-wizard .review {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 22px;
+}
+
+@media (max-width: 520px) {
+  .sell-wizard .review {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sell-wizard .review .rphoto {
+  aspect-ratio: 4 / 5;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--sell-surface);
+  border: 1px solid var(--sell-line);
+}
+
+.sell-wizard .review .rphoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sell-wizard .rlist {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sell-wizard .ritem {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--sell-line);
+  font-size: 14px;
+}
+
+.sell-wizard .ritem .k {
+  color: var(--sell-ink-2);
+}
+
+.sell-wizard .ritem .v {
+  font-weight: 600;
+  text-align: right;
+}
+
+.sell-wizard .ritem.miss .v {
+  color: var(--sell-red);
+}
+
+.sell-wizard .ritem .edit {
+  color: var(--sell-green-ink);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.sell-wizard .checklist {
+  border: 1px solid var(--sell-line);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-top: 22px;
+}
+
+.sell-wizard .checklist h4 {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.sell-wizard .ck {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.sell-wizard .ck .cbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sell-wizard .ck.ok .cbox {
+  background: var(--sell-green);
+  color: var(--sell-paper);
+}
+
+.sell-wizard .ck.no .cbox {
+  background: color-mix(in srgb, var(--sell-red) 12%, transparent);
+  color: var(--sell-red);
+  border: 1px solid color-mix(in srgb, var(--sell-red) 30%, transparent);
+}
+
+.sell-wizard .ck.rec.no .cbox {
+  background: var(--sell-surface);
+  color: var(--sell-ink-3);
+  border: 1px solid var(--sell-line-2);
+}
+
+.sell-wizard .ck .cl {
+  flex: 1;
+}
+
+.sell-wizard .ck.no .cl {
+  color: var(--sell-ink);
+}
+
+.sell-wizard .ck .jump {
+  font-size: 12px;
+  color: var(--sell-green-ink);
+  font-weight: 600;
+}
+
+.sell-wizard .checklist .sub {
+  font-size: 11.5px;
+  color: var(--sell-ink-3);
+  margin: 12px 0 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sell-wizard .preview-buyer {
+  max-width: 280px;
+}
+
+.sell-wizard .pvnote {
+  font-size: 12.5px;
+  color: var(--sell-ink-3);
+  margin-bottom: 14px;
+}
+
+.sell-wizard .agree {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--sell-ink-2);
+  margin: 20px 0 6px;
+}
+
+.sell-wizard .agree input {
+  margin-top: 3px;
+  accent-color: var(--sell-green);
+}
+
+.sell-wizard .agree a {
+  color: var(--sell-green-ink);
+  font-weight: 600;
+}
+
+.sell-wizard .wnav {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+  align-items: center;
+}
+
+.sell-wizard .wnav .back {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--sell-ink-2);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 12px 4px;
+}
+
+.sell-wizard .wnav .back:hover {
+  color: var(--sell-ink);
+}
+
+.sell-wizard .wnav .spacer {
+  flex: 1;
+}
+
+@media (max-width: 920px) {
+  .sell-wizard .wnav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    margin: 0;
+    padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--sell-paper) 92%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid var(--sell-line);
+  }
+
+  .sell-wizard .wnav #savebtn {
+    display: none;
+  }
+
+  .sell-wizard .wnav .btn.green.lg {
+    flex: 1;
+  }
+}
+
+.sell-wizard .aside {
+  position: sticky;
+  top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 920px) {
+  .sell-wizard .aside {
+    position: static;
+  }
+}
+
+.sell-wizard .aside .card,
+.sell-wizard .strength {
+  border: 1px solid var(--sell-line);
+  border-radius: var(--sell-radius-card);
+  padding: 20px;
+}
+
+.sell-wizard .aside .card h3 {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+.sell-wizard .sellben2 {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.sell-wizard .sellben2:last-child {
+  margin-bottom: 0;
+}
+
+.sell-wizard .sellben2 .i {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--sell-green) 10%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.sell-wizard .sellben2 h4 {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.sell-wizard .sellben2 p,
+.sell-wizard .tipcard p {
+  font-size: 12.5px;
+  color: var(--sell-ink-2);
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+.sell-wizard .tipcard {
+  background: var(--sell-surface);
+  border: none;
+}
+
+.sell-wizard .tipcard p {
+  font-size: 13px;
+  color: color-mix(in srgb, var(--sell-ink) 92%, transparent);
+  line-height: 1.55;
+}
+
+.sell-wizard .tipcard .eyebrow {
+  margin-bottom: 8px;
+}
+
+.sell-wizard .strength .shead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sell-wizard .sgauge {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+}
+
+.sell-wizard .sgauge svg {
+  width: 64px;
+  height: 64px;
+  transform: rotate(-90deg);
+}
+
+.sell-wizard .sgauge .bgc {
+  stroke: var(--sell-surface);
+}
+
+.sell-wizard .sgauge .fgc {
+  stroke: var(--sell-green);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease;
+}
+
+.sell-wizard .sgauge .snum {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.sell-wizard .strength .sband {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.sell-wizard .strength .sspeed {
+  font-size: 12px;
+  color: var(--sell-ink-2);
+  margin-top: 2px;
+}
+
+.sell-wizard .snext {
+  margin-top: 14px;
+  border-top: 1px solid var(--sell-line);
+  padding-top: 12px;
+}
+
+.sell-wizard .snext .nx {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--sell-ink-2);
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.sell-wizard .snext .nx:hover {
+  color: var(--sell-ink);
+}
+
+.sell-wizard .snext .nx b,
+.sell-wizard .nmiss {
+  color: var(--sell-green-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.sell-wizard .nmiss {
+  font-size: 11.5px;
+  margin-top: 3px;
+}
+
+.sell-wizard .coach {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 7px;
+}
+
+.sell-wizard .co {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 980px;
+  padding: 3px 9px;
+  background: var(--sell-surface);
+  color: var(--sell-ink-3);
+}
+
+.sell-wizard .co.ok {
+  background: color-mix(in srgb, var(--sell-green) 12%, transparent);
+  color: var(--sell-green-ink);
+}
+
+.sell-wizard .qadd {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.sell-wizard .qa {
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--sell-ink-2);
+  background: var(--sell-surface);
+  border: none;
+  border-radius: 980px;
+  padding: 5px 11px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.sell-wizard .qa:hover {
+  background: color-mix(in srgb, var(--sell-ink) 8%, var(--sell-paper));
+  color: var(--sell-ink);
+}
+
+.sell-wizard .qa.used {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.sell-wizard .flashfill .inp,
+.sell-wizard .flashfill .ta {
+  animation: sell-fill 0.8s ease;
+}
+
+.sell-wizard .inp.typing {
+  border-color: var(--sell-green);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sell-green) 12%, transparent);
+}
+
+.sell-wizard .lp .pcard {
+  max-width: 210px;
+  margin: 0 auto;
+  cursor: default;
+}
+
+.sell-wizard .lp .lpcap {
+  font-size: 11px;
+  color: var(--sell-ink-3);
+  text-align: center;
+  margin-top: 10px;
+}
+
+.sell-wizard .pcard {
+  display: block;
+  cursor: pointer;
+}
+
+.sell-wizard .pimg {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  background: var(--sell-surface);
+}
+
+.sell-wizard .pimg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.sell-wizard .pcard:hover .pimg img {
+  transform: scale(1.04);
+}
+
+.sell-wizard .pimg .sale {
+  position: absolute;
+  left: 9px;
+  top: 9px;
+  background: var(--sell-red);
+  color: var(--sell-paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11.5px;
+  padding: 4px 9px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sell-wizard .pimg .fav {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--sell-paper) 72%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--sell-paper) 70%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sell-ink);
+  cursor: pointer;
+}
+
+.sell-wizard .fav.on {
+  color: var(--sell-red);
+}
+
+.sell-wizard .pcard .pname {
+  font-size: 13.5px;
+  font-weight: 500;
+  margin: 10px 0 3px;
+  color: var(--sell-ink);
+}
+
+.sell-wizard .pcard .psave {
+  display: inline-block;
+  background: var(--sell-red);
+  color: var(--sell-paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.sell-wizard .pcard .prrp {
+  font-size: 11.5px;
+  color: var(--sell-ink-3);
+  text-decoration: line-through;
+  margin-top: 4px;
+}
+
+.sell-wizard .pcard .pprice {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 17px;
+  margin-top: 2px;
+  color: var(--sell-ink);
+}
+
+.sell-wizard .pcard .pprice sup {
+  font-size: 10px;
+  font-weight: 700;
+  vertical-align: top;
+  margin-left: 1px;
+}
+
+.sell-wizard .pcard .psize,
+.sell-wizard .pcard .pbrand {
+  font-size: 12px;
+  color: var(--sell-ink-2);
+  margin-top: 4px;
+}
+
+.sell-wizard .pcard .prate {
+  font-size: 11.5px;
+  color: var(--sell-green-ink);
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sell-wizard .toasts {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 88px;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.sell-wizard .toast {
+  background: var(--sell-ink);
+  color: var(--sell-paper);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: 980px;
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--sell-ink) 20%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: sell-toast-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.sell-wizard .toast.out {
+  opacity: 0;
+  transform: translateY(8px);
+  transition: 0.3s;
+}
+
+.sell-wizard #nextbtn.ready,
+.sell-wizard .btn.ready {
+  animation: sell-ready-pulse 1.5s ease-out 2;
+}
+
+.sell-wizard .wobble {
+  animation: sell-wobble 0.45s ease;
+}
+
+.sell-wizard .pic {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: -0.14em;
+  fill: currentColor;
+  flex: none;
+}
+
+.sell-wizard .pic-14 {
+  width: 14px;
+  height: 14px;
+}
+
+.sell-wizard .pic-16 {
+  width: 16px;
+  height: 16px;
+}
+
+.sell-wizard .pic-18 {
+  width: 18px;
+  height: 18px;
+}
+
+.sell-wizard .pic-20 {
+  width: 20px;
+  height: 20px;
+}
+
+.sell-wizard .pic-22 {
+  width: 22px;
+  height: 22px;
+}
+
+.sell-wizard .pic-24 {
+  width: 24px;
+  height: 24px;
+}
+
+.sell-wizard svg[data-bp-icons] {
+  display: none;
+}
+
+@keyframes sell-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sell-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sell-blink {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes sell-fill {
+  0% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--sell-green) 30%, transparent);
+    background: color-mix(in srgb, var(--sell-green) 10%, transparent);
+  }
+
+  100% {
+    box-shadow: none;
+  }
+}
+
+@keyframes sell-select-pop {
+  0% {
+    transform: scale(0.96);
+  }
+
+  60% {
+    transform: scale(1.02);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes sell-ready-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--sell-green) 50%, transparent);
+  }
+
+  100% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
+@keyframes sell-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.9);
+  }
+}
+
+@keyframes sell-wobble {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-6px);
+  }
+
+  55% {
+    transform: translateX(5px);
+  }
+
+  80% {
+    transform: translateX(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sell-wizard .panel,
+  .sell-wizard .spinner,
+  .sell-wizard .ai-thinking .dots span,
+  .sell-wizard .flashfill .inp,
+  .sell-wizard .flashfill .ta,
+  .sell-wizard .pk.on,
+  .sell-wizard .cond.on,
+  .sell-wizard .shipopt.on,
+  .sell-wizard #nextbtn.ready,
+  .sell-wizard .btn.ready,
+  .sell-wizard .toast,
+  .sell-wizard .wobble {
+    animation: none;
+  }
+}

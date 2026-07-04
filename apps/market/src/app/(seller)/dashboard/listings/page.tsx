@@ -112,38 +112,62 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
 
       {listings.length > 0 && (
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-          {listings.map((listing) => (
-            <Link
-              key={listing.id}
-              href={`/sell/${listing.inventoryItemId}/review`}
-              className="group overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm transition-shadow hover:shadow-md"
-            >
-              <div className="relative aspect-square bg-brand-100">
-                {(listing as { primaryImageUrl?: string | null }).primaryImageUrl ? (
-                  <Image
-                    src={(listing as { primaryImageUrl?: string | null }).primaryImageUrl!}
-                    alt={listing.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-brand-300">
-                    <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                    </svg>
-                  </div>
-                )}
-              </div>
-              <div className="p-3 space-y-1">
-                <p className="truncate text-sm font-medium text-brand-900">{listing.title}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-brand-800">{centsToDollars(listing.priceCents)}</span>
-                  <StatusBadge status={listing.status} />
+          {listings.map((listing) => {
+            const cardContent = (
+              <>
+                <div className="relative aspect-square bg-brand-100">
+                  {(listing as { primaryImageUrl?: string | null }).primaryImageUrl ? (
+                    <Image
+                      src={(listing as { primaryImageUrl?: string | null }).primaryImageUrl!}
+                      alt={listing.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-brand-300">
+                      <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
+                <div className="p-3 space-y-1">
+                  <p className="truncate text-sm font-medium text-brand-900">{listing.title}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-brand-800">{centsToDollars(listing.priceCents)}</span>
+                    <StatusBadge status={listing.status} />
+                  </div>
+                </div>
+              </>
+            );
+
+            // Only draft listings map to an inventory-item id the sell
+            // wizard understands — active/paused/sold/archived listings
+            // don't have a detail page yet (a later phase), so they render
+            // as a non-interactive card instead of a broken link into the
+            // wizard (which only handles pre-publish drafts).
+            if (listing.status === "draft") {
+              return (
+                <Link
+                  key={listing.id}
+                  href={`/sell?draft=${listing.inventoryItemId}`}
+                  className="group overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm transition-shadow hover:shadow-md"
+                >
+                  {cardContent}
+                </Link>
+              );
+            }
+
+            return (
+              <div
+                key={listing.id}
+                className="overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm"
+              >
+                {cardContent}
               </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </main>
