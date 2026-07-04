@@ -58,6 +58,11 @@ The engine was forked from `benobie/piklo-v2` @ `2419a38` (02/07/2026), renamed 
 - **`next/image` needs `images.unoptimized: true`** under `output: 'export'` (no optimisation server). Set in `next.config.ts`.
 - **`lucide-react` is v1.x** — brand icons (Instagram/Facebook/YouTube/Twitter) were REMOVED. Inline minimal brand SVGs where needed (see `site-footer.tsx`).
 
+## `apps/market` gotchas (Launch-2 engine SSR app)
+
+- **Tailwind v4 content detection doesn't cross workspace package boundaries** — `packages/ui` (the shared `@bushpop/ui` component library) is a separate workspace from `apps/market`, so any utility class used ONLY inside a `packages/ui` component (e.g. `Button`'s `bg-brand`, `hover:bg-brand-hover`, `active:bg-interactive`) never gets scanned by `apps/market`'s Tailwind build — the class reaches the HTML but has no matching compiled CSS rule, silently rendering unstyled/invisible (white-on-white). Fixed by an explicit `@source "../../../../packages/ui/src";` in `apps/market/src/app/globals.css` (PR #55, 04/07). If a new shared package with Tailwind classes is added, it needs its own `@source` line, or its components will render broken with no build error or console warning.
+- **better-auth's client requires an absolute `baseURL`, even for same-origin requests** — `createAuthClient({ baseURL: "/api/auth" })` throws `Invalid base URL: /api/auth` at runtime because better-auth validates via `new URL(...)`, which rejects relative paths. `apps/market/src/lib/auth-client.ts` uses `window.location.origin + "/api/auth"` on the client (SSR still uses `WEB_URL`) — requests still go same-origin through the `/api` proxy rewrite, only the client config needs the absolute form. Fixed in PR #53, 04/07.
+
 ## Deploy
 
 GitHub Actions (`.github/workflows/deploy.yml`) → `wrangler pages deploy out --project-name bushpop-v2`, run with `workingDirectory: apps/web`. **The `workingDirectory` is load-bearing, not cosmetic:** `wrangler pages deploy` resolves the Pages Functions directory (`functions/`) relative to its own cwd, not the output-dir argument — running it from repo root with `apps/web/out` as the arg silently never finds `apps/web/functions/`, so no Function ever deploys. This bit us for weeks (17/06–02/07): `functions/uncategorized/[[path]].js` was scaffolded and "done" but never actually served — fixed 02/07 (PR #20).
