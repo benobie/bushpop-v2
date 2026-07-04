@@ -3,7 +3,7 @@
 // Tiny client island: the heart/save toggle on a product card. Local state
 // only (no marketplace yet). Kept minimal so a server-rendered ProductCard
 // stays server-rendered — just this heart hydrates.
-import { Heart } from "lucide-react";
+import { Heart } from "@phosphor-icons/react/dist/ssr";
 import { useState } from "react";
 
 export function FavButton({ label = "Save" }: { label?: string }) {
@@ -19,7 +19,7 @@ export function FavButton({ label = "Save" }: { label?: string }) {
         setSaved((s) => !s);
       }}
     >
-      <Heart size={16} fill={saved ? "currentColor" : "none"} strokeWidth={2} />
+      <Heart size={16} weight={saved ? "fill" : "bold"} />
     </button>
   );
 }

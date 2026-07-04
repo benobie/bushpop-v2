@@ -1,15 +1,24 @@
 @import "tailwindcss";
 
 /*
-  Bushpop v2 design system — ported from the approved prototype
-  (~/projects/Bushpop/design/home/bushpop.css). Apple-clean white/grey,
-  Hanken Grotesk + Inter, glossy Emerald pill CTA, frosted-glass nav.
+  Bushpop v2 design system — BRG / Lit-Glass (styling-rollout PR-2/PR-3,
+  ported from ~/projects/Bushpop/design/home/bushpop.css). Apple-clean
+  white/grey, glass buttons/cards, obsidian dark surfaces. British racing
+  green is the one accent, fiercely rationed.
 
-  Scalar tokens live in @theme (→ Tailwind utilities: bg-ink, text-green-ink,
-  rounded-card, font-head). Multi-layer component styles (the glossy button,
+  apps/web is static-export and MUST NOT import engine packages, so these
+  token VALUES are duplicated by hand from the styling handoff §2 table —
+  packages/config/tailwind/tokens.css (B9/U0) is the engine's source of
+  truth; keep both in sync by value when either changes.
+
+  Scalar tokens live in @theme (→ Tailwind utilities: bg-ink, text-green-bright,
+  rounded-card, font-head). Multi-layer component styles (glass buttons,
   frosted nav, product card, footer, MDX prose) are plain classes below —
-  they are too layered to express as utilities and are consumed by the
-  React components verbatim.
+  too layered to express as utilities, consumed by the React components
+  verbatim. Motion here is CSS-only (no per-page pointermove listener), so
+  --mx/--my/--cx/--cy fall back to a centred glow exactly as the prototype's
+  own no-JS degradation — the always-on orbit rings still rotate via pure
+  CSS @property animation.
 */
 @theme {
   /* ink / text */
@@ -22,10 +31,17 @@
   --color-surface: #f5f5f7;
   --color-surface-alt: #fafafa;
 
-  /* green (accent + links) and CTA base */
-  --color-green: #16b34a;
-  --color-green-ink: #0a7d33;
-  --color-green-cta: #15c250;
+  /* BRG green system (LOCKED 02/07 + 04/07, styling-rollout §2) */
+  --color-green-ink: #004225; /* THE GREEN — rest/brand (LOCKED) */
+  --color-green: #0d6b3f; /* lit/hover */
+  --color-green-bright: #0b5c35; /* FLAT primary: links, hover text-lights, flat labels (LOCKED 04/07 — classic ink doesn't separate from dark body text) */
+  --color-green-cta: #004225;
+  --color-green-cta-h: #005c30;
+  --color-on-cta: #ffffff;
+
+  /* brand dark — neutral obsidian (LOCKED; green-black rejected) */
+  --color-obsidian: #0a0c0b;
+  --color-obsidian-2: #141615;
 
   /* sale red — sale/discount only */
   --color-red: #e0362f;
@@ -39,18 +55,23 @@
   --radius-card: 18px;
   --radius-card-lg: 26px;
 
-  /* type — wired to next/font variables set on <html> in layout.tsx */
+  /* type — wired to next/font variables set on <html> in layout.tsx.
+     ⚠ Prototype heads = DM Sans; this repo ships Hanken Grotesk (PR #18).
+     Flagged for Ben in the PR — not resolved here (don't ship two heading
+     fonts across surfaces past cutover). */
   --font-head: var(--font-hanken), -apple-system, system-ui, sans-serif;
   --font-body: var(--font-inter), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 /* Non-utility design vars used only inside the component classes below. */
 :root {
-  --cta-top: #34e070;
-  --cta-mid: #12b84c;
-  --cta-bot: #0da344;
+  /* F2 subtle top-lit gradient (Ben 02/07) */
+  --cta-top: #0b5231;
+  --cta-mid: #004225;
+  --cta-bot: #00341d;
   --shadow: 0 4px 24px -8px rgba(20, 30, 24, 0.14);
   --shadow-lg: 0 24px 60px -24px rgba(20, 30, 24, 0.3);
+  --page-gap: 12px;
 }
 
 html {
@@ -76,7 +97,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-green-ink);
+  color: var(--color-green-bright);
 }
 h1.page {
   font-family: var(--font-head);
@@ -92,8 +113,12 @@ h2.sec {
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
+.muted {
+  color: var(--color-ink-2);
+}
 
-/* ===== Buttons ===== */
+/* ===== Buttons (styling §3: shape rule — pill = money CTA, 12px rect =
+   everything else; buttons in a group share shape AND height) ===== */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -103,92 +128,222 @@ h2.sec {
   cursor: pointer;
   font-family: var(--font-head);
   font-weight: 600;
-  border-radius: 980px;
+  border-radius: 12px;
   font-size: 15px;
   padding: 12px 24px;
-  transition: transform 0.12s ease, box-shadow 0.25s ease, background 0.2s;
+  transition: transform 0.12s ease, box-shadow 0.25s ease, background 0.2s, border-color 0.2s,
+    filter 0.2s;
 }
 .btn:active {
   transform: scale(0.98);
 }
-/* Signature glossy Emerald CTA (bushpop.css .btn.green / button-lab fx-sig) */
+.btn:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+/* PRIMARY = F2 subtle glass (Ben 02/07 — supersedes the emerald-era candy
+   glass). Near-flat top-lit BRG fill + specular top rim + hairline edge;
+   the orbit ring is always-on. Hover = light, never movement. */
 .btn.green {
+  border-radius: 980px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   color: #fff;
-  text-shadow: 0 1px 1px rgba(0, 45, 15, 0.42);
-  background: linear-gradient(115deg, transparent 42%, rgba(255, 255, 255, 0.55) 50%, transparent 58%) no-repeat,
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: linear-gradient(
+      115deg,
+      transparent 36%,
+      rgba(255, 255, 255, 0.1) 44%,
+      rgba(255, 255, 255, 0.3) 50%,
+      rgba(255, 255, 255, 0.1) 56%,
+      transparent 64%
+    )
+    no-repeat,
     linear-gradient(180deg, var(--cta-top) 0%, var(--cta-mid) 55%, var(--cta-bot) 100%);
   background-size: 250% 100%, 100% 100%;
   background-position: 150% 0, 0 0;
-  filter: brightness(1.03) saturate(1.28);
-  box-shadow: 0 14px 30px -10px rgba(18, 180, 76, 0.6), 0 3px 8px -3px rgba(9, 80, 35, 0.4),
-    inset 0 2px 0 rgba(255, 255, 255, 0.55), inset 0 -11px 18px -8px rgba(0, 58, 22, 0.55);
-  transition: transform 0.12s ease, box-shadow 0.2s ease, background-position 0.5s ease,
-    text-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 1px 2px rgba(0, 0, 0, 0.22),
+    0 6px 18px -10px rgba(0, 45, 25, 0.55);
+  transition: transform 0.14s ease, box-shadow 0.18s ease, background 0.18s ease, filter 0.2s ease;
+}
+/* ring sits ON the hairline border (inset:-1px) so the lit glass edge covers
+   it — inset:0 exposes the translucent border as a dark outline (Ben caught
+   it on sight, ring geometry rule, styling §3). */
+.btn.green::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1.2px;
+  z-index: 3;
+  pointer-events: none;
+  background: radial-gradient(90px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.95), transparent 75%),
+    conic-gradient(
+      from var(--arc-a),
+      rgba(255, 255, 255, 0.2) 0deg,
+      rgba(255, 255, 255, 0.95) 40deg,
+      rgba(170, 255, 205, 0.55) 82deg,
+      rgba(255, 255, 255, 0.2) 150deg,
+      rgba(255, 255, 255, 0.2) 360deg
+    );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: arc-orbit 4s linear infinite;
 }
 .btn.green::after {
   content: "";
   position: absolute;
-  top: 0;
-  left: -60%;
-  width: 40%;
-  height: 100%;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.6), transparent);
-  transform: skewX(-18deg);
-  transition: left 0.55s ease;
+  inset: 0;
+  border-radius: inherit;
   pointer-events: none;
-}
-.btn.green:hover {
-  transform: translateY(2px);
-  text-shadow: 0 1px 2px rgba(0, 35, 12, 0.95), 0 0 2px rgba(0, 28, 9, 0.85);
-  box-shadow: 0 8px 18px -10px rgba(18, 180, 76, 0.5), 0 2px 6px -3px rgba(9, 80, 35, 0.35),
-    inset 0 2px 0 rgba(255, 255, 255, 0.5), inset 0 7px 14px -5px rgba(0, 58, 22, 0.55),
-    0 0 26px -2px rgba(52, 224, 112, 0.55);
-  animation: btn-shine 1.5s linear infinite, btn-glow 2.2s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(120px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.24), transparent 70%);
 }
 .btn.green:hover::after {
-  left: 130%;
+  opacity: 1;
+}
+.btn.green:hover {
+  transform: none;
+  filter: brightness(1.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 1px 3px rgba(0, 0, 0, 0.25),
+    0 0 18px -4px rgba(45, 190, 115, 0.75), 0 0 46px -10px rgba(30, 160, 95, 0.45);
+  animation: btn-sheen 4.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 .btn.green:active {
-  transform: translateY(3px);
-  box-shadow: 0 5px 12px -10px rgba(18, 180, 76, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.45),
-    inset 0 10px 18px -5px rgba(0, 58, 22, 0.62);
+  transform: scale(0.97, 0.95);
+  filter: brightness(1.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25),
+    0 0 22px -2px rgba(60, 210, 135, 0.85), 0 0 56px -8px rgba(30, 160, 95, 0.5);
 }
-@keyframes btn-shine {
+@property --arc-a {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes arc-orbit {
+  to {
+    --arc-a: 360deg;
+  }
+}
+@keyframes btn-sheen {
   0% {
     background-position: 150% 0, 0 0;
+  }
+  40% {
+    background-position: -150% 0, 0 0;
   }
   100% {
     background-position: -150% 0, 0 0;
   }
 }
-@keyframes btn-glow {
-  0%,
-  100% {
-    filter: brightness(1.05) saturate(1.32);
-  }
-  50% {
-    filter: brightness(1.13) saturate(1.4);
-  }
-}
 .btn.rect {
   border-radius: 12px;
 }
+.btn.pill {
+  border-radius: 980px;
+}
+
+/* ---- secondary buttons — 12px glass rects, cursor-light hover (styling §3):
+   resting = flat fill + hairline edge; hover = border light (::before,
+   masked ring) + interior glow (::after). No movement on hover. ---- */
+.btn.ghost,
+.btn.dark {
+  position: relative;
+}
+.btn.ghost::after,
+.btn.dark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.btn.ghost::before,
+.btn.dark::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.btn.ghost:hover::after,
+.btn.dark:hover::after,
+.btn.ghost:hover::before,
+.btn.dark:hover::before {
+  opacity: 1;
+}
+
+/* GHOST — quiet tinted glass */
 .btn.ghost {
-  background: var(--color-surface);
   color: var(--color-ink);
+  background: rgba(29, 31, 30, 0.06);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease,
+    transform 0.12s ease;
+}
+.btn.ghost::after {
+  background: radial-gradient(110px circle at var(--mx, 50%) var(--my, 50%), rgba(29, 31, 30, 0.09), transparent 70%);
+}
+.btn.ghost::before {
+  background: radial-gradient(90px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.12) 75%);
 }
 .btn.ghost:hover {
-  background: #ececef;
+  background: rgba(29, 31, 30, 0.08);
 }
+.btn.ghost:active {
+  transform: scale(0.96);
+}
+
+/* DARK — obsidian, becomes a light source on hover */
 .btn.dark {
-  background: var(--color-ink);
   color: #fff;
+  background: linear-gradient(180deg, var(--color-obsidian-2), var(--color-obsidian));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease,
+    transform 0.12s ease;
+}
+.btn.dark::after {
+  background: radial-gradient(120px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.22), transparent 70%);
+}
+.btn.dark::before {
+  background: radial-gradient(90px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.95), transparent 75%),
+    conic-gradient(
+      from var(--arc-a),
+      rgba(255, 255, 255, 0.14) 0deg,
+      rgba(255, 255, 255, 0.85) 40deg,
+      rgba(200, 255, 220, 0.45) 82deg,
+      rgba(255, 255, 255, 0.14) 150deg,
+      rgba(255, 255, 255, 0.14) 360deg
+    );
+  animation: arc-orbit 3.2s linear infinite;
 }
 .btn.dark:hover {
-  filter: brightness(1.15);
+  background: linear-gradient(180deg, #1d201f, #0e100f);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26), 0 1px 3px rgba(0, 0, 0, 0.3);
 }
+.btn.dark:active {
+  transform: scale(0.96);
+  filter: brightness(1.12);
+}
+.btn.ghost:active {
+  filter: brightness(0.97);
+}
+
 .btn.block {
   width: 100%;
 }
@@ -196,45 +351,84 @@ h2.sec {
   padding: 15px 26px;
   font-size: 16px;
 }
+.btn.sm {
+  padding: 8px 15px;
+  font-size: 13.5px;
+  gap: 6px;
+}
 @media (prefers-reduced-motion: reduce) {
+  .btn.green::before,
+  .btn.dark::before,
   .btn.green:hover {
     animation: none;
   }
 }
 
-/* ===== Chips ===== */
+/* ===== Chips — cursor-light, small scale (styling §3) ===== */
 .chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-family: var(--font-head);
-  font-weight: 600;
+  font-weight: 500;
   font-size: 13.5px;
-  color: var(--color-ink);
-  background: var(--color-paper);
-  border: 1px solid var(--color-line-2);
+  color: #33343a;
+  background: var(--color-surface);
+  border: 1px solid transparent;
   border-radius: 980px;
   padding: 8px 15px;
   cursor: pointer;
   white-space: nowrap;
-  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  user-select: none;
+  transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.chip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(70px circle at var(--mx, 50%) var(--my, 50%), rgba(29, 31, 30, 0.09), transparent 70%);
 }
 .chip:hover {
-  border-color: var(--color-green);
-  background: rgba(22, 179, 74, 0.06);
+  background: #ececef;
+}
+.chip:hover::after {
+  opacity: 1;
+}
+.chip:active {
+  transform: scale(0.96);
+}
+.chip:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
 }
 .chip.on {
   background: var(--color-ink);
   color: #fff;
-  border-color: var(--color-ink);
+  font-weight: 600;
+}
+.chip.on::after {
+  background: radial-gradient(70px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.18), transparent 70%);
 }
 .chip.deal {
   background: var(--color-green-cta);
   color: #fff;
+  font-weight: 600;
   border-color: var(--color-green-cta);
 }
+.chip.deal::after {
+  background: radial-gradient(70px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.22), transparent 70%);
+}
 
-/* ===== Nav (frosted sticky) ===== */
+/* ===== Nav (frosted sticky, borderless-until-scroll — HANDOFF-nav.md) =====
+   Anatomy: logo · search pill · right group (guides links · heart · bag ·
+   Sell ⊕ green CTA). Hairline is transparent at top of page, fades in past
+   ~8px scroll via the .scrolled class (toggled by the NavScrollBorder client
+   leaf — the only JS this component needs). */
 .nav {
   position: sticky;
   top: 0;
@@ -242,9 +436,14 @@ h2.sec {
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(22px) saturate(180%);
   -webkit-backdrop-filter: blur(22px) saturate(180%);
-  border-bottom: 1px solid var(--color-line);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.25s ease;
+}
+.nav.scrolled {
+  border-bottom-color: var(--color-line);
 }
 .nav .inner {
+  position: relative;
   max-width: 1240px;
   margin: 0 auto;
   padding: 0 24px;
@@ -264,27 +463,33 @@ h2.sec {
   display: flex;
   align-items: center;
   gap: 9px;
-  background: rgba(0, 0, 0, 0.04);
-  border: 1px solid var(--color-line);
+  background: #fff;
+  border: 1px solid var(--color-line-2);
   border-radius: 980px;
   padding: 9px 16px;
   font-size: 13.5px;
   color: var(--color-ink-3);
-  transition: 0.2s;
+  transition: background 0.2s ease;
 }
 .nav .search:hover {
-  background: rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.03);
 }
 .nav .right {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
   font-size: 14px;
   font-weight: 500;
 }
-.nav .right a {
+.nav .right a:not(.btn) {
   color: #33343a;
+}
+/* same shape AND height for every nav button (shape-follows-group) */
+.nav .right .btn {
+  border-radius: 12px;
+  height: 38px;
+  padding: 0 15px;
 }
 .nav .ic {
   width: 36px;
@@ -300,12 +505,136 @@ h2.sec {
 .nav .ic:hover {
   background: rgba(0, 0, 0, 0.05);
 }
+.nav .burger {
+  display: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink);
+  cursor: pointer;
+  flex: none;
+  padding: 0;
+}
+.nav .burger:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* ---- mobile nav drawer — behind a prop defaulted OFF (Ben's call for the
+   content site; see PR body). Same slide-in panel primitives as the
+   marketplace nav; content site has no category taxonomy so level 2 is
+   omitted — just the site's own guide/about/help links + Sell CTA. ---- */
+.ndrawer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  pointer-events: none;
+}
+.ndrawer .scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 12, 11, 0.42);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.ndrawer .panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(320px, 88vw);
+  background: #fff;
+  transform: translateX(-103%);
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px 20px 24px;
+  box-shadow: 0 0 60px rgba(10, 12, 11, 0.18);
+}
+.ndrawer.open {
+  pointer-events: auto;
+}
+.ndrawer.open .scrim {
+  opacity: 1;
+}
+.ndrawer.open .panel {
+  transform: none;
+}
+.nd-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+}
+.nd-head .wm {
+  height: 16px;
+  width: auto;
+  color: var(--color-ink);
+}
+.nd-head .x {
+  width: 38px;
+  height: 38px;
+  border: none;
+  background: transparent;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-ink);
+  cursor: pointer;
+  padding: 0;
+  margin-right: -10px;
+}
+.nd-head .x:active {
+  background: rgba(0, 0, 0, 0.06);
+}
+.nd-cta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 14px 0 6px;
+}
+.nd-cta .btn {
+  width: 100%;
+  border-radius: 12px;
+}
+.nd-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+}
+.nd-list a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 2px;
+  border-bottom: 1px solid var(--color-line);
+  font-family: var(--font-head);
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--color-ink);
+  transition: color 0.18s ease;
+}
+@media (hover: hover) {
+  .nd-list a:hover {
+    color: var(--color-green-ink);
+  }
+}
+.nd-list a:active {
+  background: rgba(0, 0, 0, 0.04);
+}
 
 /* ===== Breadcrumb ===== */
 .crumb {
   font-size: 12.5px;
   color: var(--color-ink-3);
-  padding: 20px 0 0;
+  padding: var(--page-gap, 12px) 0 0;
 }
 .crumb a:hover {
   color: var(--color-ink);
@@ -318,14 +647,17 @@ h2.sec {
   color: var(--color-ink);
 }
 
-/* ===== Product card ===== */
+/* ===== Product card — Lit Glass, treatment D (LOCKED) =====
+   Rest: flat photo + 1px glass edge. Hover: quiet zoom 1.03 + brighten
+   1.07, MONOTONE WHITE travelling ring (a green ring was built and
+   rejected), title lights BRG. At-rest light = buttons only. */
 .pcard {
   display: block;
   cursor: pointer;
 }
 .pimg {
   position: relative;
-  border-radius: 14px;
+  border-radius: 16px;
   overflow: hidden;
   aspect-ratio: 4 / 5;
   background: #eceef0;
@@ -334,75 +666,188 @@ h2.sec {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform 0.45s ease, filter 0.3s ease;
 }
 .pcard:hover .pimg img {
-  transform: scale(1.04);
+  transform: scale(1.03);
+  filter: brightness(1.07);
 }
+.pimg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 2;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.pimg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(150px circle at var(--cx, 50%) var(--cy, 50%), rgba(255, 255, 255, 0.95), transparent 78%),
+    conic-gradient(
+      from var(--arc-a),
+      rgba(255, 255, 255, 0.18) 0deg,
+      rgba(255, 255, 255, 0.92) 40deg,
+      rgba(255, 255, 255, 0.45) 82deg,
+      rgba(255, 255, 255, 0.18) 150deg,
+      rgba(255, 255, 255, 0.18) 360deg
+    );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: arc-orbit 4s linear infinite;
+}
+.pcard:hover .pimg::before {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pimg::before {
+    animation: none;
+  }
+}
+
+/* ---- badge family — one anatomy, semantic colours (styling §3):
+   .sale red foil (discount, "N% OFF") · .psave yellow foil black text
+   (SAVE $N) · .flag obsidian foil (scarcity/freshness). No fake urgency. ---- */
 .pimg .sale {
   position: absolute;
   left: 9px;
   top: 9px;
-  background: var(--color-red);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: #fff;
   font-family: var(--font-head);
   font-weight: 700;
   font-size: 11.5px;
   padding: 4px 9px;
   border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.38) 50%, transparent 66%) no-repeat,
+    linear-gradient(135deg, #f5473b, #d92c25 55%, #b8211b);
+  background-size: 230% 100%, 100% 100%;
+  background-position: 128% 0, 0 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  text-shadow: 0 1px 1px rgba(110, 10, 5, 0.35);
 }
-.pimg .fav {
-  position: absolute;
-  right: 9px;
-  bottom: 9px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #1d1d1f;
-  cursor: pointer;
+.pcard:hover .pimg .sale,
+.pcard:hover .psave {
+  animation: badge-sheen 1.6s cubic-bezier(0.4, 0, 0.2, 1) 1;
 }
-.pimg .fav.on {
-  color: var(--color-red);
+@keyframes badge-sheen {
+  0% {
+    background-position: 128% 0, 0 0;
+  }
+  62% {
+    background-position: -128% 0, 0 0;
+  }
+  100% {
+    background-position: -128% 0, 0 0;
+  }
 }
 .pimg .flag {
   position: absolute;
   left: 9px;
   bottom: 9px;
-  background: rgba(0, 0, 0, 0.6);
+  z-index: 2;
   color: #fff;
   font-family: var(--font-head);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 10.5px;
   letter-spacing: 0.03em;
   padding: 3px 8px;
-  border-radius: 6px;
-  backdrop-filter: blur(6px);
+  border-radius: 7px;
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.3) 50%, transparent 66%) no-repeat,
+    linear-gradient(135deg, #20231f, #0e100f 60%, var(--color-obsidian));
+  background-size: 230% 100%, 100% 100%;
+  background-position: 128% 0, 0 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+/* heart — outline only at rest, frosted disc fades in on card hover, click
+   fills red with a spring pop (styling §3) */
+.pimg .fav {
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #fff;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.2s ease, transform 0.12s ease,
+    box-shadow 0.25s ease;
+}
+.pcard:hover .pimg .fav {
+  color: #1d1d1f;
+  filter: none;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border-color: rgba(255, 255, 255, 0.65);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 1px 4px rgba(0, 0, 0, 0.14);
+}
+.pimg .fav:hover {
+  background: rgba(255, 255, 255, 0.82);
+}
+.pimg .fav:active {
+  transform: scale(0.9);
+}
+.pimg .fav.on {
+  color: var(--color-red);
+  animation: heart-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.pcard:hover .pimg .fav.on {
+  color: var(--color-red);
+}
+@keyframes heart-pop {
+  0% {
+    transform: scale(0.72);
+  }
+  55% {
+    transform: scale(1.22);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 .pcard .pname {
   font-size: 13.5px;
   font-weight: 500;
   margin: 10px 0 3px;
   color: var(--color-ink);
+  transition: color 0.18s ease;
+}
+.pcard:hover .pname {
+  color: var(--color-green-bright);
 }
 .pcard .psave {
   display: inline-block;
-  background: var(--color-red);
-  color: #fff;
+  color: #1d1d1f;
   font-family: var(--font-head);
   font-weight: 700;
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 6px;
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.45) 50%, transparent 66%) no-repeat,
+    linear-gradient(135deg, #ffd54a, #ffc400 55%, #e8a900);
+  background-size: 230% 100%, 100% 100%;
+  background-position: 128% 0, 0 0;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 .pcard .prrp {
   font-size: 11.5px;
@@ -429,16 +874,16 @@ h2.sec {
 }
 .pcard .prate {
   font-size: 11.5px;
-  color: var(--color-green-ink);
+  color: var(--color-green-bright);
   margin-top: 5px;
   display: flex;
   align-items: center;
   gap: 5px;
 }
 
-/* ===== Footer ===== */
+/* ===== Footer — obsidian ===== */
 .site-footer {
-  background: #0b0d0c;
+  background: var(--color-obsidian);
   color: #cfd2d0;
   margin-top: 60px;
 }
@@ -593,7 +1038,7 @@ h2.sec {
   margin: 0 0 16px;
 }
 .prose-bushpop a {
-  color: var(--color-green-ink);
+  color: var(--color-green-bright);
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -655,5 +1100,8 @@ h2.sec {
   }
   .nav .search {
     display: none;
+  }
+  .nav .burger {
+    display: inline-flex;
   }
 }

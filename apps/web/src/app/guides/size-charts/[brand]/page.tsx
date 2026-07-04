@@ -101,7 +101,7 @@ export default async function BrandSizeChartPage({
       ))}
 
       <nav className="text-sm text-ink-3 mb-6" aria-label="Breadcrumb">
-        <Link href="/guides/size-charts/" className="text-green-ink font-medium underline">
+        <Link href="/guides/size-charts/" className="text-green-bright font-medium underline">
           Size Charts
         </Link>
         <span> / {brand.name}</span>
@@ -197,7 +197,7 @@ export default async function BrandSizeChartPage({
         <p className="text-lg font-medium mb-2">
           Found your size? Shop {brand.name} secondhand on Bushpop.
         </p>
-        <Link href="/shop/" className="text-green-ink font-medium underline">
+        <Link href="/shop/" className="text-green-bright font-medium underline">
           Browse the shop →
         </Link>
       </div>
@@ -223,7 +223,7 @@ export default async function BrandSizeChartPage({
             <li key={b.slug}>
               <Link
                 href={`/guides/size-charts/${b.slug}/`}
-                className="text-green-ink font-medium underline"
+                className="text-green-bright font-medium underline"
               >
                 {b.name} size chart
               </Link>

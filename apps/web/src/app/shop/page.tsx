@@ -8,7 +8,7 @@
 // Launch-1 guide or about page (fit guides, op-shop guides, how buying works)
 // rather than to product listings.
 import Link from "next/link";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight, Clock } from "@phosphor-icons/react/dist/ssr";
 import { pageMeta } from "@/lib/seo";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ArticleJsonLd } from "@/components/json-ld";
@@ -138,8 +138,8 @@ export default function ShopPage() {
 
       {/* Launching-soon hero */}
       <section className="rounded-[26px] border border-line bg-surface p-8 sm:p-10">
-        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-green-ink">
-          <Clock size={14} strokeWidth={2.4} /> Launching soon
+        <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-green-bright">
+          <Clock size={14} weight="bold" /> Launching soon
         </span>
         <h1 className="page mt-4">Shop secondhand fashion</h1>
         <p className="muted mt-3 max-w-2xl text-[17px]">
@@ -176,9 +176,9 @@ export default function ShopPage() {
               <p className="mt-2 text-ink-2">{d.blurb}</p>
               <Link
                 href={d.href}
-                className="mt-3 inline-flex items-center gap-1.5 font-semibold text-green-ink"
+                className="mt-3 inline-flex items-center gap-1.5 font-semibold text-green-bright"
               >
-                {d.cta} <ArrowRight size={15} strokeWidth={2.4} />
+                {d.cta} <ArrowRight size={15} weight="bold" />
               </Link>
             </li>
           ))}
@@ -192,9 +192,9 @@ export default function ShopPage() {
             <li key={g.href}>
               <Link
                 href={g.href}
-                className="inline-flex items-center gap-1.5 font-medium text-green-ink"
+                className="inline-flex items-center gap-1.5 font-medium text-green-bright"
               >
-                {g.label} <ArrowRight size={14} strokeWidth={2.4} />
+                {g.label} <ArrowRight size={14} weight="bold" />
               </Link>
             </li>
           ))}

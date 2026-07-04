@@ -28,7 +28,7 @@ export default function NotFound() {
       <ul className="space-y-2">
         {SUGGESTIONS.map((s) => (
           <li key={s.href}>
-            <Link href={s.href} className="font-medium text-green-ink underline">
+            <Link href={s.href} className="font-medium text-green-bright underline">
               {s.label}
             </Link>
           </li>

@@ -12,7 +12,7 @@ export default function GonePage() {
         This page has been permanently removed from Bushpop.
       </p>
       <p>
-        <a href="/" className="font-medium text-green-ink underline">
+        <a href="/" className="font-medium text-green-bright underline">
           Return to Bushpop home
         </a>
       </p>

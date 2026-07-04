@@ -6,20 +6,20 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Search,
+  MagnifyingGlass,
   Shield,
-  MapPin,
-  Zap,
+  Lightning,
   Tag,
   Package,
   ArrowRight,
-} from "lucide-react";
+} from "@phosphor-icons/react/dist/ssr";
 import { Button } from "@/components/button";
 import { Chip } from "@/components/chip";
 import { ProductCard } from "@/components/product-card";
 import { FreshDrops } from "@/components/fresh-drops";
 import { WaitlistForm } from "@/components/waitlist-form";
 import { MobileBottomBar } from "@/components/mobile-bottom-bar";
+import { SouthernCrossIcon } from "@/components/icons";
 import { BRANDS, RECENTLY_VIEWED, STYLES } from "@/lib/demo-products";
 import { COMING_SOON, SELL_SOON } from "@/lib/links";
 
@@ -48,14 +48,14 @@ const TRUST = [
   { Icon: Shield, label: "Buyer Protection on every order" },
   { Icon: Tag, label: "Free to list" },
   { Icon: Package, label: "Sellers ship direct" },
-  { Icon: MapPin, label: "Human support, based in Australia" },
+  { Icon: SouthernCrossIcon, label: "Human support, based in Australia" },
 ];
 
 const SELLER_BENEFITS = [
-  { Icon: Zap, title: "List for free", body: "Photograph your pieces, set a price and publish. No listing fees." },
+  { Icon: Lightning, title: "List for free", body: "Photograph your pieces, set a price and publish. No listing fees." },
   { Icon: Tag, title: "Free to list", body: "1.75% + 30¢ only when it sells — nothing until then." },
   { Icon: Package, title: "You ship direct", body: "Post the order straight to the buyer once it sells." },
-  { Icon: MapPin, title: "Human support", body: "Real people, based in Australia, at support@bushpop.com.au." },
+  { Icon: SouthernCrossIcon, title: "Human support", body: "Real people, based in Australia, at support@bushpop.com.au." },
 ];
 
 const HOW_IT_WORKS = [
@@ -100,13 +100,13 @@ export default function HomePage() {
           <div className="w-full max-w-2xl rounded-[26px] border border-line bg-white/75 p-8 shadow-[0_24px_60px_-24px_rgba(20,30,24,0.3)] backdrop-blur-xl sm:p-10">
             <div className="eyebrow mb-3">Preview · marketplace launching soon</div>
             <h1 className="page">
-              Bring <span className="text-green-ink">joy</span> to your wardrobe
+              Bring <span className="text-green-bright">joy</span> to your wardrobe
             </h1>
             <p className="muted mx-auto mt-4 max-w-lg text-[17px]">
               Vintage, streetwear and designer. Preloved, from sellers right across Australia.
             </p>
             <Link href={COMING_SOON} className="search mx-auto mt-6 !max-w-md" aria-label="Search preloved (launching soon)">
-              <Search size={16} strokeWidth={2} />
+              <MagnifyingGlass size={16} weight="bold" />
               <span>Search brands, styles, sizes…</span>
             </Link>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -130,7 +130,7 @@ export default function HomePage() {
         <div className="shell flex flex-wrap items-center justify-center gap-x-8 gap-y-3 py-4 text-sm text-ink-2">
           {TRUST.map(({ Icon, label }) => (
             <span key={label} className="inline-flex items-center gap-2">
-              <Icon size={16} strokeWidth={2} className="text-green-ink" />
+              <Icon size={16} weight="bold" className="text-green-bright" />
               {label}
             </span>
           ))}
@@ -151,8 +151,8 @@ export default function HomePage() {
         <div className="eyebrow">Just listed</div>
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <h2 className="sec">Fresh drops</h2>
-          <Link href={COMING_SOON} className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-ink">
-            See everything <ArrowRight size={15} strokeWidth={2.4} />
+          <Link href={COMING_SOON} className="inline-flex items-center gap-1.5 text-sm font-semibold text-green-bright">
+            See everything <ArrowRight size={15} weight="bold" />
           </Link>
         </div>
         <FreshDrops />
@@ -199,7 +199,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {HOW_IT_WORKS.map((s) => (
               <div key={s.step} className="rounded-[18px] border border-line bg-white p-5">
-                <span className="grid h-9 w-9 place-items-center rounded-full bg-surface font-head text-sm font-bold text-green-ink">{s.step}</span>
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-surface font-head text-sm font-bold text-green-bright">{s.step}</span>
                 <div className="mt-3 font-head text-sm font-bold">{s.title}</div>
                 <p className="mt-1 text-sm text-ink-2">{s.body}</p>
               </div>
@@ -245,7 +245,7 @@ export default function HomePage() {
           <div className="grid grid-cols-2 gap-3">
             {SELLER_BENEFITS.map(({ Icon, title, body }) => (
               <div key={title} className="rounded-[18px] border border-white/10 bg-white/5 p-4">
-                <Icon size={20} className="text-[#79e0a0]" />
+                <Icon size={20} weight="bold" className="text-[#79e0a0]" />
                 <div className="mt-2 font-head text-sm font-bold text-white">{title}</div>
                 <p className="mt-1 text-xs text-[#a9b1ac]">{body}</p>
               </div>
