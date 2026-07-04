@@ -60,7 +60,8 @@ The engine was forked from `benobie/piklo-v2` @ `2419a38` (02/07/2026), renamed 
 - `cacheComponents: true` is for the SSR/Launch-2 path — NOT set here (static export)
 - **MDX plugins must be passed to `createMDX` as serializable string names, NOT imported functions** — Turbopack rejects function refs with "does not have serializable options". Use `remarkPlugins: [["remark-gfm"]]` / `rehypePlugins: [["rehype-slug"]]`. Both are wired: `remark-gfm` is load-bearing for pipe tables (without it MDX tables render as literal `|` text), `rehype-slug` gives headings `id`s for in-page anchor links (e.g. `/guides/size-charts/#condition-guide`)
 - **`next/image` needs `images.unoptimized: true`** under `output: 'export'` (no optimisation server). Set in `next.config.ts`.
-- **`lucide-react` is v1.x** — brand icons (Instagram/Facebook/YouTube/Twitter) were REMOVED. Inline minimal brand SVGs where needed (see `site-footer.tsx`).
+- **No icon library ships brand marks** — Instagram/Facebook/YouTube/Twitter etc. aren't in `@phosphor-icons/react` (or lucide, which this repo no longer uses at all — fully removed in the B11 re-skin, PR #61). Inline minimal brand SVGs where needed (see `site-footer.tsx`).
+- **`@phosphor-icons/react` needs the `/dist/ssr` subpath in RSC components** — `import { Heart } from "@phosphor-icons/react/dist/ssr"`, not the bare package. The base package's icons depend on a module-scope `IconContext` (`React.createContext`) that breaks under some Next 16 build configs (confirmed: crashes `apps/market`'s build under `cacheComponents`+Turbopack — see `phosphor-icons-breaks-next16-build` memory); the `/dist/ssr` entrypoint's context-free per-icon components avoided that entirely here (confirmed clean across all 57 `apps/web` routes). Pass `weight="bold"` per icon, not via a context provider.
 
 ## `apps/market` gotchas (Launch-2 engine SSR app)
 
