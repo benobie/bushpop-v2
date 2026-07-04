@@ -13,10 +13,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { ulid } from "ulid";
 import { db } from "@bushpop/db/client";
-import { orders, checkoutSessions, carts, channelListings } from "@bushpop/db/schema";
+import { orders, checkoutSessions, carts, channelListings, refunds } from "@bushpop/db/schema";
 import {
   orderConfirmationBuyerTemplate,
   orderNotificationSellerTemplate,
+  refundConfirmationBuyerTemplate,
   shippingConfirmationBuyerTemplate,
 } from "../../../lib/email/templates.js";
 import { getSentEmails, clearMockEmails, _resetEmailSender } from "../../../lib/email/index.js";
@@ -137,6 +138,19 @@ async function createMinimalCart(buyerId: string, _sellerId: string, channelId: 
   return cart!.id;
 }
 
+async function createProcessedRefund(orderId: string, amountCents: number): Promise<void> {
+  await db.insert(refunds).values({
+    id: ulid(),
+    orderId,
+    reason: "test refund",
+    type: "full",
+    amountCents,
+    platformFeeRefundedCents: 200,
+    stripeRefundId: `re_test_${ulid().toLowerCase()}`,
+    status: "processed",
+  });
+}
+
 // ── 1. Template output matches expected plain text ────────────────────────────
 
 describe("Email templates", () => {
@@ -247,6 +261,37 @@ describe("Email templates", () => {
     expect(text).toContain("Great news — your Bushpop order is on its way!");
     expect(text).toContain("The Bushpop Team");
   });
+
+  it("refundConfirmationBuyer — contains order ID, buyer name, refund amount", () => {
+    const { subject, text } = refundConfirmationBuyerTemplate({
+      orderId: "01JTEST0000000000000000004",
+      buyerName: "Jane Buyer",
+      amountCents: 6000,
+      currency: "AUD",
+      channelName: "Bushpop",
+    });
+
+    expect(subject).toContain("00000004");
+    expect(text).toContain("Jane Buyer");
+    expect(text).toContain("01JTEST0000000000000000004");
+    expect(text).toContain("AUD 60.00");
+    expect(text).not.toMatch(/piklo/i);
+    expect(text).not.toMatch(/insurance/i);
+  });
+
+  it("refundConfirmationBuyer — channelName is a no-op for Bushpop (word-for-word match)", () => {
+    const { subject, text } = refundConfirmationBuyerTemplate({
+      orderId: "01JTEST0000000000000000004",
+      buyerName: "Jane Buyer",
+      amountCents: 6000,
+      currency: "AUD",
+      channelName: "Bushpop",
+    });
+
+    expect(subject).toBe("Your Bushpop order #00000004 has been refunded");
+    expect(text).toContain("Your Bushpop order has been refunded.");
+    expect(text).toContain("The Bushpop Team");
+  });
 });
 
 // ── 2. Worker processes jobs with mock provider ───────────────────────────────
@@ -304,6 +349,47 @@ describe("Email worker — processEmailJob", () => {
     expect(sent[0]!.to).toBe(buyer.email);
     expect(sent[0]!.text).toContain("MOCK-TRACK123");
     expect(sent[0]!.text).toContain("Australia Post");
+  });
+
+  it("refund_confirmation_buyer — sends email with the processed refund amount", async () => {
+    const { order, buyer } = await createMinimalOrder({ status: "refunded" });
+    await createProcessedRefund(order.id, order.totalCents);
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "refund_confirmation_buyer", orderId: order.id });
+
+    const sent = getSentEmails();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).toBe(buyer.email);
+    expect(sent[0]!.subject).toContain(order.id.slice(-8).toUpperCase());
+    expect(sent[0]!.text).toContain("AUD 60.00");
+  });
+
+  it("refund_confirmation_buyer — still sends when the order's terminal status is 'cancelled' (admin cancel path)", async () => {
+    // The generic cancelled-order guard exists so other email types don't
+    // fire on an already-cancelled order — it must NOT swallow this one,
+    // since a refund confirmation's whole point is to fire once the order
+    // lands in a refunded/cancelled terminal state.
+    const { order, buyer } = await createMinimalOrder({ status: "cancelled" });
+    await createProcessedRefund(order.id, order.totalCents);
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "refund_confirmation_buyer", orderId: order.id });
+
+    const sent = getSentEmails();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).toBe(buyer.email);
+  });
+
+  it("refund_confirmation_buyer — throws when no processed refund row exists for the order", async () => {
+    const { order } = await createMinimalOrder({ status: "refunded" });
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await expect(
+      processEmailJobForTest({ type: "refund_confirmation_buyer", orderId: order.id }),
+    ).rejects.toThrow(/No processed refund found/);
+
+    expect(getSentEmails()).toHaveLength(0);
   });
 });
 

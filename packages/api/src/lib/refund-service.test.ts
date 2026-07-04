@@ -24,6 +24,7 @@ import {
   reconcileReversalOpFromStripe,
 } from "./refund-service.js";
 import { enqueueAdminAlert } from "./admin-alerts.js";
+import { enqueueEmail } from "../workers/email.js";
 
 // ---------------------------------------------------------------------------
 // Mocks — must be declared before imports to allow vi.mock hoisting
@@ -193,6 +194,9 @@ describe("processRefund — pre-transfer path (held)", () => {
     expect(ops[0]!.status).toBe("succeeded");
     expect(ops[0]!.type).toBe("refund");
     expect(ops[0]!.providerObjectId).toBe("re_test_stripe_123");
+
+    // Buyer refund confirmation email enqueued
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
   });
 });
 
@@ -228,6 +232,9 @@ describe("processRefund — post-transfer path (released)", () => {
     const reversalOp = ops.find((o) => o.type === "reversal");
     expect(refundOp!.status).toBe("succeeded");
     expect(reversalOp!.status).toBe("succeeded");
+
+    // Buyer refund confirmation email enqueued
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
   });
 });
 
@@ -395,6 +402,11 @@ describe("resumePendingRefunds", () => {
       .where(eq(paymentOperations.id, staleOpId));
     expect(op!.status).toBe("succeeded");
     expect(op!.providerObjectId).toBe("re_test_stripe_123");
+
+    // Order recovered to refunded → buyer confirmation enqueued
+    const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+    expect(order!.status).toBe("refunded");
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
   });
 });
 
@@ -573,6 +585,8 @@ describe("reconcileRefundOpFromStripe", () => {
 
     const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
     expect(hold!.status).toBe("refunded");
+
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
   });
 
   it("is idempotent against repeated webhook deliveries", async () => {
@@ -611,6 +625,10 @@ describe("reconcileRefundOpFromStripe", () => {
       .from(paymentOperations)
       .where(eq(paymentOperations.id, opId));
     expect(op!.status).toBe("succeeded");
+
+    // Only the first delivery finalised the order — the email must not
+    // double-send on the repeated webhook.
+    expect(enqueueEmail).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -661,6 +679,8 @@ describe("reconcileReversalOpFromStripe", () => {
 
     const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
     expect(order!.status).toBe("refunded");
+
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
   });
 });
 // ---------------------------------------------------------------------------
@@ -697,6 +717,10 @@ describe("processRefund — admin cancel options", () => {
       .where(eq(paymentOperations.orderId, orderId));
     expect(ops.length).toBe(1);
     expect(ops[0]!.status).toBe("succeeded");
+
+    // Refund confirmation fires even though the terminal status is
+    // "cancelled", not "refunded" — the buyer still got their money back.
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
   });
 
   it("post-release: terminal status 'cancelled' after refund + reversal both succeed", async () => {
@@ -726,6 +750,8 @@ describe("processRefund — admin cancel options", () => {
       .where(eq(paymentOperations.orderId, orderId));
     expect(ops.length).toBe(2);
     expect(ops.every((o) => o.status === "succeeded")).toBe(true);
+
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
   });
 
   it("pre-release: Stripe refund failure leaves order/hold untouched and surfaces error", async () => {
@@ -1019,6 +1045,10 @@ describe("LB-R2-2 reconciler ordering", () => {
     // Refund row must remain pending
     const [refund] = await db.select().from(refunds).where(eq(refunds.id, refundId));
     expect(refund!.status).toBe("pending");
+
+    // Not finalised yet — no refund confirmation email until the refund
+    // webhook completes the join.
+    expect(enqueueEmail).not.toHaveBeenCalled();
   });
 
   it("reversal-first (cont.): subsequent refund webhook finalises both rows to terminal state", async () => {
@@ -1036,6 +1066,10 @@ describe("LB-R2-2 reconciler ordering", () => {
 
     const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
     expect(order!.status).toBe("refunded");
+
+    // Exactly one email — sent when the join actually finalised, not before.
+    expect(enqueueEmail).toHaveBeenCalledTimes(1);
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
   });
 
   it("refund-first (normal case): refund webhook fires first → terminal state reached", async () => {
@@ -1052,6 +1086,9 @@ describe("LB-R2-2 reconciler ordering", () => {
 
     const [orderMid] = await db.select().from(orders).where(eq(orders.id, orderId));
     expect(orderMid!.status).toBe("refund_in_progress");
+
+    // Not finalised yet — no email while the reversal is still outstanding.
+    expect(enqueueEmail).not.toHaveBeenCalled();
 
     // Now reversal webhook fires
     const [reversalOp] = await db
@@ -1072,6 +1109,9 @@ describe("LB-R2-2 reconciler ordering", () => {
 
     const [orderFinal] = await db.select().from(orders).where(eq(orders.id, orderId));
     expect(orderFinal!.status).toBe("refunded");
+
+    expect(enqueueEmail).toHaveBeenCalledTimes(1);
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
   });
 
   it("duplicate webhook delivery: calling same reconciler twice is a no-op (CAS idempotency)", async () => {
