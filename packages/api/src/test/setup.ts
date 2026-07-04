@@ -27,6 +27,8 @@ beforeAll(() => {
 beforeEach(async () => {
   await db.execute(sql`
     TRUNCATE TABLE
+      progression_events,
+      bulk_batches,
       ai_generations,
       listing_scores,
       listing_reports,

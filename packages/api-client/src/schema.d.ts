@@ -2557,6 +2557,430 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/seller/bulk/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recent bulk-listing batches */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            batches: {
+                                id: string;
+                                label: string | null;
+                                itemCount: number;
+                                publishedCount: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Start a new bulk-listing intake batch */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        label?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            label: string | null;
+                            itemCount: number;
+                            publishedCount: number;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/bulk/batches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a batch with all its draft items (photos/strength/AI status) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            batch: {
+                                id: string;
+                                label: string | null;
+                                itemCount: number;
+                                publishedCount: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            items: {
+                                id: string;
+                                version: number;
+                                lifecycleState: string;
+                                title: string | null;
+                                brand: string | null;
+                                categoryId: string | null;
+                                category: {
+                                    id: string;
+                                    slug: string;
+                                    name: string;
+                                    parentId: string | null;
+                                    parentSlug: string | null;
+                                } | null;
+                                size: string | null;
+                                sizeScale: string | null;
+                                colour: string | null;
+                                description: string | null;
+                                condition: string | null;
+                                conditionNotes: string | null;
+                                measurements: {
+                                    [key: string]: number;
+                                } | null;
+                                measurementTemplate: {
+                                    key: string;
+                                    keys: string[];
+                                    sizeExempt: boolean;
+                                };
+                                askingPriceCents: number | null;
+                                rrpCents: number | null;
+                                shippingOption: string | null;
+                                parcelSize: string | null;
+                                shippingClass: string | null;
+                                images: {
+                                    id: string;
+                                    url: string;
+                                    contentType: string | null;
+                                    sizeBytes: number | null;
+                                    status: string;
+                                    position: number;
+                                    isPrimary: boolean;
+                                    /** Format: date-time */
+                                    confirmedAt: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    thumbUrl: string;
+                                }[];
+                                strength: {
+                                    score: number;
+                                    band: string;
+                                    breakdown: {
+                                        [key: string]: number;
+                                    };
+                                    missing: {
+                                        key: string;
+                                        label: string;
+                                        step: number;
+                                        points: number;
+                                    }[];
+                                    version: string;
+                                };
+                                aiTitle: string | null;
+                                aiDescription: string | null;
+                                aiSuggestedBrand: string | null;
+                                aiSuggestedCategory: string | null;
+                                aiSuggestedColour: string | null;
+                                aiConfidence: number | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/bulk/batches/{id}/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create N empty drafts tagged to this batch, ready for photo intake */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        count: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            batch: {
+                                id: string;
+                                label: string | null;
+                                itemCount: number;
+                                publishedCount: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
+                            items: {
+                                id: string;
+                                version: number;
+                                lifecycleState: string;
+                                title: string | null;
+                                brand: string | null;
+                                categoryId: string | null;
+                                category: {
+                                    id: string;
+                                    slug: string;
+                                    name: string;
+                                    parentId: string | null;
+                                    parentSlug: string | null;
+                                } | null;
+                                size: string | null;
+                                sizeScale: string | null;
+                                colour: string | null;
+                                description: string | null;
+                                condition: string | null;
+                                conditionNotes: string | null;
+                                measurements: {
+                                    [key: string]: number;
+                                } | null;
+                                measurementTemplate: {
+                                    key: string;
+                                    keys: string[];
+                                    sizeExempt: boolean;
+                                };
+                                askingPriceCents: number | null;
+                                rrpCents: number | null;
+                                shippingOption: string | null;
+                                parcelSize: string | null;
+                                shippingClass: string | null;
+                                images: {
+                                    id: string;
+                                    url: string;
+                                    contentType: string | null;
+                                    sizeBytes: number | null;
+                                    status: string;
+                                    position: number;
+                                    isPrimary: boolean;
+                                    /** Format: date-time */
+                                    confirmedAt: string | null;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    thumbUrl: string;
+                                }[];
+                                strength: {
+                                    score: number;
+                                    band: string;
+                                    breakdown: {
+                                        [key: string]: number;
+                                    };
+                                    missing: {
+                                        key: string;
+                                        label: string;
+                                        step: number;
+                                        points: number;
+                                    }[];
+                                    version: string;
+                                };
+                                aiTitle: string | null;
+                                aiDescription: string | null;
+                                aiSuggestedBrand: string | null;
+                                aiSuggestedCategory: string | null;
+                                aiSuggestedColour: string | null;
+                                aiConfidence: number | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/bulk/batches/{id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish every ready draft in the batch (partial success reported per item) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        legalAgree: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            published: {
+                                itemId: string;
+                                listingId: string;
+                                handle: string;
+                                strengthScore: number;
+                            }[];
+                            failed: {
+                                itemId: string;
+                                reason: string;
+                                missing?: string[];
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seller/bulk/batches/{id}/export.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export the batch as CSV for crosslisting ops */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/seller/listings": {
         parameters: {
             query?: never;
@@ -3764,181 +4188,6 @@ export interface paths {
         get?: never;
         put?: never;
         /** Cancel a checkout session (created or payment_pending only) */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            cancelled: boolean;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/store/checkout-groups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create a multi-vendor checkout group — reserve inventory + create Stripe PaymentIntent */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        shippingAddressId: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            orderGroupId: string;
-                            clientSecret: string;
-                            /** @enum {string} */
-                            chargeType: "destination" | "sct";
-                            totals: {
-                                subtotalCents: number;
-                                shippingCents: number;
-                                platformFeeCents: number;
-                                sellerProceedsCents: number;
-                                totalCents: number;
-                                currency: string;
-                            };
-                            allocations: {
-                                allocationId: string;
-                                sellerId: string;
-                                /** @enum {string} */
-                                status: "pending" | "charge_reserved" | "transfer_pending" | "transfer_retrying" | "transferred" | "transfer_blocked" | "shipped" | "delivered" | "refunded" | "cancelled";
-                                subtotalCents: number;
-                                shippingCents: number;
-                                platformFeeCents: number;
-                                sellerProceedsCents: number;
-                                totalCents: number;
-                                itemIds: string[];
-                            }[];
-                            /** Format: date-time */
-                            expiresAt: string | null;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/store/checkout-groups/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a checkout group by ID (buyer only) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Default Response */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            orderGroupId: string;
-                            /** @enum {string} */
-                            status: "created" | "payment_pending" | "requires_action" | "confirming" | "paid_unallocated" | "allocating" | "allocated" | "partially_failed" | "expired" | "payment_declined" | "cancelled";
-                            /** @enum {string} */
-                            chargeType: "destination" | "sct";
-                            totals: {
-                                subtotalCents: number;
-                                shippingCents: number;
-                                platformFeeCents: number;
-                                sellerProceedsCents: number;
-                                totalCents: number;
-                                currency: string;
-                            };
-                            allocations: {
-                                allocationId: string;
-                                sellerId: string;
-                                /** @enum {string} */
-                                status: "pending" | "charge_reserved" | "transfer_pending" | "transfer_retrying" | "transferred" | "transfer_blocked" | "shipped" | "delivered" | "refunded" | "cancelled";
-                                subtotalCents: number;
-                                shippingCents: number;
-                                platformFeeCents: number;
-                                sellerProceedsCents: number;
-                                totalCents: number;
-                                itemIds: string[];
-                            }[];
-                            /** Format: date-time */
-                            expiresAt: string | null;
-                        };
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/store/checkout-groups/{id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Cancel a checkout group (created or payment_pending only) */
         post: {
             parameters: {
                 query?: never;

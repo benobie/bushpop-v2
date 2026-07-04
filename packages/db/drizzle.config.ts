@@ -17,6 +17,8 @@ export default defineConfig({
     "./src/schema/listing-reports.ts",
     "./src/schema/listing-scores.ts",
     "./src/schema/ai-generations.ts",
+    "./src/schema/bulk-batches.ts",
+    "./src/schema/progression-events.ts",
   ],
   out: "./drizzle",
   dialect: "postgresql",

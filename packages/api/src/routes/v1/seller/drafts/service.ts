@@ -186,8 +186,11 @@ async function serializeDraft(item: InventoryItemRow) {
 
 // ── Create / read ──
 
-export async function createDraft(ownerId: string) {
-  const [item] = await db.insert(inventoryItems).values({ ownerId }).returning();
+export async function createDraft(ownerId: string, batchId?: string) {
+  const [item] = await db
+    .insert(inventoryItems)
+    .values(batchId ? { ownerId, batchId } : { ownerId })
+    .returning();
 
   await dispatchEvent({
     eventName: "inventory_item.created",
@@ -195,7 +198,7 @@ export async function createDraft(ownerId: string) {
     actorId: ownerId,
     entityType: "inventory_item",
     entityId: item!.id,
-    metadata: { source: "sell_flow_draft" },
+    metadata: { source: batchId ? "bulk_tool" : "sell_flow_draft" },
   });
 
   return serializeDraft(item!);

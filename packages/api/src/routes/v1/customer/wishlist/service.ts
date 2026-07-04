@@ -9,6 +9,7 @@ import {
 } from "@bushpop/db/schema";
 import { NotFoundError } from "../../../../lib/errors.js";
 import { getPublicImageUrl } from "../../../../lib/image-url.js";
+import { dispatchEvent } from "../../../../lib/events.js";
 
 type WishlistEntry = {
   id: string;
@@ -67,6 +68,20 @@ export async function addToWishlist(userId: string, channelListingId: string, ch
     });
 
   if (inserted) {
+    // item.saved — retention-engine Phase A source event (thin buyer-side XP
+    // signal, docs/BRIEF-retention-engine.md §4). Only on a genuinely new
+    // save, not the onConflictDoNothing idempotent-resave path below.
+    dispatchEvent({
+      eventName: "item.saved",
+      category: "wishlist",
+      actorId: userId,
+      entityType: "channel_listing",
+      entityId: channelListingId,
+      channelId,
+    }).catch((err) => {
+      console.error("[wishlist] Failed to dispatch item.saved:", err);
+    });
+
     return inserted;
   }
 

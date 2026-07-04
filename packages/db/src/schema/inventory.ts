@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { ulid } from "ulid";
 import { user } from "./auth";
 import { categories } from "./categories";
+import { bulkBatches } from "./bulk-batches";
 
 export const inventoryItems = pgTable("inventory_items", {
   id: varchar("id", { length: 26 }).primaryKey().$defaultFn(() => ulid()),
@@ -54,12 +55,18 @@ export const inventoryItems = pgTable("inventory_items", {
   aiImageHash: varchar("ai_image_hash", { length: 64 }),
 
   shippingClass: varchar("shipping_class", { length: 5 }),
+
+  // Internal bulk-listing tool (B2) — nullable tag grouping items created in
+  // the same intake session. Null for items created via the normal /sell flow.
+  batchId: varchar("batch_id", { length: 26 }).references(() => bulkBatches.id, { onDelete: "set null" }),
+
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdateFn(() => new Date()),
 }, (table) => [
   index("inventory_items_owner_id_idx").on(table.ownerId),
   index("inventory_items_lifecycle_state_idx").on(table.lifecycleState),
   index("inventory_items_category_id_idx").on(table.categoryId),
+  index("inventory_items_batch_id_idx").on(table.batchId),
   check("inventory_items_asking_price_cents_check", sql`${table.askingPriceCents} IS NULL OR ${table.askingPriceCents} > 0`),
 ]);
 
