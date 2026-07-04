@@ -160,7 +160,7 @@ There is no separate de-hardcode plan doc — **this table is the register**; ti
 
 1. **Merge PR #48** after Ben/Fable sign-off, then run its two post-merge gates (real-device mobile-Safari, staging AI live-smoke) — merging also lands the market test tooling on `main`.
 2. **Payment trace past the PI:** set a real `STRIPE_WEBHOOK_SECRET` on staging (Phase 5) and verify the webhook→order→emails→label leg end-to-end with Stripe test cards.
-3. **Formalise Phase-1 direct mode** — decide whether the implicit MoR behaviour of `/checkout` needs a named flag/config, and what to do with the unwired `/checkout-groups` path (keep for Phase 2 multi-vendor).
+3. **Formalise Phase-1 direct mode** — ✅ memo delivered 04/07 (PR #51): §9 PROPOSED row recommends no runtime flag + env-gating `/checkout-groups` OFF (follow-up code handoff: `~/.claude/handoffs/2026-07-04-bushpop-checkout-groups-gate.md`, merge held for Ben). **Awaiting Ben's ratification of the §9 row** — not yet closed.
 4. **BP-fee decision (BLOCKED on business call)** — resolve the §3 code-vs-copy conflict (7% buyer fee + "no seller commission" claims in `apps/web` vs engine reality + ratified positioning), then fix the web copy or the engine, not both independently.
 5. **De-Piklo docs sweep** — §7 "safe to rewrite/fix" rows: OPS-RUNBOOK rewrite against the real Coolify deploy, 5433→5435 corrections, provenance-header typo.
 6. **Test-count reconciliation** — run the API suite against a live dev stack and record the real count in §4 (replaces the "568 as recorded" phrasing).
