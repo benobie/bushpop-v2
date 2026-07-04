@@ -427,7 +427,9 @@ export function SellWizard({ existingDraft, initialDraftId }: SellWizardProps) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Note: no react-hooks/exhaustive-deps disable needed — eslint-plugin-react-hooks
+    // isn't registered in this repo's flat config (eslint.config.mjs), so an
+    // inert disable comment for it errors as "rule not found" instead of no-op.
   }, [currentStep, showDraftBar]);
 
   return (

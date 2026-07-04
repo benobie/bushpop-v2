@@ -56,6 +56,9 @@ const test = base.extend<
   // not one per test. The auth endpoint is real-rate-limited (10/min) —
   // one seller per test case blew through that budget and 429'd.
   sellerStorageState: [
+    // Playwright fixture functions require a destructured first param even
+    // with no deps.
+    // eslint-disable-next-line no-empty-pattern
     async ({}, use) => {
       const { storageState } = await createAuthenticatedSeller(BASE_URL);
       await use(storageState);
