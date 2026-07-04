@@ -1,7 +1,7 @@
 # Bushpop V2 — production stack deployed by Coolify (coolify.bushpop.xyz, homelab 154.26.158.150).
 #
 # Single internal network. On the Bushpop homelab, Coolify's Traefik proxy is
-# DISABLED — Caddy fronts everything — so unlike the upstream piklo compose the
+# DISABLED — Caddy fronts everything — so unlike the upstream piklo-v2 compose the
 # web/api services DO publish host ports (3210/3334) for Caddy to reach:
 #   market.bushpop.xyz → :3210   ·   api.bushpop.xyz → :3334
 # Ports live here in the compose file, not in Coolify's UI (its API rejects

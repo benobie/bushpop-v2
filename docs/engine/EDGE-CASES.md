@@ -1,4 +1,4 @@
-> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@bushpop/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
+> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@piklo/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
 
 # Edge Cases and Gotchas
 
@@ -120,9 +120,9 @@ See: ADR-005
 
 `--force` does not bypass all confirmation prompts when constraints are being dropped or altered. For CI, always use `db:migrate` (applies the migration files) rather than `db:push` (introspects and pushes). Using `push` in CI can block indefinitely waiting for stdin.
 
-### Test schema drift affects `piklo_test` separately
+### Test schema drift affects `bushpop_test` separately
 
-Integration tests run against the `piklo_test` database on port 5433. When you run a migration locally, both `piklo` and `piklo_test` need to be updated before the test suite will pass. The `DATABASE_URL` in `packages/api/vitest.config.ts` points to `piklo_test`.
+Integration tests run against the `bushpop_test` database on port 5435. When you run a migration locally, both `bushpop` and `bushpop_test` need to be updated before the test suite will pass. The `DATABASE_URL` in `packages/api/vitest.config.ts` points to `bushpop_test`.
 
 ### `vi.clearAllMocks()` does not wipe mock implementations
 
@@ -232,7 +232,7 @@ The Better Auth client uses the relative path `/api/auth` in browser contexts. D
 
 ### No CI integration test job
 
-Integration tests require Docker services (Postgres on port 5433, Redis, MeiliSearch). They run locally only. The CI pipeline runs build, lint, typecheck, webpack build, cache audit, and security checks (`gitleaks` + `npm audit`) — but not the API test suite. Do not assume CI green means tests pass.
+Integration tests require Docker services (Postgres on port 5435, Redis on 6380, MeiliSearch on 7701). They run locally only. The CI pipeline runs build, lint, typecheck, webpack build, cache audit, and security checks (`gitleaks` + `npm audit`) — but not the API test suite. Do not assume CI green means tests pass.
 
 ### `gitleaks` false positives on test env vars
 

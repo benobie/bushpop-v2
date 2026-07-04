@@ -1,4 +1,4 @@
-> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@bushpop/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
+> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@piklo/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
 
 ---
 last-verified: 2026-05-03
@@ -24,7 +24,7 @@ graph LR
   end
 
   subgraph Data["Datastores"]
-    PG[("PostgreSQL 16<br/>:5433")]
+    PG[("PostgreSQL 16<br/>:5435")]
     Redis[("Redis 7<br/>:6379")]
     Meili[("MeiliSearch<br/>:7700")]
   end
@@ -37,7 +37,7 @@ graph LR
   Starshipit["Starshipit"]
   Resend["Resend"]
   Claude["Claude Haiku 4.5"]
-  R2["Cloudflare R2<br/>media.piklo.com.au"]
+  R2["Cloudflare R2<br/>bushpop-images bucket (r2.dev pub URL on staging;<br/>media.bushpop.com.au at cutover)"]
 
   Browser -->|"HTTP + cookie"| Web
   Web -->|"/api/* proxy rewrite"| API
@@ -78,14 +78,15 @@ Source: `packages/config/src/channel-config.ts`, `packages/api/src/plugins/chann
 
 ### Channel config
 
-Two channels are defined in `packages/config/src/channel-config.ts`:
+**Bushpop-v2 is single-tenant** — only one channel is defined in `packages/config/src/channel-config.ts`:
 
-| Slug | Domain | Platform fee | Status |
+| Slug | Domain | Platform fee (channel field) | Status |
 |---|---|---|---|
-| `piklo` | `piklo.com.au` | 8% (800 bps) | Active |
-| `bushpop` | `bushpop.com.au` | 10% (1000 bps) | Inactive |
+| `bushpop` | `bushpop.com.au` | 175 bps (legacy/descriptive — see note) | Active |
 
-`DEFAULT_CHANNEL` is `"piklo"`. The `CHANNELS` constant and `resolveChannelFromHost()` are the single source of truth for branding, URLs, and theme — nothing else should hard-code channel defaults.
+`DEFAULT_CHANNEL` is `"bushpop"`. The `CHANNELS` constant and `resolveChannelFromHost()` are the single source of truth for branding, URLs, and theme — nothing else should hard-code channel defaults.
+
+> **Commission note:** `channels.platform_fee_bps` is no longer consulted for actual commission math — that's computed from `packages/config/src/fees.ts`'s effective-dated `COMMISSION_SCHEDULE` (1.75% + 30¢ seller-side, effective 2026-07-01; PR #27). Don't cite the channel table's fee field as the live rate.
 
 ### Channel resolution
 
@@ -93,7 +94,7 @@ The API resolves the current channel on every request via the `channelPlugin` (`
 
 1. `Host` header → matched against `channelsByDomain` map (refreshed every 5 minutes from the `channels` table).
 2. `X-Channel` header → matched against `channelCache` map by slug.
-3. Fallback to `DEFAULT_CHANNEL` (`"piklo"`).
+3. Fallback to `DEFAULT_CHANNEL` (`"bushpop"`).
 
 The resolved `ChannelData` is attached to `request.channel` and available in all route handlers.
 

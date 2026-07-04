@@ -1,4 +1,4 @@
-# Piklo web — Next.js 16 (standalone output).
+# Bushpop market — Next.js 16 (standalone output).
 # Build context = repo root:  docker build -f apps/market/Dockerfile .
 # The web app only imports pure constants/helpers + Tailwind CSS from
 # @bushpop/config, so the build needs NO server secrets. API_BASE_URL is baked

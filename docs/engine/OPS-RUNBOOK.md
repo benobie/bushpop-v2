@@ -1,28 +1,28 @@
-> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@bushpop/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
+> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@piklo/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
 
 # Operations Runbook
 
-Operational procedures for piklo-v2. "LIVE" sections describe procedures backed by shipped code. "TODO" sections describe work that is specified but not yet built — do not attempt the procedure, the code path does not exist.
+Operational procedures for the bushpop-v2 engine. "LIVE" sections describe procedures backed by shipped code. "TODO" sections describe work that is specified but not yet built — do not attempt the procedure, the code path does not exist.
 
 ## Local Development
 
 ### Start services
 
 ```bash
-docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.dev.yml up -d
 ```
 
 ### Stop services
 
 ```bash
-docker compose -f infra/docker-compose.yml down
+docker compose -f infra/docker-compose.dev.yml down
 ```
 
 ### Reset database
 
 ```bash
-docker compose -f infra/docker-compose.yml down -v  # removes volumes
-docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.dev.yml down -v  # removes volumes
+docker compose -f infra/docker-compose.dev.yml up -d
 pnpm db:migrate
 pnpm db:seed
 ```
@@ -40,8 +40,8 @@ pnpm db:seed       # seed data
 Drizzle's migration journal is out of sync with actual DB state. Easiest fix is a clean reset:
 
 ```bash
-docker compose -f infra/docker-compose.yml down -v
-docker compose -f infra/docker-compose.yml up -d
+docker compose -f infra/docker-compose.dev.yml down -v
+docker compose -f infra/docker-compose.dev.yml up -d
 pnpm db:migrate && pnpm db:seed
 ```
 
@@ -53,10 +53,10 @@ This destroys local data. If you need to preserve data, export it first with the
 
 ```bash
 # Snapshot the local container DB to a timestamped file
-mkdir -p ~/backups/piklo-v2
-docker exec piklo-db pg_dump -U piklo -d piklo --clean --if-exists \
-  > ~/backups/piklo-v2/piklo-$(date +%Y-%m-%d-%H%M).sql
-ls -lh ~/backups/piklo-v2/ | tail -5
+mkdir -p ~/backups/bushpop-v2
+docker exec bushpop-db pg_dump -U bushpop -d bushpop --clean --if-exists \
+  > ~/backups/bushpop-v2/bushpop-$(date +%Y-%m-%d-%H%M).sql
+ls -lh ~/backups/bushpop-v2/ | tail -5
 ```
 
 The `--clean --if-exists` flags make the dump self-contained — restoring it will drop and recreate each object.
@@ -65,89 +65,78 @@ The `--clean --if-exists` flags make the dump self-contained — restoring it wi
 
 ```bash
 # Restore from a timestamped snapshot (destructive)
-cat ~/backups/piklo-v2/piklo-YYYY-MM-DD-HHMM.sql | \
-  docker exec -i piklo-db psql -U piklo -d piklo
+cat ~/backups/bushpop-v2/bushpop-YYYY-MM-DD-HHMM.sql | \
+  docker exec -i bushpop-db psql -U bushpop -d bushpop
 ```
 
-### Production backup — TODO
+### Staging backup — TODO
 
-No automated pg_dump schedule, no volume snapshots, no off-host replication. The first production deploy (below) keeps backups manual via the `pg_dump`/restore procedure above (run against the `piklo-db` container on the homelab). Managed Postgres + automated backups is a pre-GMV follow-up.
+No automated pg_dump schedule, no volume snapshots, no off-host replication. The engine staging stack (below) keeps backups manual via the `pg_dump`/restore procedure above (run against the `bushpop-db` container on the homelab, exec'd through Coolify). Managed Postgres + automated backups is a pre-GMV follow-up.
 
-## Production Deploy (Coolify on homelab)
+## Engine Staging Deploy (Coolify on homelab)
 
-First production deploy of the API + web stack to Coolify (`coolify.bushpop.xyz`, host `154.26.158.150`), test-mode Stripe. Stack file: `infra/docker-compose.prod.yml` (5 services: `piklo-db`, `piklo-redis`, `piklo-meilisearch`, `api`, `web`).
+> **Rewritten 04/07/2026 for the bushpop-v2 fork** — the section below described upstream piklo-v2's first production deploy to `piklo.com.au`. That never applied here. Bushpop's engine deploy has been **LIVE on staging since 03/07/2026**; production `bushpop.com.au` stays on WordPress until the separate DNS cutover (business doc, not this repo). Authoritative source for everything below: `.claude/CLAUDE.md` §Deploy.
 
-### Architecture decisions (locked 15/06)
+Coolify app **`bushpop-engine`** (uuid `w1be995ronuhl7092d4jr392`) on the homelab VPS (`coolify.bushpop.xyz`, host `154.26.158.150`), source `benobie/bushpop-v2` via deploy key, base directory `/infra`, compose file `infra/docker-compose.engine.prod.yml` (5 services: `bushpop-db`, `bushpop-redis`, `bushpop-meilisearch`, `api`, `web`), tracking `main`, test-mode Stripe.
+
+**Deploys are API-triggered, not push-triggered:** Coolify does NOT redeploy automatically when `main` moves — you (or a script) must call `POST /api/v1/deploy?uuid=w1be995ronuhl7092d4jr392` against the Coolify API. Nothing in `.github/workflows/` ships the engine; `deploy.yml` only ever touches the content site (`apps/web` → Cloudflare Pages).
+
+### Architecture decisions (ported from upstream, still true)
 
 - **Single Coolify Docker-Compose stack**, one internal network. Build context = repo root.
 - **API runs `tsx src/index.ts`, NOT `node dist`.** `@bushpop/config`/`@bushpop/types`/`@bushpop/db` export raw `./src/index.ts` and config/types have no build script, so a compiled `dist` can't resolve workspace imports at runtime. The prod image therefore keeps dev deps (`tsx` + `drizzle-kit`). **Image-size trade-off (INF-M1):** because those are runtime-required, a `--prod` install is NOT an option (it would drop `tsx`/`drizzle-kit` and break boot), so the image carries the full dev toolchain (vitest, tsc, etc.) — ~400MB heavier + wider attack surface. The only safe slim is bundling the API with tsup (`noExternal: [/@bushpop/]`, native deps external) for a real `node dist` artifact; deferred as pre-GMV hardening.
 - **Containers run as non-root (`USER node`, uid 1000)** in both Dockerfiles (INF-H1). The API's `node_modules`/pnpm store stay root-owned but world-readable, so `tsx`/`drizzle-kit` execute fine without a costly `chown -R` of the dep tree.
-- **Healthchecks: liveness for restarts, readiness for monitoring (INF-L1/L2).** Both container `HEALTHCHECK`s probe `/health/live` (or `/` for web) — they decide container restart, so they must NOT depend on external services. A Stripe/Meili/R2 outage must not restart the API. Use `/health/ready` (checks db/redis/stripe, returns 503 on critical-dep down) for external monitoring/alerting only — never as a restart gate. `web` gates on the api container being healthy (`/health/live`), which only passes after migrate-on-boot completes, so web never serves before migrations finish.
-- **Migrate-on-boot:** `packages/api/docker-entrypoint.sh` runs `pnpm --filter @bushpop/db db:migrate` (23 migrations) before exec'ing the server. Single replica → no migration race.
-- **Workers are in-process** — one `api` container runs Fastify + all 15 BullMQ workers. No separate worker service.
-- **MeiliSearch self-bootstraps** the `listings_piklo` index on the Fastify `onReady` hook behind a versioned Redis flag. No manual index step.
+- **Healthchecks: liveness for restarts, readiness for monitoring (INF-L1/L2).** Both container `HEALTHCHECK`s probe `/health/live` (or `/` for web) — they decide container restart, so they must NOT depend on external services. A Stripe/Meili/R2 outage must not restart the API. Use `/health/ready` (checks db/redis/stripe, returns 503 on critical-dep down) for external monitoring/alerting only — never as a restart gate. `web` gates on the api container being healthy (`/health/live`), which only passes after migrate-on-boot completes, so web never serves before migrations finish. **Healthchecks probe `127.0.0.1`, never `localhost`** (PR #41) — busybox `wget` in the alpine images resolves `localhost` to `::1` first and these containers only bind IPv4, so a `localhost` healthcheck hangs/fails even when the service is up.
+- **Migrate-on-boot:** `packages/api/docker-entrypoint.sh` runs `pnpm --filter @bushpop/db db:migrate` (24 migrations, `0000`–`0023`) before exec'ing the server. Single replica → no migration race.
+- **Workers are in-process** — one `api` container runs Fastify + all 17 BullMQ workers (full list: `docs/engine/workers.md`). No separate worker service.
+- **MeiliSearch self-bootstraps** the `listings_piklo` index on the Fastify `onReady` hook behind a versioned Redis flag. No manual index step. (Index name is the pre-fork upstream name — a deliberate data-migration item, not a branding miss; see §7 of `docs/HANDOFF-ZERO-CONTEXT.md`.)
 
 ### Environment contract
 
-Authoritative source: `packages/config/src/env.ts`. Set all values in the **Coolify env UI — never in the repo**.
+Authoritative source: `packages/config/src/env.ts`. Values are set in the **Coolify env UI**, but read `infra/docker-compose.engine.prod.yml` first — **Coolify re-syncs every env var from that compose file's default on EVERY deploy** (PR #43). That means the UI is not a safe place to override anything the compose file gives a non-empty default:
 
-| Var                                                                                            | Required?                                                                               | Source                                                                                                                                                                                                                           |
-| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`, `REDIS_URL`, `MEILISEARCH_HOST`                                                | Hard (boot fails)                                                                       | Set in compose to internal service URLs                                                                                                                                                                                          |
-| `MEILI_MASTER_KEY`, `BETTER_AUTH_SECRET` (≥32), `PIKLO_DB_PASSWORD`                            | Hard                                                                                    | Claude generates (`openssl rand`)                                                                                                                                                                                                |
-| `WEB_URL`, `ADMIN_URL`, `API_URL`                                                              | Hard                                                                                    | `https://piklo.com.au` / `https://admin.piklo.com.au` (placeholder) / `https://api.piklo.com.au`                                                                                                                                 |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`                                                   | Hard                                                                                    | Ben (`sk_test_`); webhook secret is a **bootstrap placeholder** on the first deploy — see "Stripe webhook secret bootstrap" below                                                                                                |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`                                                           | **Build-time** (Hard for checkout)                                                      | Ben (`pk_test_`). NOT a runtime var — Next inlines it at build, so it is a Docker **build ARG** passed via compose `web.build.args`. Without it the image bakes `loadStripe("")` and checkout silently dies. See INF-C1          |
-| `NEXT_PUBLIC_POSTHOG_KEY`                                                                      | Build-time (optional)                                                                   | Ben (analytics; safe to omit — build arg with `""` default)                                                                                                                                                                      |
-| `STARSHIPIT_API_KEY`, `STARSHIPIT_WEBHOOK_SECRET`                                              | Hard                                                                                    | Ben (sandbox). `STARSHIPIT_WEBHOOK_SECRET` verifies INBOUND webhooks (HMAC-SHA256)                                                                                                                                               |
-| `STARSHIPIT_SUBSCRIPTION_KEY`                                                                  | Optional in schema; effectively required for the shipping flow                          | Ben. This is the `Ocp-Apim-Subscription-Key` for **outbound** Starshipit REST calls (label / tracking / address-validate), NOT webhook auth. If the account's API gateway enforces it, outbound calls 403 without it. See INF-M5 |
-| `ADMIN_EMAIL`                                                                                  | Optional (defaults to `admin@piklo.com.au`)                                             | Ben. Destination for operator-critical alerts (stuck ops, payout/migration failures). Set it so alerts reach a real inbox without a redeploy. See INF-H2                                                                         |
-| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL` | Optional in schema; **throws on image-URL build** → effectively required for storefront | Ben (bucket `piklo-media`, public `https://media.piklo.com.au`)                                                                                                                                                                  |
-| `RESEND_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `SENTRY_DSN`                                            | Optional (graceful fallback)                                                            | Ben (skippable for first deploy — mock email / enrichment off / no error tracking)                                                                                                                                               |
+| Compose shape | Behaviour | Vars |
+| --- | --- | --- |
+| `${VAR}` — no default | Coolify UI value survives deploys (nothing to reset to). This is where real secrets belong. | `BUSHPOP_DB_PASSWORD`, `MEILI_MASTER_KEY`, `BETTER_AUTH_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STARSHIPIT_API_KEY`, `STARSHIPIT_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (build arg) |
+| `${VAR:-realvalue}` — non-empty default | **Clobbered back to the compose default on every deploy.** To change one of these, edit the compose file and redeploy — a Coolify UI edit will not stick. | `WEB_URL` (`https://market.bushpop.xyz`), `ADMIN_URL` (`https://admin.bushpop.xyz`), `API_URL` (`https://api.bushpop.xyz`), `CHANNEL_SLUG` (`bushpop`), `R2_BUCKET_NAME` (`bushpop-images`), `R2_PUBLIC_URL` (the r2.dev pub URL below), `ADMIN_EMAIL` (`admin@bushpop.com.au`) |
+| `${VAR:-}` — empty-string default | Coolify UI value survives (default is empty), but **`validateEnv` treats `""` as unset** (PR #42) — so an unset one silently behaves as "not configured", never as an observable empty string. | `STARSHIPIT_SUBSCRIPTION_KEY`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SENTRY_DSN`, `NEXT_PUBLIC_POSTHOG_KEY` (build arg) |
+| `DATABASE_URL`, `REDIS_URL`, `MEILISEARCH_HOST` | Hardcoded in compose to internal service DNS names (`bushpop-db`/`bushpop-redis`/`bushpop-meilisearch`) — not Coolify-editable at all, by design. | — |
 
-`RESEND_API_KEY` is **optional** (mock sender fallback) — earlier docs claiming it hard-fails boot are wrong.
-
-**Empty string = unset** for every env var (PR #42): `validateEnv` strips `""` values before parsing, because compose `${VAR:-}` defaults inject empty strings that would otherwise fail zod `min(1)`/`url` checks on optional keys. Required keys still fail — as `Required`. Corollary: never rely on `""` being observable in `process.env`-driven engine code.
-
-#### Stripe webhook secret bootstrap (chicken-and-egg)
-
-`env.ts` declares `STRIPE_WEBHOOK_SECRET: z.string().min(1)` — hard-required at boot. But the real `whsec_…` value only exists **after** you register a webhook endpoint, which needs the API already live. Break the deadlock with a two-deploy bootstrap:
-
-1. **First deploy:** set `STRIPE_WEBHOOK_SECRET=whsec_placeholder_bootstrap` (any 8+ char string that passes `.min(1)`). The API boots; the webhook handler will reject real Stripe signatures until step 3, which is fine — there are no live charges yet.
-2. **Register the endpoint** in the Stripe **test** dashboard (step 5 of the deploy procedure below) and copy the generated `whsec_…`.
-3. **Second deploy:** replace `STRIPE_WEBHOOK_SECRET` with the real `whsec_…` in Coolify and redeploy the API (~2-minute downtime). Webhooks now verify.
+Notes on specific vars:
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` and `R2_PUBLIC_URL` are **build-time** — Next/Docker bake them into the image, so they're passed as `web.build.args` in compose, not read at runtime. Without the Stripe key the image bakes `loadStripe("")` and checkout silently dies (INF-C1); this is already wired and baked on staging (04/07).
+- `R2_PUBLIC_URL` currently defaults to the bucket's r2.dev public URL (`https://pub-3c7f819593c94086b71e9663605d4c11.r2.dev`, bucket `bushpop-images`) — **NOT** `bushpop-media`. At cutover, swap the `web` and `api` compose defaults to the custom domain `media.bushpop.com.au` and attach it to the R2 bucket.
+- `STRIPE_WEBHOOK_SECRET` is a **placeholder** on staging today, pending Phase 5 (queue item 2 in `docs/HANDOFF-ZERO-CONTEXT.md` §10) — real Stripe test key is already wired for the PaymentIntent leg, but webhook signatures won't verify until a real `whsec_…` replaces the placeholder.
+- `RESEND_API_KEY` is **optional** (mock sender fallback) — earlier docs claiming it hard-fails boot are wrong. Resend is live-verified on staging (sends as `noreply@bushpop.com.au`).
 
 ### Deploy procedure
 
-1. **Coolify resource** — type _Docker Compose_, source = `benobie/piklo-v2`, compose path `infra/docker-compose.prod.yml`, branch `main`. Enter env per the table above. Two gotchas:
-   - **`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` must be set as a build var** so Coolify forwards it to the `web` build arg — it is baked at image build, not read at runtime. Set it before the first build or the web image ships a dead checkout (INF-C1).
-   - **`STRIPE_WEBHOOK_SECRET` starts as `whsec_placeholder_bootstrap`** — the real value comes after step 5 (see "Stripe webhook secret bootstrap" above).
-   - _(Optional)_ Set `SENTRY_DSN` now for first-deploy error tracking, and `ADMIN_EMAIL` so operator alerts reach a real inbox. Both are optional but recommended (INF-L3 / INF-H2).
-2. **Deploy.** The API entrypoint runs migrations, then starts. If a migration fails the container logs `[entrypoint] !!! MIGRATION_FAILED` and exits; `restart: unless-stopped` relaunches it, so a bad migration becomes a crash-loop — watch for repeated `MIGRATION_FAILED` and tear the stack down rather than leaving it looping (INF-L4). Verify health in-cluster:
-   - `GET /health/live` → 200 (always).
-   - `GET /health/ready` → 200 (503 if db/redis/stripe down; meili/r2 degraded-not-fatal until first index/image).
+1. **Change compose-default env values by editing the compose file**, not the Coolify UI (see table above) — commit + push, then trigger a deploy.
+2. **Trigger the deploy** via the Coolify API: `POST /api/v1/deploy?uuid=w1be995ronuhl7092d4jr392` (Coolify API token required). The API entrypoint runs migrations, then starts. If a migration fails the container logs `[entrypoint] !!! MIGRATION_FAILED` and exits; `restart: unless-stopped` relaunches it, so a bad migration becomes a crash-loop — watch for repeated `MIGRATION_FAILED` and tear the stack down rather than leaving it looping (INF-L4).
+3. **Verify health** (probe `127.0.0.1` if checking in-container, the public hostname otherwise):
+   - `GET https://api.bushpop.xyz/health/live` → 200 (always).
+   - `GET https://api.bushpop.xyz/health/ready` → 200 (503 if db/redis/stripe down; meili/r2 degraded-not-fatal until first index/image). All green as at 03/07.
    - Confirm MeiliSearch `listings_piklo` index created by the `onReady` bootstrap.
-3. **One-time category seed** (storefront taxonomy — NOT on every boot), via Coolify exec on the `api` container:
+4. **Seeding is manual, not automatic on boot**, via Coolify exec (or `docker exec`) on the `api` container:
    ```bash
-   pnpm --filter @bushpop/db db:seed:categories
+   docker exec <api-container> pnpm --filter @bushpop/db db:seed
+   docker exec <api-container> pnpm --filter @bushpop/db db:seed:categories
    ```
-4. **DNS / origin (fix the 525):**
-   - First confirm what owns ports 80/443 on the homelab — Caddy (local-ai-packaged) or Coolify's Traefik — before any DNS cutover (they can't both own the edge).
-   - Cloudflare: proxied A records `piklo.com.au`, `www.piklo.com.au`, `api.piklo.com.au` → `154.26.158.150`. Generate a **Cloudflare Origin Certificate** for `piklo.com.au` + `*.piklo.com.au`, install at the edge, set SSL/TLS mode **Full (strict)**. This is the clean 525 fix behind the CF proxy.
-   - Verify: `curl -I https://piklo.com.au` → 200; `curl https://api.piklo.com.au/health/ready` → 200.
-5. **Stripe webhook (test mode):** register `https://api.piklo.com.au/api/v1/webhooks/stripe` in the Stripe **test** dashboard; subscribe the 8 events (`account.updated`, `payment_intent.{succeeded,requires_action,payment_failed}`, `refund.{created,updated}`, `charge.refunded`, `transfer.updated`); copy the `whsec_` into Coolify `STRIPE_WEBHOOK_SECRET` (replacing `whsec_placeholder_bootstrap`); redeploy the API. This is the second half of the two-deploy bootstrap.
+   **Seeding does not index into MeiliSearch** — `search-sync` is event-driven off writes, so a fresh reseed needs a separate backfill/re-trigger to populate the index. 6 fixtures were seeded + Meili-indexed as at 03/07.
+5. **DNS / origin:** Coolify's Traefik is disabled on this homelab — **Caddy fronts everything**, so the compose file publishes host ports for Caddy to reach directly: `market.bushpop.xyz` → `:3210`, `api.bushpop.xyz` → `:3334` (see the header comment in `infra/docker-compose.engine.prod.yml`). No Cloudflare Origin Certificate / Traefik labels needed for this stack.
+   - Verify: `curl -I https://market.bushpop.xyz` → 200; `curl https://api.bushpop.xyz/health/ready` → 200.
+6. **Stripe webhook (test mode) — outstanding, Phase 5:** register `https://api.bushpop.xyz/api/v1/webhooks/stripe` in the Stripe **test** dashboard; subscribe the 8 events (`account.updated`, `payment_intent.{succeeded,requires_action,payment_failed}`, `refund.{created,updated}`, `charge.refunded`, `transfer.updated`); copy the `whsec_` into the compose file's `STRIPE_WEBHOOK_SECRET` default (or set it directly in Coolify — this var has no compose default, so a UI-set value survives); redeploy the API.
 
 ### Verify end-to-end (done-when)
 
-Create a listing (image → R2 → Meili index) → checkout with test card `4242 4242 4242 4242` → `payment_intent.succeeded` webhook processed → order row created.
+Create a listing (image → R2 → Meili index) → checkout with test card `4242 4242 4242 4242` → `payment_intent.succeeded` webhook processed → order row created. **Blocked today on step 6 above** (webhook secret still a placeholder) — the current verified end of the live trace is the PaymentIntent leg (`docs/HANDOFF-ZERO-CONTEXT.md` §3 item 4).
 
 **Buyer storefront smoke (do this too — it exercises the Stripe publishable-key bake from INF-C1):**
 
-1. **Browse** — open `https://piklo.com.au`, confirm listings render with images (proves R2 public URLs + Meili index).
+1. **Browse** — open `https://market.bushpop.xyz`, confirm listings render with images (proves R2 public URLs + Meili index).
 2. **Search** — run a query; confirm results come back (proves `search-sync` + Meili).
 3. **Bag** — add a listing to the bag/cart; confirm it persists across a page reload.
 4. **Test charge** — proceed to checkout. **The Stripe payment form must mount** — if it doesn't, the web image was built without `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (INF-C1). Pay with `4242 4242 4242 4242`.
-5. **Order** — confirm the order confirmation renders and the `orders` row is created (same as the done-when above).
+5. **Order** — confirm the order confirmation renders and the `orders` row is created (blocked until step 6 above lands a real webhook secret).
 
 > ⚠️ **Money-safety:** test mode only. Do NOT switch `STRIPE_SECRET_KEY` to `sk_live_` until the money-safety criticals close.
 

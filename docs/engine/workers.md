@@ -1,4 +1,4 @@
-> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@bushpop/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
+> **Provenance:** engine doc copied from `benobie/piklo-v2` @ `2419a38` at fork time (02/07/2026), with `@piklo/*` renamed `@bushpop/*`. May drift from upstream — see `docs/engine/FORK.md`.
 
 ---
 last-verified: 2026-05-03
@@ -129,7 +129,7 @@ Single sink for transactional email. Resend in production, mock in dev/test.
 | Idempotency | jobId = `notificationId` (when supplied) else `${type}-${orderId}`. Notification-level claim via compare-and-set on `notifications.status` (pending → sending) |
 | Retry | `attempts=3`, exponential backoff 5000ms, `removeOnComplete=true`, `removeOnFail=3` |
 | Concurrency | `1`, BullMQ limiter `max=2` per `1000ms` |
-| Env-gating | `ADMIN_EMAIL` optional (defaults to `admin@piklo.com.au`) |
+| Env-gating | `ADMIN_EMAIL` optional (defaults to `admin@bushpop.com.au`) |
 | Emits | None |
 | Side effects | Resend API call; updates on `notifications` (status, attempts, sent/failed timestamps, error) |
 
