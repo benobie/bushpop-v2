@@ -11,7 +11,9 @@ import { inventoryItems, inventoryItemImages, channelListings } from "@bushpop/d
 export interface SeededListing {
   id: string;
   handle: string;
+  title: string;
   priceCents: number;
+  shippingClass: string;
 }
 
 /**
@@ -66,5 +68,5 @@ export async function createActiveListing(sellerId: string): Promise<SeededListi
     publishedAt: new Date(),
   });
 
-  return { id: item!.id, handle, priceCents };
+  return { id: item!.id, handle, title: "E2E Checkout Test Jacket", priceCents, shippingClass: "m" };
 }

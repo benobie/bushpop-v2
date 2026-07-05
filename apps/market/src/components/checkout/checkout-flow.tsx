@@ -171,7 +171,7 @@ export function CheckoutFlow({ addresses, cartItems }: CheckoutFlowProps) {
   }
 
   const summary = (
-    <aside className="lg:sticky lg:top-6" data-testid="checkout-summary">
+    <aside className="order-first lg:order-none lg:sticky lg:top-6" data-testid="checkout-summary">
       <div className="rounded-[var(--radius-bp-rect)] border border-[var(--color-bp-line)] bg-[var(--color-bp-surface-3)] p-5">
         <h3 className="mb-3 font-[family-name:var(--font-bp-head)] text-[15px] font-bold text-[var(--color-bp-ink)]">
           Order summary

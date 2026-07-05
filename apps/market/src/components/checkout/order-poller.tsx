@@ -147,7 +147,7 @@ export function OrderPoller({ sessionId }: OrderPollerProps) {
             It&rsquo;s yours.
           </h1>
           <p className="mt-2.5 text-[15px] text-[var(--color-bp-ink-2)]" data-testid="order-reference">
-            Order #{orderRef} confirmed &mdash; nice find.
+            {`Order #${orderRef} confirmed — nice find.`}
           </p>
         </div>
 
