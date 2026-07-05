@@ -22,6 +22,11 @@ export {
   SelectItem,
 } from "./primitives/select";
 
+// Checkout-scoped compositions (U1) — pure Tailwind+token, no matching bp-*
+// CSS class, so they don't fit either grouping above.
+export { SummaryRow, type SummaryRowProps } from "./primitives/summary-row";
+export { Banner, type BannerProps } from "./primitives/banner";
+
 // Lit Glass (U0 design system) — design/home/bushpop.css port
 export { Chip, type ChipProps } from "./primitives/chip";
 export { Tgl, type TglProps } from "./primitives/tgl";
@@ -51,6 +56,10 @@ export {
   BagFillIcon,
   HouseIcon,
   UserIcon,
+  LockIcon,
+  ShieldIcon,
+  CheckIcon,
+  TruckIcon,
 } from "./icons/nav-icons";
 export { useCursorLight } from "./lib/use-cursor-light";
 export { useNavScrolled } from "./lib/use-nav-scrolled";

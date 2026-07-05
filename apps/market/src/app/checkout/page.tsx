@@ -35,11 +35,14 @@ export default async function CheckoutPage() {
   const addresses = addressesResult.data ?? [];
 
   return (
-    <main className="mx-auto max-w-xl px-4 py-10">
-      <h1 className="mb-8 font-display text-2xl font-bold text-brand-900">
+    <main className="mx-auto max-w-[1100px] px-4 py-8 sm:py-10" data-testid="checkout-page">
+      <h1 className="font-[family-name:var(--font-bp-head)] text-2xl font-extrabold tracking-tight text-[var(--color-bp-ink)] sm:text-[26px]">
         Checkout
       </h1>
-      <CheckoutFlow addresses={addresses} />
+      <p className="mb-6 mt-1 text-sm text-[var(--color-bp-ink-2)]">
+        You&rsquo;re almost there &mdash; just a couple of details and it&rsquo;s yours.
+      </p>
+      <CheckoutFlow addresses={addresses} cartItems={cart.items} />
     </main>
   );
 }

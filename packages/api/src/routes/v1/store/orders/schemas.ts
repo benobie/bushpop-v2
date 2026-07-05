@@ -16,6 +16,15 @@ export const orderItemResponseSchema = z.object({
   priceCents: z.number().int().nonnegative(),
   currency: z.string().length(3),
   createdAt: z.string().datetime(),
+  // U1 checkout/confirmation restyle: same "look up fresh" enrichment as the
+  // cart response (store/cart/service.ts enrichCartItems) — nulls if the
+  // underlying listing/inventory item has since been deleted.
+  title: z.string().nullable(),
+  coverImage: z.string().nullable(),
+  handle: z.string().nullable(),
+  size: z.string().nullable(),
+  condition: z.string().nullable(),
+  brand: z.string().nullable(),
 });
 
 export const orderResponseSchema = z.object({

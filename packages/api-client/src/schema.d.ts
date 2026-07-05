@@ -4693,6 +4693,12 @@ export interface paths {
                                     currency: string;
                                     /** Format: date-time */
                                     createdAt: string;
+                                    title: string | null;
+                                    coverImage: string | null;
+                                    handle: string | null;
+                                    size: string | null;
+                                    condition: string | null;
+                                    brand: string | null;
                                 }[];
                                 /** Format: date-time */
                                 createdAt: string;
@@ -4780,6 +4786,12 @@ export interface paths {
                                 currency: string;
                                 /** Format: date-time */
                                 createdAt: string;
+                                title: string | null;
+                                coverImage: string | null;
+                                handle: string | null;
+                                size: string | null;
+                                condition: string | null;
+                                brand: string | null;
                             }[];
                             /** Format: date-time */
                             createdAt: string;
@@ -4868,6 +4880,12 @@ export interface paths {
                                     currency: string;
                                     /** Format: date-time */
                                     createdAt: string;
+                                    title: string | null;
+                                    coverImage: string | null;
+                                    handle: string | null;
+                                    size: string | null;
+                                    condition: string | null;
+                                    brand: string | null;
                                 }[];
                                 /** Format: date-time */
                                 createdAt: string;
@@ -4955,6 +4973,12 @@ export interface paths {
                                 currency: string;
                                 /** Format: date-time */
                                 createdAt: string;
+                                title: string | null;
+                                coverImage: string | null;
+                                handle: string | null;
+                                size: string | null;
+                                condition: string | null;
+                                brand: string | null;
                             }[];
                             /** Format: date-time */
                             createdAt: string;
@@ -5053,6 +5077,12 @@ export interface paths {
                                 currency: string;
                                 /** Format: date-time */
                                 createdAt: string;
+                                title: string | null;
+                                coverImage: string | null;
+                                handle: string | null;
+                                size: string | null;
+                                condition: string | null;
+                                brand: string | null;
                             }[];
                             /** Format: date-time */
                             createdAt: string;

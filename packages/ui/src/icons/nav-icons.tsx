@@ -98,3 +98,27 @@ export const UserIcon = createIcon(
   "UserIcon",
   <path d="M128 24a56 56 0 1 0 56 56 56.06 56.06 0 0 0-56-56m0 88a32 32 0 1 1 32-32 32 32 0 0 1-32 32m0 20c-40 0-96 20.12-96 60v20a12 12 0 0 0 24 0v-20c0-14.87 40.15-36 72-36s72 21.13 72 36v20a12 12 0 0 0 24 0v-20c0-39.88-56-60-96-60" />,
 );
+
+/** Ported byte-exact from design/home/checkout.html's icon sprite (#i-lock). */
+export const LockIcon = createIcon(
+  "LockIcon",
+  <path d="M208 76h-28V56a52 52 0 0 0-104 0v20H48a20 20 0 0 0-20 20v112a20 20 0 0 0 20 20h160a20 20 0 0 0 20-20V96a20 20 0 0 0-20-20M100 56a28 28 0 0 1 56 0v20h-56Zm104 148H52V100h152Zm-60-52a16 16 0 1 1-16-16a16 16 0 0 1 16 16" />,
+);
+
+/** Ported byte-exact from design/home/checkout.html's icon sprite (#i-shield). */
+export const ShieldIcon = createIcon(
+  "ShieldIcon",
+  <path d="M208 36H48a20 20 0 0 0-20 20v56c0 54.29 26.32 87.22 48.4 105.29c23.71 19.39 47.44 26 48.44 26.29a12.1 12.1 0 0 0 6.32 0c1-.28 24.73-6.9 48.44-26.29c22.08-18.07 48.4-51 48.4-105.29V56a20 20 0 0 0-20-20m-4 76c0 35.71-13.09 64.69-38.91 86.15A126.3 126.3 0 0 1 128 219.38a126.1 126.1 0 0 1-37.09-21.23C65.09 176.69 52 147.71 52 112V60h152ZM79.51 144.49a12 12 0 1 1 17-17L112 143l47.51-47.52a12 12 0 0 1 17 17l-56 56a12 12 0 0 1-17 0Z" />,
+);
+
+/** Ported byte-exact from design/home/checkout.html's icon sprite (#i-check). */
+export const CheckIcon = createIcon(
+  "CheckIcon",
+  <path d="m232.49 80.49l-128 128a12 12 0 0 1-17 0l-56-56a12 12 0 1 1 17-17L96 183L215.51 63.51a12 12 0 0 1 17 17Z" />,
+);
+
+/** Ported byte-exact from design/home/order-confirmation.html's icon sprite (#i-truck). */
+export const TruckIcon = createIcon(
+  "TruckIcon",
+  <path d="m255.14 115.54l-14-35A19.89 19.89 0 0 0 222.58 68H196v-4a12 12 0 0 0-12-12H32a20 20 0 0 0-20 20v112a20 20 0 0 0 20 20h14.06a36 36 0 0 0 67.88 0h44.12a36 36 0 0 0 67.88 0H236a20 20 0 0 0 20-20v-64a21.7 21.7 0 0 0-.86-4.46M196 92h23.88l6.4 16H196ZM80 204a12 12 0 1 1 12-12a12 12 0 0 1-12 12m92-41.92A36.32 36.32 0 0 0 158.06 180h-44.12a36 36 0 0 0-67.88 0H36v-40h136Zm0-46.08H36V76h136Zm20 88a12 12 0 1 1 12-12a12 12 0 0 1-12 12m40-24h-6.06A36.09 36.09 0 0 0 196 156.23V132h36Z" />,
+);

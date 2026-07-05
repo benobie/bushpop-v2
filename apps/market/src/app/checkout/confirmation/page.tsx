@@ -8,7 +8,7 @@
 import Link from "next/link";
 import { requireAuth } from "@/lib/require-auth";
 import { OrderPoller } from "@/components/checkout/order-poller";
-import { Button } from "@bushpop/ui";
+import { Button, Banner } from "@bushpop/ui";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -36,12 +36,13 @@ export default async function ConfirmationPage({
   if (redirectStatus === "failed" || (!redirectStatus && !sessionId)) {
     return (
       <main className="mx-auto max-w-xl px-4 py-10">
-        <div className="rounded-xl bg-red-50 px-4 py-4">
-          <p className="font-semibold text-red-800">Payment unsuccessful</p>
-          <p className="mt-1 text-sm text-red-700">
-            Your payment could not be processed. Please try again.
-          </p>
-        </div>
+        <Banner
+          variant="error"
+          title="Payment unsuccessful"
+          data-testid="checkout-payment-failed"
+        >
+          Your payment could not be processed. Please try again.
+        </Banner>
         <div className="mt-6 flex gap-3">
           <Button asChild variant="primary">
             <Link href="/checkout">Try again</Link>
@@ -58,12 +59,9 @@ export default async function ConfirmationPage({
   if (!sessionId) {
     return (
       <main className="mx-auto max-w-xl px-4 py-10">
-        <div className="rounded-xl bg-brand-50 px-4 py-4">
-          <p className="font-semibold text-brand-800">Payment processed</p>
-          <p className="mt-1 text-sm text-brand-600">
-            Your payment was successful. Check your orders for details.
-          </p>
-        </div>
+        <Banner variant="neutral" title="Payment processed">
+          Your payment was successful. Check your orders for details.
+        </Banner>
         <div className="mt-6">
           <Button asChild variant="primary">
             <Link href="/orders">View orders</Link>
@@ -73,12 +71,11 @@ export default async function ConfirmationPage({
     );
   }
 
-  // Success — poll for the order
+  // Success — poll for the order. OrderPoller owns its own heading for every
+  // sub-state (polling spinner / timeout fallback / "It's yours." hero) so
+  // this shell stays a plain container.
   return (
-    <main className="mx-auto max-w-xl px-4 py-10">
-      <h1 className="mb-8 font-display text-2xl font-bold text-brand-900">
-        Order Confirmation
-      </h1>
+    <main className="mx-auto max-w-2xl px-4 py-8 sm:py-10" data-testid="checkout-confirmation-page">
       <OrderPoller sessionId={sessionId} />
     </main>
   );
