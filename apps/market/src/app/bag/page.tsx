@@ -3,9 +3,10 @@
  * Authed + forced dynamic — never cache (createAuthedApiClient forces dynamic,
  * and cart state changes on every mutation).
  *
- * Cart items from the API carry no title/image — renders minimal (price + index label + remove).
+ * Cart items now carry title/coverImage/handle (U1 §2.1 enrichment).
  */
 import Link from "next/link";
+import Image from "next/image";
 import { requireAuth } from "@/lib/require-auth";
 import { createAuthedApiClient } from "@bushpop/api-client/server";
 import { RemoveFromBagButton } from "@/components/listing/remove-from-bag-button";
@@ -58,17 +59,33 @@ export default async function BagPage() {
           {/* Item list */}
           <Card>
             <CardContent className="divide-y divide-brand-100 p-0">
-              {items.map((item, idx) => (
+              {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between px-4 py-4"
+                  className="flex items-center gap-4 px-4 py-4"
                 >
-                  <div className="space-y-0.5">
-                    {/* Cart items carry no title from the API — use positional label */}
-                    <p className="text-sm font-medium text-brand-800">
-                      Item {idx + 1}
-                    </p>
-                    <p className="text-xs text-brand-400">{item.channelListingId}</p>
+                  <Link
+                    href={item.handle ? `/listing/${item.handle}` : "#"}
+                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-brand-100"
+                    aria-label={item.title ?? "View listing"}
+                  >
+                    {item.coverImage ? (
+                      <Image
+                        src={item.coverImage}
+                        alt={item.title ?? "Listing photo"}
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    ) : null}
+                  </Link>
+                  <div className="flex-1 space-y-0.5">
+                    <Link
+                      href={item.handle ? `/listing/${item.handle}` : "#"}
+                      className="text-sm font-medium text-brand-800 hover:underline"
+                    >
+                      {item.title ?? "Listing no longer available"}
+                    </Link>
                     <p className="text-sm font-semibold text-brand-900">
                       {formatMoney(item.priceCents, item.currency)}
                     </p>
@@ -84,6 +101,11 @@ export default async function BagPage() {
               </p>
             </CardFooter>
           </Card>
+
+          {/* Buyer Protection + shipping note — computed at checkout, render-only */}
+          <p className="px-1 text-xs text-brand-400">
+            Buyer Protection on every order. Shipping and any Buyer Protection fee are calculated at checkout.
+          </p>
 
           {/* CTA */}
           <Button asChild variant="primary" size="lg" className="w-full">

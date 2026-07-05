@@ -117,7 +117,7 @@ export default async function SearchPage({
           {/* Filter bar — client island */}
           <div className="mb-6">
             <Suspense fallback={null}>
-              <FilterBar basePath="/search" q={q} />
+              <FilterBar basePath="/search" q={q} facetDistribution={result.facetDistribution} />
             </Suspense>
           </div>
 
