@@ -121,7 +121,11 @@ Notes on specific vars:
    docker exec <api-container> pnpm --filter @bushpop/db db:seed
    docker exec <api-container> pnpm --filter @bushpop/db db:seed:categories
    ```
-   **Seeding does not index into MeiliSearch** — `search-sync` is event-driven off writes, so a fresh reseed needs a separate backfill/re-trigger to populate the index. 6 fixtures were seeded + Meili-indexed as at 03/07.
+   **Seeding does not index into MeiliSearch** — `search-sync` is event-driven off writes, so a fresh reseed needs a separate backfill to populate the index:
+   ```bash
+   docker exec <api-container> pnpm --filter @bushpop/api search:reindex
+   ```
+   (`packages/api/src/scripts/reindex-search.ts`, added PR #78 05/07 — rebuilds MeiliSearch from Postgres for every seeded channel; previously this required an ad-hoc re-trigger with no dedicated script.) 6 fixtures were seeded + Meili-indexed as at 03/07; categories backfilled + reindexed 05/07 (PR #78).
 5. **DNS / origin:** Coolify's Traefik is disabled on this homelab — **Caddy fronts everything**, so the compose file publishes host ports for Caddy to reach directly: `market.bushpop.xyz` → `:3210`, `api.bushpop.xyz` → `:3334` (see the header comment in `infra/docker-compose.engine.prod.yml`). No Cloudflare Origin Certificate / Traefik labels needed for this stack.
    - Verify: `curl -I https://market.bushpop.xyz` → 200; `curl https://api.bushpop.xyz/health/ready` → 200.
 6. **Stripe webhook (test mode) — outstanding, Phase 5:** register `https://api.bushpop.xyz/api/v1/webhooks/stripe` in the Stripe **test** dashboard; subscribe the 8 events (`account.updated`, `payment_intent.{succeeded,requires_action,payment_failed}`, `refund.{created,updated}`, `charge.refunded`, `transfer.updated`); copy the `whsec_` into the compose file's `STRIPE_WEBHOOK_SECRET` default (or set it directly in Coolify — this var has no compose default, so a UI-set value survives); redeploy the API.
