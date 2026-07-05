@@ -13,7 +13,8 @@
     "start:prod": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "search:reindex": "tsx src/scripts/reindex-search.ts"
   },
   "optionalDependencies": {
     "@img/sharp-darwin-arm64": "^0.34.0",

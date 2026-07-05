@@ -18,6 +18,7 @@ import {
   Button,
 } from "@bushpop/ui";
 import { conditionLabel } from "@/lib/condition-labels";
+import { categoryLabel } from "@/lib/category-labels";
 import { track } from "@/lib/analytics";
 import { DEFAULT_CHANNEL } from "@bushpop/config";
 
@@ -81,9 +82,11 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
     router.push(`${basePath}?${params.toString()}`);
   }
 
+  const categoryFacets = Object.entries(facetDistribution?.categorySlug ?? {}).sort((a, b) => b[1] - a[1]);
   const brandFacets = Object.entries(facetDistribution?.brand ?? {}).sort((a, b) => b[1] - a[1]);
   const sizeFacets = Object.entries(facetDistribution?.size ?? {}).sort((a, b) => b[1] - a[1]);
   const colourFacets = Object.entries(facetDistribution?.colour ?? {}).sort((a, b) => b[1] - a[1]);
+  const currentCategory = searchParams.get("categorySlug") ?? "";
   const currentSize = searchParams.get("size") ?? "";
   const currentColour = searchParams.get("colour") ?? "";
 
@@ -126,6 +129,23 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
             <SelectItem value="poor">{conditionLabel("poor")}</SelectItem>
           </SelectContent>
         </Select>
+
+        {/* Category — populated from facet counts when available */}
+        {categoryFacets.length > 0 && (
+          <Select value={currentCategory} onValueChange={(v) => pushFilter("categorySlug", v === "all" ? "" : v)}>
+            <SelectTrigger className="h-9 w-40 text-sm">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All categories</SelectItem>
+              {categoryFacets.map(([slug, count]) => (
+                <SelectItem key={slug} value={slug}>
+                  {categoryLabel(slug)} ({count})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         {/* Brand — populated from facet counts when available */}
         {brandFacets.length > 0 && (
@@ -220,7 +240,12 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
               onClick={() => pushFilter(key, "")}
               className="flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs text-brand-700"
             >
-              {FILTER_LABELS[key] ?? key}: {key === "condition" ? conditionLabel(value) : value}
+              {FILTER_LABELS[key] ?? key}:{" "}
+              {key === "condition"
+                ? conditionLabel(value)
+                : key === "categorySlug"
+                  ? categoryLabel(value)
+                  : value}
               <span aria-hidden="true">×</span>
             </button>
           ))}

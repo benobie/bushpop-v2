@@ -1,10 +1,11 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "./client";
 import { channels } from "./schema/channels";
 import { user } from "./schema/auth";
 import { userRoles, sellerProfiles, addresses } from "./schema/user-domain";
 import { inventoryItems, inventoryItemImages } from "./schema/inventory";
 import { channelListings } from "./schema/listings";
+import { categories } from "./schema/categories";
 import { ulid } from "ulid";
 
 async function seed() {
@@ -122,13 +123,29 @@ async function seedDevListings() {
   });
 
   const fixtures = [
-    { title: "Vintage Levi's 501 Jeans", brand: "Levi's", size: "32", colour: "blue", condition: "good", shippingClass: "m", priceCents: 6500 },
-    { title: "Wool Overcoat", brand: "Country Road", size: "M", colour: "camel", condition: "excellent", shippingClass: "l", priceCents: 12000 },
-    { title: "Silk Slip Dress", brand: "Zimmermann", size: "8", colour: "black", condition: "excellent", shippingClass: "s", priceCents: 9500 },
-    { title: "Leather Ankle Boots", brand: "R.M. Williams", size: "9", colour: "tan", condition: "good", shippingClass: "xl", priceCents: 14000 },
-    { title: "Linen Shirt", brand: "Bassike", size: "L", colour: "white", condition: "good", shippingClass: "s", priceCents: 4500 },
-    { title: "Gold Hoop Earrings", brand: "Sarah & Sebastian", size: "OS", colour: "gold", condition: "excellent", shippingClass: "xs", priceCents: 3000 },
+    { title: "Vintage Levi's 501 Jeans", brand: "Levi's", size: "32", colour: "blue", condition: "good", shippingClass: "m", priceCents: 6500, categorySlug: "jeans" },
+    { title: "Wool Overcoat", brand: "Country Road", size: "M", colour: "camel", condition: "excellent", shippingClass: "l", priceCents: 12000, categorySlug: "coats" },
+    { title: "Silk Slip Dress", brand: "Zimmermann", size: "8", colour: "black", condition: "excellent", shippingClass: "s", priceCents: 9500, categorySlug: "midi-dresses" },
+    { title: "Leather Ankle Boots", brand: "R.M. Williams", size: "9", colour: "tan", condition: "good", shippingClass: "xl", priceCents: 14000, categorySlug: "boots" },
+    { title: "Linen Shirt", brand: "Bassike", size: "L", colour: "white", condition: "good", shippingClass: "s", priceCents: 4500, categorySlug: "shirts" },
+    { title: "Gold Hoop Earrings", brand: "Sarah & Sebastian", size: "OS", colour: "gold", condition: "excellent", shippingClass: "xs", priceCents: 3000, categorySlug: "jewellery" },
   ];
+
+  // Category IDs are looked up by slug (@bushpop/config CATEGORY_LEAVES) rather
+  // than hardcoded — resolves to null if `db:seed:categories` hasn't run yet,
+  // which is non-fatal (categoryId is nullable) but leaves PLP category
+  // filtering with nothing to filter on.
+  const categorySlugs = [...new Set(fixtures.map((f) => f.categorySlug))];
+  const categoryRows = await db
+    .select({ id: categories.id, slug: categories.slug })
+    .from(categories)
+    .where(inArray(categories.slug, categorySlugs));
+  const categoryIdBySlug = new Map(categoryRows.map((c) => [c.slug, c.id]));
+  if (categoryIdBySlug.size === 0) {
+    console.warn(
+      "No categories found — run `pnpm --filter @bushpop/db db:seed:categories` first for PLP category filtering to have data.",
+    );
+  }
 
   for (const f of fixtures) {
     const [item] = await db
@@ -140,6 +157,7 @@ async function seedDevListings() {
         availabilityStatus: "available",
         lifecycleState: "for_sale",
         brand: f.brand,
+        categoryId: categoryIdBySlug.get(f.categorySlug) ?? null,
         size: f.size,
         colour: f.colour,
         condition: f.condition,
