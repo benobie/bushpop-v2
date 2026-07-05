@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import { DEFAULT_CHANNEL, getChannelConfig } from "@bushpop/config";
 import { SessionProvider } from "@/providers/session-provider";
 import { ChannelProvider } from "@/providers/channel-provider";
 import { PostHogProvider } from "@/providers/posthog-provider";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
-import { MobileNav } from "@/components/layout/mobile-nav";
+import { SiteHeader } from "@/components/layout/site-header";
+import { SiteHeaderSkeleton } from "@/components/layout/site-header-skeleton";
+import { MarketFooter } from "@/components/layout/market-footer";
+import { MarketBottomBar } from "@/components/layout/market-bottom-bar";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -49,13 +51,18 @@ export default function RootLayout({
           <ChannelProvider>
             <PostHogProvider>
               <SessionProvider>
-                <Header channelName={channelConfig.name} />
+                <Suspense fallback={<SiteHeaderSkeleton />}>
+                  <SiteHeader />
+                </Suspense>
                 <div className="pb-16 md:pb-0">{children}</div>
-                <Footer
+                <MarketFooter
                   channelName={channelConfig.name}
+                  tagline={channelConfig.tagline}
                   supportEmail={channelConfig.supportEmail}
                 />
-                <MobileNav />
+                <Suspense fallback={null}>
+                  <MarketBottomBar />
+                </Suspense>
               </SessionProvider>
             </PostHogProvider>
           </ChannelProvider>
