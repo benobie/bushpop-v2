@@ -202,13 +202,13 @@ The evidence pack `docs/payments-evidence-pack-2026-07.pdf` commits to a dispute
 - [ ] Email template for "we've received your report" lives in the transactional-email template set (`bushpop-v2/docs/email-matrix.md`).
 - [ ] `support@bushpop.com.au` is monitored by the support person (configured in Chatwoot or mailbox, depending on U4's choice for Q8).
 - [ ] This doc linked in the internal Slack / onboarding so the support person knows the process.
-- [ ] Product page / FAQ section "Reporting counterfeits" is marked [DRAFT] (see §6) and does NOT link from the public site yet.
+- [x] Product page / FAQ section "Reporting counterfeits" — **BUILT 05/07/2026** as `apps/market` route `/help/report-counterfeit` (`bushpop-v2` PR #77, HELD for Ben, not yet merged/live). Do not treat as linked-from-the-public-site until that PR merges.
 
 **At T+7d (post-canary check-in):**
 
 - [ ] First counterfeit claim (if any) has been processed end-to-end successfully.
 - [ ] The evidence ledger has at least one real row (or zero claims if none were received).
-- [ ] The U4 trust-gate build is scheduled to lift the public-facing version.
+- [x] The U4 trust-gate build — **done 05/07/2026**, see above; still needs Ben's merge to actually go live.
 
 ---
 
