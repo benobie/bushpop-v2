@@ -51,7 +51,7 @@ There is also no forgot-password UI page in `apps/market` yet — but better-aut
 
 No code queried the email queue's failed-job list — a permanently-failed send had no visible surface anywhere (BullMQ's `removeOnFail: 3` just meant "keep the last 3 failed jobs in Redis", not "someone can see them"). Added `getFailedEmailJobs()` (`workers/email.ts`) wrapping `queue.getFailed()`, and a real-BullMQ integration test (`test/integration/email/email-dlq.test.ts`, not the mocked-queue style used elsewhere in the suite) that forces a permanent send failure and asserts it's queryable — proving the "visible, not silent" requirement rather than just asserting the error isn't swallowed in-process.
 
-This is a query surface, not a shipped admin UI — B3 (admin panel, next batch) is where `getFailedEmailJobs()` should surface into an actual page for Ben/support to look at.
+~~This is a query surface, not a shipped admin UI — B3 (admin panel, next batch) is where `getFailedEmailJobs()` should surface into an actual page for Ben/support to look at.~~ **DONE 05/07 (B3, PR #70):** `GET /api/v1/admin/email-jobs/failed` + the `apps/market` `/admin/email-jobs` page now surface this list for Ben/support.
 
 ### De-hardcode check (VERIFIED CLEAN)
 
