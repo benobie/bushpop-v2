@@ -37,6 +37,21 @@ export {
   type MobileBottomBarItem,
 } from "./primitives/mobile-bottom-bar";
 export { SouthernCrossIcon, TrendIcon, HandHeartIcon, type CustomIconProps } from "./icons/custom";
+export {
+  MenuIcon,
+  CloseIcon,
+  ArrowRightIcon,
+  ArrowLeftIcon,
+  SearchIcon,
+  HeartIcon,
+  ChatIcon,
+  PlusCircleIcon,
+  ChevronDownIcon,
+  BagOutlineIcon,
+  BagFillIcon,
+  HouseIcon,
+  UserIcon,
+} from "./icons/nav-icons";
 export { useCursorLight } from "./lib/use-cursor-light";
 export { useNavScrolled } from "./lib/use-nav-scrolled";
 export { spawnBurst } from "./lib/spawn-burst";

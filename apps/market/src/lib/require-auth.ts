@@ -22,3 +22,20 @@ export async function requireAuth() {
     redirect("/sign-in");
   }
 }
+
+/**
+ * Non-redirecting session check for chrome shared by authed and anonymous
+ * routes (the nav). Unlike requireAuth(), an unauthenticated visitor is a
+ * normal, expected case here — not an error to redirect away from.
+ */
+export async function getOptionalCustomer() {
+  try {
+    const api = await createAuthedApiClient();
+    const { data, error } = await api.GET("/api/v1/customer/me");
+    if (error || !data) return null;
+    return data;
+  } catch (err) {
+    unstable_rethrow(err);
+    return null;
+  }
+}
