@@ -12,8 +12,14 @@ export function MarkShippedForm({ orderId, status }: { orderId: string; status: 
   const [carrier, setCarrier] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Tracks the just-shipped outcome locally so the button stays hidden
+  // through the window between the PATCH resolving and router.refresh()
+  // landing a re-render with the server's updated `status` prop — without
+  // this, a seller could double-click and fire a second ship request that
+  // 409s against the order they just shipped.
+  const [justShipped, setJustShipped] = useState(false);
 
-  if (status !== "paid") {
+  if (status !== "paid" || justShipped) {
     return null;
   }
 
@@ -39,7 +45,10 @@ export function MarkShippedForm({ orderId, status }: { orderId: string; status: 
         return;
       }
       setOpen(false);
+      setJustShipped(true);
       router.refresh();
+    } catch {
+      setError("Could not reach the server — check your connection and try again.");
     } finally {
       setSubmitting(false);
     }

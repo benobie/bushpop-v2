@@ -8,8 +8,25 @@ interface DashboardOrdersPageProps {
   searchParams: Promise<{ status?: string }>;
 }
 
+// Tabs shown in the UI — a curated subset of the full backend status enum.
 const STATUS_FILTERS = ["all", "paid", "shipped", "delivered", "completed", "cancelled"] as const;
 type StatusFilter = (typeof STATUS_FILTERS)[number];
+
+// Every status the backend can return, so a direct link (e.g. from an email
+// or a bookmark) to a status without its own tab — like ?status=refunded —
+// still filters correctly instead of silently falling back to "all".
+const ALL_ORDER_STATUSES = [
+  "paid",
+  "shipped",
+  "delivered",
+  "completed",
+  "cancelled",
+  "delivery_assumed",
+  "shipment_stale_review",
+  "refund_in_progress",
+  "refunded",
+] as const;
+type OrderStatus = (typeof ALL_ORDER_STATUSES)[number];
 
 const STATUS_LABELS: Record<string, string> = {
   all: "All",
@@ -42,24 +59,16 @@ function getStatusVariant(status: string): "active" | "default" | "draft" | "sol
 
 export default async function DashboardOrdersPage({ searchParams }: DashboardOrdersPageProps) {
   const { status: rawStatus } = await searchParams;
+  const isKnownStatus = ALL_ORDER_STATUSES.includes(rawStatus as OrderStatus);
   const statusFilter = (STATUS_FILTERS.includes(rawStatus as StatusFilter) ? rawStatus : "all") as StatusFilter;
+  const queryStatus = isKnownStatus ? (rawStatus as OrderStatus) : undefined;
 
   await requireAuth();
   const api = await createAuthedApiClient();
 
   const { data, error } = await api.GET("/api/v1/seller/orders", {
     params: {
-      query:
-        statusFilter !== "all"
-          ? {
-              status: statusFilter as
-                | "paid"
-                | "shipped"
-                | "delivered"
-                | "completed"
-                | "cancelled",
-            }
-          : {},
+      query: queryStatus ? { status: queryStatus } : {},
     },
   });
 
