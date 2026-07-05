@@ -45,7 +45,12 @@ export function MarketFooter({ channelName, tagline, supportEmail }: MarketFoote
         },
         {
           heading: "Support",
-          links: [{ label: "Contact us", href: `mailto:${supportEmail}` }],
+          links: [
+            { label: "Help", href: "/help" },
+            { label: "Returns and Buyer Protection", href: "/returns" },
+            { label: "Shipping", href: "/shipping" },
+            { label: "Contact us", href: `mailto:${supportEmail}` },
+          ],
         },
       ]}
     />
