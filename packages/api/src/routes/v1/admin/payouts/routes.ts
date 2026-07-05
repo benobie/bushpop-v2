@@ -3,15 +3,92 @@ import { z } from "zod";
 import { requireAuth } from "../../../../middleware/require-auth.js";
 import { requireRole } from "../../../../middleware/require-role.js";
 import { idempotencyMiddleware } from "../../../../middleware/idempotency.js";
-import { eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
 import { payoutHolds } from "@bushpop/db/schema";
 import { releasePayoutHold } from "../../../../lib/payout-hold-service.js";
 import { AppError, NotFoundError, ConflictError, ValidationError } from "../../../../lib/errors.js";
 
+const adminReadPreHandlers = [requireAuth, requireRole("admin")];
 const adminPreHandlers = [requireAuth, requireRole("admin"), idempotencyMiddleware];
 
+const listQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  status: z.string().optional(),
+});
+
 export async function adminPayoutRoutes(app: FastifyInstance) {
+  // GET /api/v1/admin/payouts — list payout holds (read-only view)
+  app.get(
+    "/api/v1/admin/payouts",
+    {
+      preHandler: adminReadPreHandlers,
+      schema: {
+        tags: ["Admin - Payouts"],
+        summary: "List payout holds (admin only)",
+        querystring: listQuerySchema,
+        response: {
+          200: z.object({
+            items: z.array(
+              z.object({
+                id: z.string(),
+                orderId: z.string(),
+                status: z.string(),
+                amountCents: z.number(),
+                currency: z.string(),
+                transferId: z.string().nullable(),
+                releaseAttempts: z.number(),
+                failureReason: z.string().nullable(),
+                createdAt: z.string().datetime(),
+              }),
+            ),
+            total: z.number(),
+            page: z.number(),
+            limit: z.number(),
+            totalPages: z.number(),
+          }),
+        },
+      },
+    },
+    async (request) => {
+      const { page, limit, status } = request.query as z.infer<typeof listQuerySchema>;
+      const offset = (page - 1) * limit;
+      const where = status ? eq(payoutHolds.status, status) : undefined;
+
+      const [items, countResult] = await Promise.all([
+        db
+          .select({
+            id: payoutHolds.id,
+            orderId: payoutHolds.orderId,
+            status: payoutHolds.status,
+            amountCents: payoutHolds.amountCents,
+            currency: payoutHolds.currency,
+            transferId: payoutHolds.transferId,
+            releaseAttempts: payoutHolds.releaseAttempts,
+            failureReason: payoutHolds.failureReason,
+            createdAt: payoutHolds.createdAt,
+          })
+          .from(payoutHolds)
+          .where(where)
+          .orderBy(desc(payoutHolds.createdAt))
+          .limit(limit)
+          .offset(offset),
+        db.select({ count: sql<number>`count(*)::int` }).from(payoutHolds).where(where),
+      ]);
+
+      const total = countResult[0]?.count ?? 0;
+
+      return {
+        items: items.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() })),
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      };
+    },
+  );
+
   // POST /api/v1/admin/payouts/:holdId/release — release payout to seller
   app.post(
     "/api/v1/admin/payouts/:holdId/release",

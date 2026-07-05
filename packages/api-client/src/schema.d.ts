@@ -5065,6 +5065,171 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/v1/admin/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List orders (admin only) */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                status: string;
+                                buyerId: string;
+                                sellerId: string;
+                                totalCents: number;
+                                currency: string;
+                                trackingNumber: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                            total: number;
+                            page: number;
+                            limit: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get order detail (admin only) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            status: string;
+                            buyerId: string;
+                            sellerId: string;
+                            totalCents: number;
+                            currency: string;
+                            trackingNumber: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            subtotalCents: number;
+                            shippingCents: number;
+                            platformFeeCents: number;
+                            buyerProtectionFeeCents: number;
+                            sellerProceedsCents: number;
+                            trackingCarrier: string | null;
+                            lastTrackingStatus: string | null;
+                            /** Format: date-time */
+                            lastTrackingEventAt: string | null;
+                            /** Format: date-time */
+                            deliveryConfirmedAt: string | null;
+                            /** Format: date-time */
+                            slaDeadlineAt: string | null;
+                            stripePaymentIntentId: string | null;
+                            stripeTransferId: string | null;
+                            buyer: {
+                                id: string;
+                                name: string;
+                                email: string;
+                            } | null;
+                            seller: {
+                                id: string;
+                                name: string;
+                                email: string;
+                            } | null;
+                            items: {
+                                id: string;
+                                channelListingId: string;
+                                title: string | null;
+                                priceCents: number;
+                            }[];
+                            payoutHold: {
+                                id: string;
+                                status: string;
+                                amountCents: number;
+                                transferId: string | null;
+                                releaseAttempts: number;
+                                failureReason: string | null;
+                            } | null;
+                            refunds: {
+                                id: string;
+                                status: string;
+                                amountCents: number;
+                                reason: string | null;
+                                stripeRefundId: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            events: {
+                                id: string;
+                                eventName: string;
+                                actorId: string | null;
+                                metadata?: unknown;
+                                deliveryStatus: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/orders/{id}/cancel": {
         parameters: {
             query?: never;
@@ -5101,6 +5266,63 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/payouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List payout holds (admin only) */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                orderId: string;
+                                status: string;
+                                amountCents: number;
+                                currency: string;
+                                transferId: string | null;
+                                releaseAttempts: number;
+                                failureReason: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            total: number;
+                            page: number;
+                            limit: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -5146,6 +5368,321 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/listings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List channel listings (admin only) */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                title: string;
+                                status: string;
+                                priceCents: number;
+                                currency: string;
+                                ownerId: string;
+                                ownerName: string | null;
+                                score: number | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            total: number;
+                            page: number;
+                            limit: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/listings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get channel listing detail (admin only) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            title: string;
+                            status: string;
+                            priceCents: number;
+                            currency: string;
+                            ownerId: string;
+                            ownerName: string | null;
+                            score: number | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            description: string | null;
+                            handle: string;
+                            /** Format: date-time */
+                            publishedAt: string | null;
+                            /** Format: date-time */
+                            hiddenAt: string | null;
+                            ownerEmail: string | null;
+                            lifecycleState: string;
+                            availabilityStatus: string;
+                            brand: string | null;
+                            condition: string | null;
+                            scoreBreakdown: {
+                                [key: string]: number;
+                            } | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/ai-usage/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** AI draft generation cost + usage summary (admin only) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            totalGenerations: number;
+                            totalCostUsdMicros: number;
+                            byStatus: {
+                                status: string;
+                                count: number;
+                            }[];
+                            byProvider: {
+                                provider: string;
+                                count: number;
+                                costUsdMicros: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/ai-usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List recent AI draft generations (admin only) */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                sellerId: string;
+                                inventoryItemId: string;
+                                trigger: string;
+                                provider: string;
+                                model: string;
+                                status: string;
+                                costUsdMicros: number | null;
+                                latencyMs: number | null;
+                                confidence: number | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            page: number;
+                            limit: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/fees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** View the current fee schedule (read-only, admin only) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            commissionSchedule: {
+                                effectiveFrom: string;
+                                bps: number;
+                                fixedCents: number;
+                            }[];
+                            buyerProtectionSchedule: {
+                                effectiveFrom: string;
+                                bps: number;
+                                fixedCents: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/email-jobs/failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List failed (dead-letter) email jobs (admin only) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                jobId: string;
+                                type: string;
+                                orderId: string;
+                                failedReason: string | null;
+                                attemptsMade: number;
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

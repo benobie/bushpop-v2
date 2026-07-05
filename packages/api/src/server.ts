@@ -42,6 +42,10 @@ import { storeOrderRoutes } from "./routes/v1/store/orders/routes";
 import { sellerOrderRoutes } from "./routes/v1/seller/orders/routes";
 import { adminOrderRoutes } from "./routes/v1/admin/orders/routes";
 import { adminPayoutRoutes } from "./routes/v1/admin/payouts/routes";
+import { adminListingRoutes } from "./routes/v1/admin/listings";
+import { adminAiUsageRoutes } from "./routes/v1/admin/ai-usage";
+import { adminFeeRoutes } from "./routes/v1/admin/fees";
+import { adminEmailJobRoutes } from "./routes/v1/admin/email-jobs";
 import { AppError, PublishNotReadyError } from "./lib/errors";
 import { InvalidTransitionError } from "./lib/state-machine";
 import { registerIdempotencyHook } from "./middleware/idempotency";
@@ -213,6 +217,10 @@ export async function buildServer() {
   await app.register(sellerOrderRoutes);
   await app.register(adminOrderRoutes);
   await app.register(adminPayoutRoutes);
+  await app.register(adminListingRoutes);
+  await app.register(adminAiUsageRoutes);
+  await app.register(adminFeeRoutes);
+  await app.register(adminEmailJobRoutes);
   await app.register(adminReportRoutes);
   await app.register(storeListingReportRoutes);
 

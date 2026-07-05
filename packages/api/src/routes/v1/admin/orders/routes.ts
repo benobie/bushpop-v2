@@ -9,10 +9,61 @@ import { orders, refunds } from "@bushpop/db/schema";
 import { dispatchEvent } from "../../../../lib/events.js";
 import { NotFoundError } from "../../../../lib/errors.js";
 import { processRefund } from "../../../../lib/refund-service.js";
+import { listOrdersQuerySchema, orderSummarySchema, orderDetailSchema } from "./schemas.js";
+import { listOrders, getOrderDetail } from "./service.js";
 
+const adminReadPreHandlers = [requireAuth, requireRole("admin")];
 const adminPreHandlers = [requireAuth, requireRole("admin"), idempotencyMiddleware];
 
 export async function adminOrderRoutes(app: FastifyInstance) {
+  // GET /api/v1/admin/orders — list orders, optional status filter
+  app.get(
+    "/api/v1/admin/orders",
+    {
+      preHandler: adminReadPreHandlers,
+      schema: {
+        tags: ["Admin - Orders"],
+        summary: "List orders (admin only)",
+        querystring: listOrdersQuerySchema,
+        response: {
+          200: z.object({
+            items: z.array(orderSummarySchema),
+            total: z.number(),
+            page: z.number(),
+            limit: z.number(),
+            totalPages: z.number(),
+          }),
+        },
+      },
+    },
+    async (request) => {
+      const { status, page, limit } = request.query as z.infer<typeof listOrdersQuerySchema>;
+      return listOrders({ status, page, limit });
+    },
+  );
+
+  // GET /api/v1/admin/orders/:id — order detail (items, payout hold, refunds, event timeline)
+  app.get(
+    "/api/v1/admin/orders/:id",
+    {
+      preHandler: adminReadPreHandlers,
+      schema: {
+        tags: ["Admin - Orders"],
+        summary: "Get order detail (admin only)",
+        params: z.object({ id: z.string().length(26) }),
+        response: { 200: orderDetailSchema },
+      },
+    },
+    async (request) => {
+      const { id } = request.params as { id: string };
+      return getOrderDetail(id);
+    },
+  );
+
+  // POST /api/v1/admin/orders/:id/refund — deliberately NOT in this PR.
+  // Ships in a follow-up PR with Opus deep review + a human merge gate
+  // (money-adjacent, runbook T-0 step 3 dependency) — see the B3 handoff.
+
   // POST /api/v1/admin/orders/:id/cancel — cancel a paid order
   //
   // AUDIT-009 fix: delegates to processRefund() so the Stripe refund (and, on
