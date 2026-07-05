@@ -110,5 +110,87 @@ describe("Store Listings API (by ID)", () => {
         expect(body.seller).not.toHaveProperty("userId");
       }
     });
+
+    it("includes PDP fields (condition/size/colour/brand/measurements/categorySlug/shippingOptions) — U1 §2.1", async () => {
+      const item = await createTestInventoryItem(userId, {
+        title: "Vintage Denim Jacket",
+        condition: "like_new",
+        size: "M",
+        colour: "Blue",
+        brand: "Levi's",
+        measurements: { chest: 52, length: 68 },
+        shippingOption: "prepaid",
+      });
+
+      const [listing] = await db
+        .insert(channelListings)
+        .values({
+          inventoryItemId: item.id,
+          channelId,
+          title: "Vintage Denim Jacket",
+          priceCents: 7500,
+          handle: `denim-jacket-${Date.now()}`,
+          status: "active",
+          publishedAt: new Date(),
+        })
+        .returning();
+
+      const res = await publicRequest("GET", `/api/v1/store/listings/${listing!.id}`);
+      expect(res.statusCode).toBe(200);
+
+      const body = res.json();
+      expect(body.condition).toBe("like_new");
+      expect(body.size).toBe("M");
+      expect(body.colour).toBe("Blue");
+      expect(body.brand).toBe("Levi's");
+      expect(body.measurements).toEqual({ chest: 52, length: 68 });
+      expect(body.shippingOptions).toEqual(["prepaid"]);
+      // No category assigned in this fixture — categorySlug is null, not omitted.
+      expect(body).toHaveProperty("categorySlug", null);
+    });
+
+    it("defaults shippingOptions to buyer_pays for legacy NULL shipping_option", async () => {
+      const item = await createTestInventoryItem(userId, { title: "Legacy Listing" });
+      const [listing] = await db
+        .insert(channelListings)
+        .values({
+          inventoryItemId: item.id,
+          channelId,
+          title: "Legacy Listing",
+          priceCents: 3000,
+          handle: `legacy-${Date.now()}`,
+          status: "active",
+          publishedAt: new Date(),
+        })
+        .returning();
+
+      const res = await publicRequest("GET", `/api/v1/store/listings/${listing!.id}`);
+      expect(res.json().shippingOptions).toEqual(["buyer_pays"]);
+    });
+
+    it("drops malformed (non-numeric) measurements entries instead of 500ing", async () => {
+      const item = await createTestInventoryItem(userId, {
+        title: "Malformed Measurements Listing",
+        // Cast past the type: simulates a manually-edited/legacy row with a
+        // non-numeric value that the app-level Zod validation never caught.
+        measurements: { chest: 52, waist: "N/A" } as unknown as Record<string, number>,
+      });
+      const [listing] = await db
+        .insert(channelListings)
+        .values({
+          inventoryItemId: item.id,
+          channelId,
+          title: "Malformed Measurements Listing",
+          priceCents: 3000,
+          handle: `malformed-measurements-${Date.now()}`,
+          status: "active",
+          publishedAt: new Date(),
+        })
+        .returning();
+
+      const res = await publicRequest("GET", `/api/v1/store/listings/${listing!.id}`);
+      expect(res.statusCode).toBe(200);
+      expect(res.json().measurements).toEqual({ chest: 52 });
+    });
   });
 });

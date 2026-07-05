@@ -169,6 +169,20 @@ describe("Cart API", () => {
       expect(body.items).toHaveLength(1);
       expect(body).not.toHaveProperty("sellerId");
     });
+
+    it("enriches items with title/coverImage/handle from the listing — U1 §2.1", async () => {
+      const listing = await createActiveTestListing(sellerId, { title: "Enriched Cart Item" });
+      await authedRequest(buyerToken, "POST", "/api/v1/store/cart/items", {
+        listingId: listing.id,
+      });
+
+      const res = await authedRequest(buyerToken, "GET", "/api/v1/store/cart");
+      expect(res.statusCode).toBe(200);
+      const item = res.json().items[0];
+      expect(item.title).toBe("Enriched Cart Item");
+      expect(item.handle).toBe(listing.handle);
+      expect(item.coverImage).toContain(`items/${listing.inventoryItemId}/primary.jpg`);
+    });
   });
 
   describe("DELETE /api/v1/store/cart/items/:id", () => {
