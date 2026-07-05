@@ -31,7 +31,21 @@ function getR2Client(): S3Client {
   });
 }
 
+// R2 is deliberately unconfigured in engine-ci.yml's test job (it only wires
+// DB/Redis/Meili — the API test suite never fetches real image bytes). Skip
+// the upload there rather than failing the whole seed; every other
+// environment this seed runs in (dev, staging, prod) always has R2 set, so
+// a real upload failure there still throws below instead of being swallowed.
+const R2_CONFIGURED = Boolean(
+  process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_BUCKET_NAME,
+);
+
 async function uploadFixtureImage(storageKey: string, colour: { r: number; g: number; b: number }): Promise<void> {
+  if (!R2_CONFIGURED) {
+    console.warn(`R2 not configured — skipping fixture image upload for ${storageKey}`);
+    return;
+  }
+
   const body = await sharp({
     create: { width: 800, height: 800, channels: 3, background: colour },
   })
@@ -41,15 +55,10 @@ async function uploadFixtureImage(storageKey: string, colour: { r: number; g: nu
     throw new Error(`Generated fixture image for ${storageKey} is empty`);
   }
 
-  const bucket = process.env.R2_BUCKET_NAME;
-  if (!bucket) {
-    throw new Error("R2_BUCKET_NAME is required to seed fixture listing images");
-  }
-
   const r2 = getR2Client();
   await r2.send(
     new PutObjectCommand({
-      Bucket: bucket,
+      Bucket: process.env.R2_BUCKET_NAME!,
       Key: storageKey,
       Body: body,
       ContentType: "image/jpeg",
