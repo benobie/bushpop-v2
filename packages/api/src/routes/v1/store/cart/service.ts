@@ -1,6 +1,7 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
-import { carts, cartItems, channelListings, inventoryItems } from "@bushpop/db/schema";
+import { carts, cartItems, channelListings, inventoryItems, inventoryItemImages } from "@bushpop/db/schema";
+import { getPublicImageUrl } from "../../../../lib/image-url.js";
 import { ConflictError, NotFoundError, ValidationError } from "../../../../lib/errors.js";
 
 // ADR-015 Sprint 1b W1: carts are now multi-seller. SellerMismatchError and the
@@ -40,7 +41,89 @@ interface CartWithItems {
     priceCents: number;
     currency: string;
     createdAt: Date;
+    title: string | null;
+    coverImage: string | null;
+    handle: string | null;
   }>;
+}
+
+type RawCartItem = {
+  id: string;
+  cartId: string;
+  channelListingId: string;
+  priceCents: number;
+  currency: string;
+  createdAt: Date;
+};
+
+/**
+ * U1 §2.1: cart response enrichment. The cart line item only stores
+ * channelListingId + the price captured at add-time; title/image/handle are
+ * looked up fresh so a rename or re-shot photo shows correctly. Enrichment is
+ * intentionally NOT status-gated — a listing the buyer already added that's
+ * since been unpublished still shows its real title/image (the buyer is
+ * mid-purchase-consideration, not browsing); only a since-deleted listing
+ * falls back to nulls, so the item never disappears from the cart silently.
+ */
+async function enrichCartItems(items: RawCartItem[]): Promise<CartWithItems["items"]> {
+  if (items.length === 0) return [];
+
+  const listingIds = [...new Set(items.map((i) => i.channelListingId))];
+
+  const listings = await db
+    .select({
+      id: channelListings.id,
+      title: channelListings.title,
+      handle: channelListings.handle,
+      inventoryItemId: channelListings.inventoryItemId,
+    })
+    .from(channelListings)
+    .where(inArray(channelListings.id, listingIds));
+
+  const inventoryItemIds = [...new Set(listings.map((l) => l.inventoryItemId))];
+  const images = inventoryItemIds.length
+    ? await db
+        .select({
+          inventoryItemId: inventoryItemImages.inventoryItemId,
+          storageKey: inventoryItemImages.storageKey,
+          isPrimary: inventoryItemImages.isPrimary,
+          position: inventoryItemImages.position,
+        })
+        .from(inventoryItemImages)
+        .where(
+          and(
+            inArray(inventoryItemImages.inventoryItemId, inventoryItemIds),
+            eq(inventoryItemImages.status, "ready"),
+          ),
+        )
+    : [];
+
+  // Cover image = primary image, falling back to the lowest-position image.
+  const byInventoryItem = new Map<string, typeof images>();
+  for (const img of images) {
+    const bucket = byInventoryItem.get(img.inventoryItemId) ?? [];
+    bucket.push(img);
+    byInventoryItem.set(img.inventoryItemId, bucket);
+  }
+  const coverByInventoryItem = new Map<string, string>();
+  for (const [id, bucket] of byInventoryItem) {
+    const primary = bucket.find((img) => img.isPrimary);
+    const chosen = primary ?? [...bucket].sort((a, b) => a.position - b.position)[0];
+    if (chosen) coverByInventoryItem.set(id, chosen.storageKey);
+  }
+
+  const listingById = new Map(listings.map((l) => [l.id, l]));
+
+  return items.map((item) => {
+    const listing = listingById.get(item.channelListingId);
+    const coverKey = listing ? coverByInventoryItem.get(listing.inventoryItemId) : undefined;
+    return {
+      ...item,
+      title: listing?.title ?? null,
+      handle: listing?.handle ?? null,
+      coverImage: coverKey ? getPublicImageUrl(coverKey) : null,
+    };
+  });
 }
 
 // ── Helpers ──
@@ -94,7 +177,7 @@ export async function getCart(buyerId: string, channelId: string): Promise<CartW
     .from(cartItems)
     .where(eq(cartItems.cartId, cart.id));
 
-  return { ...cart, items };
+  return { ...cart, items: await enrichCartItems(items) };
 }
 
 // ── Add item ──
@@ -164,7 +247,7 @@ export async function addToCart(
     .from(cartItems)
     .where(eq(cartItems.cartId, cart.id));
 
-  return { ...cart, items };
+  return { ...cart, items: await enrichCartItems(items) };
 }
 
 // ── Remove item ──

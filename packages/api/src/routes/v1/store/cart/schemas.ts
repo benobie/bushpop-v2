@@ -15,6 +15,11 @@ export const cartItemSchema = z.object({
   priceCents: z.number().int(),
   currency: z.string(),
   createdAt: z.coerce.date(),
+  // U1 §2.1: cart response enrichment — the listing may have been unpublished/
+  // deleted since it was added, so these are nullable rather than joined-required.
+  title: z.string().nullable(),
+  coverImage: z.string().nullable(),
+  handle: z.string().nullable(),
 });
 
 export const cartSchema = z.object({

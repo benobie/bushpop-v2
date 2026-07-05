@@ -8,6 +8,9 @@ import type { BrowseQuery, SearchQuery, ListingPageResponse, StoreListingCard } 
 // Internal helpers
 // ---------------------------------------------------------------------------
 
+/** Filter attributes surfaced as facet counts for the PLP/search filter bar (U1 §2.1). */
+const FACET_ATTRIBUTES = ["categorySlug", "size", "colour", "brand", "condition"] as const;
+
 /** Escape a string value for use in a MeiliSearch filter expression. */
 function escapeFilterValue(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
@@ -115,6 +118,7 @@ export async function browseListings(query: BrowseQuery, channelSlug: string): P
       sort,
       offset: query.offset,
       limit: query.limit,
+      facets: [...FACET_ATTRIBUTES],
     });
 
     const items = (result.hits as ListingDocument[]).map(toListingCard);
@@ -126,6 +130,7 @@ export async function browseListings(query: BrowseQuery, channelSlug: string): P
       offset: query.offset,
       limit: query.limit,
       hasMore: query.offset + items.length < total,
+      facetDistribution: result.facetDistribution,
     };
   } catch (err: unknown) {
     throw mapMeiliError(err);
@@ -149,6 +154,7 @@ export async function searchListings(query: SearchQuery, channelSlug: string): P
       sort,
       offset: query.offset,
       limit: query.limit,
+      facets: [...FACET_ATTRIBUTES],
     });
 
     const items = (result.hits as ListingDocument[]).map(toListingCard);
@@ -160,6 +166,7 @@ export async function searchListings(query: SearchQuery, channelSlug: string): P
       offset: query.offset,
       limit: query.limit,
       hasMore: query.offset + items.length < total,
+      facetDistribution: result.facetDistribution,
     };
   } catch (err: unknown) {
     throw mapMeiliError(err);

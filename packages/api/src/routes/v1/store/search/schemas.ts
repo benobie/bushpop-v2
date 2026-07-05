@@ -57,12 +57,17 @@ export const storeListingCardSchema = z.object({
 
 export type StoreListingCard = z.infer<typeof storeListingCardSchema>;
 
+/** Meili facet distribution: attribute -> { value -> hit count }. */
+export const facetDistributionSchema = z.record(z.string(), z.record(z.string(), z.number()));
+
 export const listingPageResponseSchema = z.object({
   items: z.array(storeListingCardSchema),
   total: z.number(),
   offset: z.number(),
   limit: z.number(),
   hasMore: z.boolean(),
+  /** Result counts per filter value, for PLP/search filter-bar chip counts (U1 §2.1). */
+  facetDistribution: facetDistributionSchema.optional(),
 });
 
 export type ListingPageResponse = z.infer<typeof listingPageResponseSchema>;

@@ -3454,6 +3454,15 @@ export interface paths {
                                 storeName: string;
                                 avatarUrl: string | null;
                             } | null;
+                            condition: string | null;
+                            size: string | null;
+                            colour: string | null;
+                            brand: string | null;
+                            measurements: {
+                                [key: string]: number;
+                            } | null;
+                            categorySlug: string | null;
+                            shippingOptions: string[];
                         };
                     };
                 };
@@ -3574,6 +3583,11 @@ export interface paths {
                             offset: number;
                             limit: number;
                             hasMore: boolean;
+                            facetDistribution?: {
+                                [key: string]: {
+                                    [key: string]: number;
+                                };
+                            };
                         };
                     };
                 };
@@ -3647,6 +3661,11 @@ export interface paths {
                             offset: number;
                             limit: number;
                             hasMore: boolean;
+                            facetDistribution?: {
+                                [key: string]: {
+                                    [key: string]: number;
+                                };
+                            };
                         };
                     };
                 };
@@ -3937,6 +3956,9 @@ export interface paths {
                                 currency: string;
                                 /** Format: date-time */
                                 createdAt: string;
+                                title: string | null;
+                                coverImage: string | null;
+                                handle: string | null;
                             }[];
                         };
                     };
@@ -3988,6 +4010,9 @@ export interface paths {
                                 currency: string;
                                 /** Format: date-time */
                                 createdAt: string;
+                                title: string | null;
+                                coverImage: string | null;
+                                handle: string | null;
                             }[];
                         } | null;
                     };

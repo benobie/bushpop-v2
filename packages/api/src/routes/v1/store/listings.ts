@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { db } from "@bushpop/db/client";
-import { channelListings, inventoryItems, inventoryItemImages, sellerProfiles } from "@bushpop/db/schema";
+import { channelListings, inventoryItems, inventoryItemImages, sellerProfiles, categories } from "@bushpop/db/schema";
 import { eq, and, or, isNull } from "drizzle-orm";
 import { getPublicImageUrl } from "../../../lib/image-url.js";
 import { NotFoundError } from "../../../lib/errors.js";
@@ -30,6 +30,16 @@ const listingResponseSchema = z.object({
     storeName: z.string(),
     avatarUrl: z.string().nullable(),
   }).nullable(),
+  // U1 §2.1: PDP fields — already on inventory_items / categories, just not
+  // previously surfaced. Render-only on the client; never re-derived.
+  condition: z.string().nullable(),
+  size: z.string().nullable(),
+  colour: z.string().nullable(),
+  brand: z.string().nullable(),
+  measurements: z.record(z.string(), z.number()).nullable(),
+  categorySlug: z.string().nullable(),
+  /** Single-value today (`inventory_items.shipping_option`); array-shaped for forward compat. */
+  shippingOptions: z.array(z.string()),
 });
 
 /** Fetch an active listing by ULID id or handle, with images and seller. */
@@ -66,9 +76,18 @@ async function fetchActiveListing(idOrHandle: string, channelId: string) {
     )
     .orderBy(inventoryItemImages.position);
 
-  // Get seller profile via inventory item owner
+  // Get seller profile + condition/size/colour/brand/measurements/category via inventory item owner
   const [inventoryItem] = await db
-    .select({ ownerId: inventoryItems.ownerId })
+    .select({
+      ownerId: inventoryItems.ownerId,
+      condition: inventoryItems.condition,
+      size: inventoryItems.size,
+      colour: inventoryItems.colour,
+      brand: inventoryItems.brand,
+      measurements: inventoryItems.measurements,
+      categoryId: inventoryItems.categoryId,
+      shippingOption: inventoryItems.shippingOption,
+    })
     .from(inventoryItems)
     .where(eq(inventoryItems.id, listing.inventoryItemId));
 
@@ -89,6 +108,15 @@ async function fetchActiveListing(idOrHandle: string, channelId: string) {
     }
   }
 
+  let categorySlug: string | null = null;
+  if (inventoryItem?.categoryId) {
+    const [category] = await db
+      .select({ slug: categories.slug })
+      .from(categories)
+      .where(eq(categories.id, inventoryItem.categoryId));
+    categorySlug = category?.slug ?? null;
+  }
+
   return {
     id: listing.id,
     title: listing.title,
@@ -106,7 +134,35 @@ async function fetchActiveListing(idOrHandle: string, channelId: string) {
       aspectRatio: img.aspectRatio ? Number(img.aspectRatio) : null,
     })),
     seller,
+    condition: inventoryItem?.condition ?? null,
+    size: inventoryItem?.size ?? null,
+    colour: inventoryItem?.colour ?? null,
+    brand: inventoryItem?.brand ?? null,
+    measurements: sanitizeMeasurements(inventoryItem?.measurements),
+    categorySlug,
+    // Legacy NULL means "buyer_pays" everywhere else in the engine (see
+    // lib/order-totals.ts) — mirror that here so PDP doesn't show "no
+    // shipping option" for older listings that predate this column.
+    shippingOptions: [inventoryItem?.shippingOption ?? "buyer_pays"],
   };
+}
+
+/**
+ * `measurements` is app-validated jsonb, not DB-constrained — malformed
+ * historical/manually-edited rows must not 500 the PDP read. Drop any
+ * non-finite-number entries rather than throwing.
+ */
+function sanitizeMeasurements(
+  measurements: Record<string, number> | null | undefined,
+): Record<string, number> | null {
+  if (!measurements || typeof measurements !== "object") return null;
+  const clean: Record<string, number> = {};
+  for (const [key, value] of Object.entries(measurements)) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      clean[key] = value;
+    }
+  }
+  return Object.keys(clean).length > 0 ? clean : null;
 }
 
 export async function storeListingRoutes(app: FastifyInstance) {

@@ -86,5 +86,21 @@ describe("Store Search API", () => {
         expect(card.seller).toHaveProperty("storeName");
       }
     });
+
+    it("returns facetDistribution counts for filter attributes — U1 §2.1", async () => {
+      const levis = await createActiveTestListing(userId, { title: "Facet Jeans A", brand: "Levi's" });
+      const wrangler = await createActiveTestListing(userId, { title: "Facet Jeans B", brand: "Wrangler" });
+      await indexTestListing(levis.id, CHANNEL_SLUG);
+      await indexTestListing(wrangler.id, CHANNEL_SLUG);
+
+      const res = await publicRequest("GET", "/api/v1/store/search?q=facet");
+      expect(res.statusCode).toBe(200);
+      const body = res.json();
+      expect(body.facetDistribution).toBeDefined();
+      expect(body.facetDistribution.brand).toMatchObject({
+        "Levi's": 1,
+        Wrangler: 1,
+      });
+    });
   });
 });
