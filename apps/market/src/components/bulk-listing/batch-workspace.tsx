@@ -207,7 +207,7 @@ export function BatchWorkspace({
     }
   }
 
-  function useAiSuggestion(item: DraftItem) {
+  function applyAiSuggestion(item: DraftItem) {
     void patchDetails(item, {
       title: item.aiTitle ?? item.title,
       brand: item.aiSuggestedBrand ?? item.brand,
@@ -363,7 +363,7 @@ export function BatchWorkspace({
                 {item.aiTitle && item.lifecycleState === "owned" && (
                   <button
                     type="button"
-                    onClick={() => useAiSuggestion(item)}
+                    onClick={() => applyAiSuggestion(item)}
                     className="text-xs text-brand-600 underline"
                   >
                     Use AI: "{item.aiTitle}"
