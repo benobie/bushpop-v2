@@ -323,6 +323,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.1024.0
+        version: 3.1078.0
       '@bushpop/config':
         specifier: workspace:^
         version: link:../config
@@ -332,6 +335,9 @@ importers:
       postgres:
         specifier: ^3.4
         version: 3.4.9
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
       ulid:
         specifier: ^2.3
         version: 2.4.0
