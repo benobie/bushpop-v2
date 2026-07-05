@@ -70,6 +70,13 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
         </Link>
       </div>
 
+      <Link
+        href="/dashboard/orders"
+        className="mt-2 inline-block text-sm text-brand-500 hover:underline"
+      >
+        View orders →
+      </Link>
+
       {/* Status filters */}
       <div className="mt-6 flex flex-wrap gap-2">
         {STATUS_FILTERS.map((s) => (
