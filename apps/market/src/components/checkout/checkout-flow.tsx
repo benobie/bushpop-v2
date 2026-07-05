@@ -202,7 +202,13 @@ export function CheckoutFlow({ addresses, cartItems }: CheckoutFlowProps) {
         </div>
 
         <div className="mt-2 space-y-1" data-testid="order-summary-totals">
-          <SummaryRow label="Subtotal" value={formatMoney(cartSubtotalCents, currency)} />
+          <SummaryRow
+            label="Subtotal"
+            value={formatMoney(
+              session ? session.totals.subtotalCents : cartSubtotalCents,
+              currency,
+            )}
+          />
           {session ? (
             <>
               <SummaryRow
