@@ -72,3 +72,7 @@ export const orderDetailSchema = orderSummarySchema.extend({
     }),
   ),
 });
+
+export const refundOrderBodySchema = z.object({
+  reason: z.string().min(1).max(500).default("admin_refund"),
+});

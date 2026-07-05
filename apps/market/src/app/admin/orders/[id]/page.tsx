@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/require-admin";
 import { createAuthedApiClient } from "@bushpop/api-client/server";
 import { formatMoney } from "@/lib/format-money";
+import { RefundButton } from "@/components/admin/refund-button";
 
 export default async function AdminOrderDetailPage({
   params,
@@ -25,15 +26,15 @@ export default async function AdminOrderDetailPage({
       <Link href="/admin/orders" className="text-sm text-brand-500 hover:underline">
         ← Orders
       </Link>
-      <div className="mt-2">
-        <h1 className="font-mono text-xl font-bold text-brand-900">{order.id}</h1>
-        <p className="mt-1 text-sm text-brand-500">
-          Status <span className="font-medium text-brand-900">{order.status}</span> · created{" "}
-          {new Date(order.createdAt).toLocaleString("en-AU")}
-        </p>
-        <p className="mt-1 text-xs text-brand-500">
-          Refund action ships in a follow-up PR (Opus-reviewed, held for Ben).
-        </p>
+      <div className="mt-2 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-mono text-xl font-bold text-brand-900">{order.id}</h1>
+          <p className="mt-1 text-sm text-brand-500">
+            Status <span className="font-medium text-brand-900">{order.status}</span> · created{" "}
+            {new Date(order.createdAt).toLocaleString("en-AU")}
+          </p>
+        </div>
+        <RefundButton orderId={order.id} status={order.status} />
       </div>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">

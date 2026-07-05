@@ -9,7 +9,12 @@ import { orders, refunds } from "@bushpop/db/schema";
 import { dispatchEvent } from "../../../../lib/events.js";
 import { NotFoundError } from "../../../../lib/errors.js";
 import { processRefund } from "../../../../lib/refund-service.js";
-import { listOrdersQuerySchema, orderSummarySchema, orderDetailSchema } from "./schemas.js";
+import {
+  listOrdersQuerySchema,
+  orderSummarySchema,
+  orderDetailSchema,
+  refundOrderBodySchema,
+} from "./schemas.js";
 import { listOrders, getOrderDetail } from "./service.js";
 
 const adminReadPreHandlers = [requireAuth, requireRole("admin")];
@@ -60,9 +65,82 @@ export async function adminOrderRoutes(app: FastifyInstance) {
     },
   );
 
-  // POST /api/v1/admin/orders/:id/refund — deliberately NOT in this PR.
-  // Ships in a follow-up PR with Opus deep review + a human merge gate
-  // (money-adjacent, runbook T-0 step 3 dependency) — see the B3 handoff.
+  // POST /api/v1/admin/orders/:id/refund — refund a paid order via the processor
+  //
+  // Runbook T-0 step 3 depends on this path. Refunds the buyer's original
+  // PaymentIntent (or reverses the transfer post-release) through the SAME
+  // processRefund() core the seller-initiated + admin-cancel paths use — no
+  // Bushpop-held-funds refund exists anywhere (AFSL rule). Every call writes
+  // an append-only marketplace_events row (dispatchEvent, category "order")
+  // as the audit trail — never mutated, only ever inserted.
+  app.post(
+    "/api/v1/admin/orders/:id/refund",
+    {
+      preHandler: adminPreHandlers,
+      schema: {
+        tags: ["Admin - Orders"],
+        summary: "Refund a paid order via the processor (admin only)",
+        params: z.object({ id: z.string().length(26) }),
+        body: refundOrderBodySchema.optional(),
+        response: {
+          200: z.object({
+            orderId: z.string(),
+            status: z.string(),
+            refundId: z.string().nullable(),
+          }),
+        },
+      },
+    },
+    async (request) => {
+      const { id } = request.params as { id: string };
+      const { reason } = (request.body as z.infer<typeof refundOrderBodySchema> | undefined) ?? {
+        reason: "admin_refund",
+      };
+
+      // NOTE: no refund-confirmation email enqueue here — that email type
+      // (PR #65, held for Ben) doesn't exist on this branch yet. Once #65
+      // merges, wire an `enqueueEmail({ type: "refund_confirmation_buyer", orderId: id })`
+      // call here (fire-and-forget, matching the pattern elsewhere in this
+      // file) — do not build a parallel refund-email path in the meantime.
+      await processRefund(id, request.user!.id, reason, { isAdmin: true });
+
+      const [order] = await db
+        .select({ id: orders.id, status: orders.status, channelId: orders.channelId })
+        .from(orders)
+        .where(eq(orders.id, id));
+
+      if (!order) {
+        throw new NotFoundError("Order not found");
+      }
+
+      const [refundRow] = await db
+        .select({ stripeRefundId: refunds.stripeRefundId })
+        .from(refunds)
+        .where(eq(refunds.orderId, id))
+        .orderBy(desc(refunds.createdAt))
+        .limit(1);
+
+      // Fire-and-forget audit event — mirrors the admin-cancel route above.
+      // TODO(AUDIT-010): migrate to transactional outbox (same debt as cancel).
+      dispatchEvent({
+        eventName: "order.refunded",
+        category: "order",
+        actorId: request.user!.id,
+        entityType: "order",
+        entityId: id,
+        channelId: order.channelId,
+        metadata: { refundedBy: "admin", reason, refundId: refundRow?.stripeRefundId ?? null },
+      }).catch((err) => {
+        request.log.error({ err }, "[admin/orders] Failed to dispatch order.refunded");
+      });
+
+      return {
+        orderId: id,
+        status: order.status,
+        refundId: refundRow?.stripeRefundId ?? null,
+      };
+    },
+  );
 
   // POST /api/v1/admin/orders/:id/cancel — cancel a paid order
   //
