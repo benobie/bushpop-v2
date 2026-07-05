@@ -3,15 +3,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
+import { track } from "@/lib/analytics";
+import { DEFAULT_CHANNEL } from "@bushpop/config";
 
 interface AddToBagButtonProps {
   listingId: string;
   /** @deprecated channel is resolved server-side; prop ignored but kept for call-site compat */
   channel?: string;
   disabled?: boolean;
+  priceCents?: number;
 }
 
-export function AddToBagButton({ listingId, disabled }: AddToBagButtonProps) {
+export function AddToBagButton({ listingId, disabled, priceCents }: AddToBagButtonProps) {
   const [loading, setLoading] = useState(false);
   const [added, setAdded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +34,10 @@ export function AddToBagButton({ listingId, disabled }: AddToBagButtonProps) {
       return;
     }
 
+    track({
+      event: "cart.add",
+      props: { channel: DEFAULT_CHANNEL, listing_id: listingId, price_cents: priceCents ?? 0 },
+    });
     setAdded(true);
     setLoading(false);
   }

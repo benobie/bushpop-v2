@@ -44,12 +44,23 @@ export type BushpopEvent =
       };
     }
   | {
-      event: "listing.viewed";
-      props: { channel: string; listing_id: string; category: string };
+      event: "pdp.view";
+      props: { channel: string; listing_id: string; category: string | null };
     }
-  | { event: "checkout.started"; props: { channel: string; item_price: number } }
   | {
-      event: "checkout.completed";
+      event: "browse.filter_applied";
+      props: { channel: string; filter: string; value: string };
+    }
+  | {
+      event: "cart.add";
+      props: { channel: string; listing_id: string; price_cents: number };
+    }
+  | {
+      event: "checkout.step";
+      props: { channel: string; step: string };
+    }
+  | {
+      event: "order.confirmed";
       props: { channel: string; order_id: string };
     };
 

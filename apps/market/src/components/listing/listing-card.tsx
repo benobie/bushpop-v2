@@ -9,6 +9,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, Badge } from "@bushpop/ui";
 import { formatMoney } from "@/lib/format-money";
+import { conditionLabel } from "@/lib/condition-labels";
 
 interface ListingCardItem {
   id: string;
@@ -84,7 +85,7 @@ export function ListingCard({ listing }: ListingCardProps) {
               )}
               {listing.condition && (
                 <Badge variant="outline" className="text-xs">
-                  {listing.condition}
+                  {conditionLabel(listing.condition)}
                 </Badge>
               )}
             </div>

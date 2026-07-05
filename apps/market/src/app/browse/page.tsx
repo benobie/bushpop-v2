@@ -78,7 +78,7 @@ export default async function BrowsePage({
       {/* Filter bar — client island */}
       <div className="mb-6">
         <Suspense fallback={null}>
-          <FilterBar basePath="/browse" />
+          <FilterBar basePath="/browse" facetDistribution={result.facetDistribution} />
         </Suspense>
       </div>
 
