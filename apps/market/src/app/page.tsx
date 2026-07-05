@@ -5,6 +5,7 @@ import { DEFAULT_CHANNEL, getChannelConfig } from "@bushpop/config";
 import { browseListings } from "@/lib/data/listings";
 import { Button, Rail, RailItem, Pcard, FoilBadge } from "@bushpop/ui";
 import { formatMoney } from "@/lib/format-money";
+import { categoryLabel } from "@/lib/category-labels";
 
 export default async function HomePage() {
   const config = getChannelConfig(DEFAULT_CHANNEL);
@@ -29,12 +30,22 @@ export default async function HomePage() {
 
       {/*
         No "Popular this week" section (W5 default — no real search-query
-        data source yet) and no gender/category duo tiles (W3 default is
-        "keep", but no category has been seeded in this environment yet —
-        a duo tile linking to an empty category is exactly the kind of
-        fixture the trust-claims ledger bans; wire this up once categories
-        are seeded rather than fabricate the slugs here).
+        data source yet).
+
+        W3 (duo tiles) descoped from a literal "Shop women / Shop men" split
+        (design/HANDOFF-home.md) to "Shop by category" — there is no gender
+        field anywhere in the schema (inventory_items has no such column,
+        AI drafts don't infer it), and the design prototype's gender split
+        was fixture-only (`g:'w'|'m'|'u'` on hardcoded cards). Adding a real
+        gender attribute is a schema + AI-prompt + wizard change, out of
+        scope here. Categories ARE real and seeded (packages/db/src/seeds/
+        categories.ts), so the two tiles below link to the two categories
+        with the most live listings — counts and images both computed at
+        request time, never fabricated (trust-claims ledger §1).
       */}
+      <Suspense fallback={null}>
+        <CategoryDuo />
+      </Suspense>
 
       {/* Recent listings preview — rendered at request time, not build time.
           The cached browseListings() fetcher hits the API, which is NOT
@@ -90,6 +101,66 @@ async function LatestListings() {
         </Button>
       </div>
     </>
+  );
+}
+
+/**
+ * "Shop by category" duo — the two categories with the most live listings,
+ * each tile showing a real cover image + a live count. Renders nothing if
+ * fewer than two categories have listings yet (an honest empty state per
+ * the trust-claims ledger — no half-filled duo, no fabricated category).
+ */
+async function CategoryDuo() {
+  await connection();
+  const overview = await browseListings({ channel: DEFAULT_CHANNEL, limit: 1 });
+  const counts = Object.entries(overview.facetDistribution?.categorySlug ?? {}).sort(
+    (a, b) => b[1] - a[1],
+  );
+  const top2 = counts.slice(0, 2);
+  if (top2.length < 2) return null;
+
+  const tiles = await Promise.all(
+    top2.map(async ([slug, count]) => {
+      const preview = await browseListings({ channel: DEFAULT_CHANNEL, categorySlug: slug, limit: 1 });
+      return {
+        slug,
+        count,
+        name: categoryLabel(slug),
+        imageUrl: preview.items[0]?.primaryImageUrl ?? null,
+      };
+    }),
+  );
+
+  return (
+    <div className="mb-12">
+      <h2 className="mb-4 font-display text-xl font-semibold text-brand-800">Shop by category</h2>
+      <div className="grid grid-cols-2 gap-4">
+        {tiles.map((tile) => (
+          <Link
+            key={tile.slug}
+            href={`/browse?categorySlug=${encodeURIComponent(tile.slug)}`}
+            className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-brand-100 sm:aspect-[16/9]"
+          >
+            {tile.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element -- plain <img>, matches Pcard's approach (no next/image domain config here)
+              <img
+                src={tile.imageUrl}
+                alt={tile.name}
+                loading="lazy"
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-4 text-white">
+              <p className="font-display text-lg font-semibold">{tile.name}</p>
+              <p className="text-sm text-white/80">
+                {tile.count} {tile.count === 1 ? "listing" : "listings"}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
   );
 }
 
