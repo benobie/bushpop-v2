@@ -59,7 +59,6 @@ export {
   LockIcon,
   ShieldIcon,
   CheckIcon,
-  TruckIcon,
 } from "./icons/nav-icons";
 export { useCursorLight } from "./lib/use-cursor-light";
 export { useNavScrolled } from "./lib/use-nav-scrolled";

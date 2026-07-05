@@ -120,21 +120,28 @@ export function OrderSummary({
           const meta = [item.condition, item.brand].filter(Boolean).join(" · ");
           return (
             <div key={item.id} className="flex gap-3 px-4 py-3" data-testid="order-item-row">
-              <Link
-                href={item.handle ? `/listing/${item.handle}` : "#"}
-                className="relative h-16 w-[52px] flex-shrink-0 overflow-hidden rounded-[9px] bg-[var(--color-bp-surface-2)]"
-                aria-label={item.title ?? "View listing"}
-              >
-                {item.coverImage ? (
-                  <Image
-                    src={item.coverImage}
-                    alt={item.title ?? "Listing photo"}
-                    fill
-                    className="object-cover"
-                    sizes="52px"
-                  />
-                ) : null}
-              </Link>
+              {item.handle ? (
+                <Link
+                  href={`/listing/${item.handle}`}
+                  className="relative h-16 w-[52px] flex-shrink-0 overflow-hidden rounded-[9px] bg-[var(--color-bp-surface-2)]"
+                  aria-label={item.title ?? "View listing"}
+                >
+                  {item.coverImage ? (
+                    <Image
+                      src={item.coverImage}
+                      alt={item.title ?? "Listing photo"}
+                      fill
+                      className="object-cover"
+                      sizes="52px"
+                    />
+                  ) : null}
+                </Link>
+              ) : (
+                <div
+                  className="relative h-16 w-[52px] flex-shrink-0 overflow-hidden rounded-[9px] bg-[var(--color-bp-surface-2)]"
+                  aria-label={item.title ?? "Listing no longer available"}
+                />
+              )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-[var(--color-bp-ink)]">
                   {item.title ?? "Listing no longer available"}
