@@ -5772,12 +5772,20 @@ export interface paths {
                                 channelListingId: string;
                                 channelId: string;
                                 reporterId: string;
+                                reporterEmail: string | null;
                                 /** @enum {string} */
                                 reason: "counterfeit" | "inappropriate" | "misleading" | "prohibited" | "other";
                                 description: string | null;
                                 /** @enum {string} */
                                 status: "pending" | "reviewed" | "actioned" | "dismissed";
                                 version: number;
+                                listingTitle: string | null;
+                                listingHandle: string | null;
+                                listingStatus: string | null;
+                                priceCents: number | null;
+                                currency: string | null;
+                                /** Format: date-time */
+                                hiddenAt: string | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -5843,12 +5851,20 @@ export interface paths {
                             channelListingId: string;
                             channelId: string;
                             reporterId: string;
+                            reporterEmail: string | null;
                             /** @enum {string} */
                             reason: "counterfeit" | "inappropriate" | "misleading" | "prohibited" | "other";
                             description: string | null;
                             /** @enum {string} */
                             status: "pending" | "reviewed" | "actioned" | "dismissed";
                             version: number;
+                            listingTitle: string | null;
+                            listingHandle: string | null;
+                            listingStatus: string | null;
+                            priceCents: number | null;
+                            currency: string | null;
+                            /** Format: date-time */
+                            hiddenAt: string | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -5882,6 +5898,55 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @enum {string} */
+                        reason: "counterfeit" | "inappropriate" | "misleading" | "prohibited" | "other";
+                        description?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** @enum {string} */
+                            status: "pending";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/moderation/flags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manually flag a listing for review (admin only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        channelListingId: string;
                         /** @enum {string} */
                         reason: "counterfeit" | "inappropriate" | "misleading" | "prohibited" | "other";
                         description?: string;
