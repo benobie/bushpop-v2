@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isModerationQueueEnabled } from "@/lib/feature-flags";
 
 // NOTE: the admin role gate (`requireAdmin()`) is NOT called here — this
 // layout renders outside any per-page Suspense boundary, and an uncached
@@ -18,6 +19,10 @@ const NAV = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const nav = isModerationQueueEnabled()
+    ? [...NAV, { href: "/admin/moderation", label: "Moderation" }]
+    : NAV;
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex items-center justify-between">
@@ -29,7 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </span>
       </div>
       <nav className="mt-4 flex flex-wrap gap-1 border-b border-brand-100 pb-2 text-sm">
-        {NAV.map((item) => (
+        {nav.map((item) => (
           <Link
             key={item.href}
             href={item.href}

@@ -196,9 +196,21 @@ The evidence pack `docs/payments-evidence-pack-2026-07.pdf` commits to a dispute
 
 ## 8. Implementation (Phase 1 launch readiness)
 
+**Queue built 05/07/2026 (B4, batch 40) — ships dark behind `MODERATION_QUEUE_ENABLED`.** The
+engine already had a `listing_reports` table + admin review API forked in from piklo-v2 (pending →
+reviewed → {actioned, dismissed}, driving `channel_listings.hidden_at`) — this implements §1–§3's
+report → freeze → resolve flow directly; no separate `counterfeit_claims` table was built (§3a below
+is superseded by the existing schema, which already satisfies the retention/access requirements).
+Staff can flag a listing directly (internal intake, `POST /api/v1/admin/moderation/flags`); buyers
+can already report via `POST /api/v1/store/listings/:id/report`. The `/admin/moderation` queue page
+(list, filter, action: start review / approve / takedown / reinstate) is built and tested against the
+real dev DB. **Track F (multi-vendor onboarding) is unblocked on the queue-exists gate** — turning it
+on for a given environment is a `MODERATION_QUEUE_ENABLED=true` deploy-config flip.
+
 **Before T-0 (go-live):**
 
-- [ ] Table `counterfeit_claims` and column `listings.delisted_reason` deployed to production DB.
+- [x] Report → review → takedown queue deployed and functional (uses `listing_reports` +
+      `channel_listings.hidden_at`, not a new `counterfeit_claims` table — see note above).
 - [ ] Email template for "we've received your report" lives in the transactional-email template set (`bushpop-v2/docs/email-matrix.md`).
 - [ ] `support@bushpop.com.au` is monitored by the support person (configured in Chatwoot or mailbox, depending on U4's choice for Q8).
 - [ ] This doc linked in the internal Slack / onboarding so the support person knows the process.
