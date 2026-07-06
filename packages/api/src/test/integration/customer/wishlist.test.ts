@@ -173,6 +173,7 @@ describe("Customer Wishlist API", () => {
     expect(pageOne.json().items).toHaveLength(2);
     expect(pageOne.json().items[0]).toMatchObject({
       listingId: third.id,
+      listingHandle: third.handle,
       title: "Third Inventory Title",
       priceCents: 4300,
       sellerName: "Wishlist Seller",

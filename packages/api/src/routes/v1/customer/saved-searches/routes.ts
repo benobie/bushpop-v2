@@ -27,7 +27,7 @@ export async function customerSavedSearchRoutes(app: FastifyInstance) {
       const body = request.body as z.infer<typeof createSavedSearchBody>;
       const saved = await createSavedSearch(
         request.user!.id,
-        body.channelId,
+        body.channelId ?? request.channel.id,
         body.query,
         body.filters,
         body.name,
@@ -50,7 +50,7 @@ export async function customerSavedSearchRoutes(app: FastifyInstance) {
     },
     async (request) => {
       const { channelId } = request.query as z.infer<typeof savedSearchListQuery>;
-      const items = await listSavedSearches(request.user!.id, channelId);
+      const items = await listSavedSearches(request.user!.id, channelId ?? request.channel.id);
       return { items };
     },
   );

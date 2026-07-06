@@ -131,6 +131,7 @@ export async function listWishlist(
       wishlistId: wishlists.id,
       wishlistCreatedAt: wishlists.createdAt,
       listingId: channelListings.id,
+      listingHandle: channelListings.handle,
       listingTitle: channelListings.title,
       inventoryTitle: inventoryItems.title,
       priceCents: channelListings.priceCents,
@@ -162,6 +163,7 @@ export async function listWishlist(
     items: pageRows.map((row) => ({
       id: row.wishlistId,
       listingId: row.listingId,
+      listingHandle: row.listingHandle,
       title: row.inventoryTitle ?? row.listingTitle,
       priceCents: row.priceCents,
       currency: row.currency,

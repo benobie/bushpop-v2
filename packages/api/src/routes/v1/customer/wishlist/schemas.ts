@@ -22,6 +22,7 @@ export const wishlistMutationResponseSchema = z.object({
 export const wishlistItemResponseSchema = z.object({
   id: z.string(),
   listingId: z.string(),
+  listingHandle: z.string(),
   title: z.string(),
   priceCents: z.number(),
   currency: z.string(),

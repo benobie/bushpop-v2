@@ -508,6 +508,7 @@ export interface paths {
                             items: {
                                 id: string;
                                 listingId: string;
+                                listingHandle: string;
                                 title: string;
                                 priceCents: number;
                                 currency: string;
@@ -659,7 +660,7 @@ export interface paths {
                         filters?: {
                             [key: string]: unknown;
                         };
-                        channelId: string;
+                        channelId?: string;
                         name?: string;
                     };
                 };

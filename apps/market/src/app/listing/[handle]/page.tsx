@@ -3,6 +3,7 @@ import { DEFAULT_CHANNEL } from "@bushpop/config";
 import { getListing } from "@/lib/data/listings";
 import { ImageGallery } from "@/components/listing/image-gallery";
 import { AddToBagButton } from "@/components/listing/add-to-bag-button";
+import { FavButton } from "@/components/listing/fav-button";
 import { ViewTracker } from "@/components/analytics/view-tracker";
 import { formatMoney } from "@/lib/format-money";
 import { conditionLabel } from "@/lib/condition-labels";
@@ -114,13 +115,18 @@ export default async function PDPPage({ params }: PDPProps) {
             </p>
           </div>
 
-          {/* Add to bag */}
-          <AddToBagButton
-            listingId={listing.id}
-            channel={DEFAULT_CHANNEL}
-            disabled={listing.status !== "active"}
-            priceCents={listing.priceCents}
-          />
+          {/* Add to bag + favourite */}
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <AddToBagButton
+                listingId={listing.id}
+                channel={DEFAULT_CHANNEL}
+                disabled={listing.status !== "active"}
+                priceCents={listing.priceCents}
+              />
+            </div>
+            <FavButton listingId={listing.id} variant="inline" />
+          </div>
 
           {/* Measurements */}
           {measurementEntries.length > 0 && (

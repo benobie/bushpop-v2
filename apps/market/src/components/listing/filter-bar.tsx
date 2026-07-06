@@ -21,6 +21,7 @@ import { conditionLabel } from "@/lib/condition-labels";
 import { categoryLabel } from "@/lib/category-labels";
 import { track } from "@/lib/analytics";
 import { DEFAULT_CHANNEL } from "@bushpop/config";
+import { SaveSearchButton } from "./save-search-button";
 
 interface FilterBarProps {
   basePath: "/browse" | "/search";
@@ -251,6 +252,8 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
           ))}
         </div>
       )}
+
+      <SaveSearchButton q={q} />
     </div>
   );
 }
