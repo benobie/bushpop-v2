@@ -11,14 +11,17 @@ import {
 } from "./schemas.js";
 import { listSellerOrders, getSellerOrder, markOrderShipped, confirmOrderPickup } from "./service.js";
 
-const sellerPreHandlers = [requireAuth, requireRole("seller")];
+// @fastify/rate-limit mutates the route's preHandler array when route-specific
+// limits are enabled. Always build a fresh array so the pickup-confirm limit
+// cannot leak onto sibling seller-order routes.
+const sellerPreHandlers = () => [requireAuth, requireRole("seller")];
 
 export async function sellerOrderRoutes(app: FastifyInstance) {
   // GET /api/v1/seller/orders — list seller's orders
   app.get(
     "/api/v1/seller/orders",
     {
-      preHandler: sellerPreHandlers,
+      preHandler: sellerPreHandlers(),
       schema: {
         tags: ["Seller - Orders"],
         summary: "List seller's orders",
@@ -45,7 +48,7 @@ export async function sellerOrderRoutes(app: FastifyInstance) {
   app.get(
     "/api/v1/seller/orders/:id",
     {
-      preHandler: sellerPreHandlers,
+      preHandler: sellerPreHandlers(),
       schema: {
         tags: ["Seller - Orders"],
         summary: "Get seller order detail",
@@ -63,7 +66,7 @@ export async function sellerOrderRoutes(app: FastifyInstance) {
   app.patch(
     "/api/v1/seller/orders/:id/ship",
     {
-      preHandler: sellerPreHandlers,
+      preHandler: sellerPreHandlers(),
       schema: {
         tags: ["Seller - Orders"],
         summary: "Mark order as shipped",
@@ -83,14 +86,13 @@ export async function sellerOrderRoutes(app: FastifyInstance) {
   );
 
   // PATCH /api/v1/seller/orders/:id/confirm-pickup — redeem the buyer's
-  // collection code at handover. Rate-limited per-seller (not just per-IP)
-  // against a 6-digit brute force; @fastify/rate-limit runs as onRequest
-  // (before preHandler auth) so req.user is undefined when keyGenerator
-  // fires — allowList bypasses tests the same way checkout-groups does.
+  // collection code at handover. Rate-limited per-seller against a 6-digit
+  // brute force; server.ts registers @fastify/rate-limit on the preHandler
+  // hook so req.user is available to the keyGenerator here.
   app.patch(
     "/api/v1/seller/orders/:id/confirm-pickup",
     {
-      preHandler: sellerPreHandlers,
+      preHandler: sellerPreHandlers(),
       config: {
         rateLimit: {
           max: 10,

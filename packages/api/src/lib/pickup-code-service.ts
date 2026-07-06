@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
 import { orders, payoutHolds, pickupCodes } from "@bushpop/db/schema";
 import { NotFoundError, ConflictError, ValidationError } from "./errors.js";
@@ -40,12 +40,25 @@ function timingSafeEqualStrings(a: string, b: string): boolean {
 }
 
 /**
- * Pickup orders never have a shipping address snapshot — the existing
- * convention already relied on by the seller order-detail page
- * ("No shipping address on file (pickup order)").
+ * Pickup orders are the only orders with all three signals:
+ * - no shipping-address snapshot,
+ * - no shipping charge,
+ * - no buyer-protection fee.
+ *
+ * Relying on the null snapshot alone is unsafe: a posted order can still end
+ * up with a missing snapshot if upstream order creation ever loses the address
+ * row, which would wrongly unlock the instant-complete / instant-payout path.
  */
-export function isPickupOrder(order: { shippingAddressSnapshot: unknown }): boolean {
-  return order.shippingAddressSnapshot === null;
+export function isPickupOrder(order: {
+  shippingAddressSnapshot: unknown;
+  shippingCents: number;
+  buyerProtectionFeeCents: number;
+}): boolean {
+  return (
+    order.shippingAddressSnapshot === null &&
+    order.shippingCents === 0 &&
+    order.buyerProtectionFeeCents === 0
+  );
 }
 
 async function getOrCreatePickupCodeRow(orderId: string) {
@@ -154,28 +167,78 @@ export async function redeemPickupCode(
     submittedCode.length === CODE_LENGTH && timingSafeEqualStrings(submittedCode, expected);
 
   if (!matches) {
-    await db
+    const [attemptUpdate] = await db
       .update(pickupCodes)
-      .set({ attempts: row.attempts + 1 })
-      .where(and(eq(pickupCodes.id, row.id), eq(pickupCodes.attempts, row.attempts)));
+      .set({ attempts: sql`${pickupCodes.attempts} + 1` })
+      .where(
+        and(
+          eq(pickupCodes.id, row.id),
+          isNull(pickupCodes.redeemedAt),
+          lt(pickupCodes.attempts, MAX_PICKUP_CODE_ATTEMPTS),
+        ),
+      )
+      .returning({ attempts: pickupCodes.attempts });
+
+    if (!attemptUpdate) {
+      const [freshRow] = await db
+        .select({ attempts: pickupCodes.attempts, redeemedAt: pickupCodes.redeemedAt })
+        .from(pickupCodes)
+        .where(eq(pickupCodes.id, row.id))
+        .limit(1);
+
+      if (freshRow?.redeemedAt) {
+        throw new ConflictError("This order has already been collected.");
+      }
+      if ((freshRow?.attempts ?? MAX_PICKUP_CODE_ATTEMPTS) >= MAX_PICKUP_CODE_ATTEMPTS) {
+        throw new ConflictError(
+          "Too many incorrect attempts. Ask the buyer to check their order page, or contact support.",
+        );
+      }
+    }
+
     throw new ConflictError("Incorrect collection code.");
   }
 
   const now = new Date();
+  let holdId: string | null = null;
 
-  // CAS paid → completed. See commerce-machines.ts for why pickup skips
-  // shipped/delivered entirely.
-  const orderResult = await db
-    .update(orders)
-    .set({ status: "completed", deliveryConfirmedAt: now })
-    .where(and(eq(orders.id, orderId), eq(orders.status, "paid")))
-    .returning({ id: orders.id });
+  await db.transaction(async (tx) => {
+    // CAS paid → completed. See commerce-machines.ts for why pickup skips
+    // shipped/delivered entirely.
+    const orderResult = await tx
+      .update(orders)
+      .set({ status: "completed", deliveryConfirmedAt: now })
+      .where(and(eq(orders.id, orderId), eq(orders.status, "paid")))
+      .returning({ id: orders.id });
 
-  if (orderResult.length === 0) {
-    throw new ConflictError("Order was modified concurrently. Please refresh and try again.");
-  }
+    if (orderResult.length === 0) {
+      throw new ConflictError("Order was modified concurrently. Please refresh and try again.");
+    }
 
-  await db.update(pickupCodes).set({ redeemedAt: now }).where(eq(pickupCodes.id, row.id));
+    const redeemedResult = await tx
+      .update(pickupCodes)
+      .set({ redeemedAt: now })
+      .where(and(eq(pickupCodes.id, row.id), isNull(pickupCodes.redeemedAt)))
+      .returning({ id: pickupCodes.id });
+
+    if (redeemedResult.length === 0) {
+      throw new ConflictError("This order has already been collected.");
+    }
+
+    const [hold] = await tx
+      .select({ id: payoutHolds.id })
+      .from(payoutHolds)
+      .where(eq(payoutHolds.orderId, orderId))
+      .limit(1);
+
+    if (hold) {
+      holdId = hold.id;
+      await tx
+        .update(payoutHolds)
+        .set({ buyerConfirmedAt: now, deliveryConfirmedAt: now })
+        .where(eq(payoutHolds.id, hold.id));
+    }
+  });
 
   dispatchEvent({
     eventName: "order.pickup_code_redeemed",
@@ -194,20 +257,15 @@ export async function redeemPickupCode(
   // re-evaluation; releasePayoutHold is the same money-safe core the admin
   // release route uses, called directly (not via the gated sweep worker)
   // because this action IS the instant-release trigger, not a background sweep.
-  const [hold] = await db
-    .select()
-    .from(payoutHolds)
-    .where(eq(payoutHolds.orderId, orderId))
-    .limit(1);
-
-  if (hold) {
-    await db
-      .update(payoutHolds)
-      .set({ buyerConfirmedAt: now, deliveryConfirmedAt: now })
-      .where(eq(payoutHolds.id, hold.id));
-
+  if (holdId) {
     try {
-      await releasePayoutHold(hold.id, "system");
+      const outcome = await releasePayoutHold(holdId, "system");
+      if (outcome.result !== "released" && outcome.result !== "adopted") {
+        console.error(
+          "[pickup-code] releasePayoutHold did not release immediately after pickup redemption:",
+          outcome,
+        );
+      }
     } catch (err) {
       console.error(
         "[pickup-code] releasePayoutHold failed after pickup redemption (will be picked up by the next sweep if enabled):",

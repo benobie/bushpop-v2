@@ -6,6 +6,7 @@ import {
   checkoutSessions,
   orders,
   payoutHolds,
+  pickupCodes,
   marketplaceEvents,
   channelListings,
 } from "@bushpop/db/schema";
@@ -59,6 +60,10 @@ async function insertPaidPickupOrder(opts: {
   buyerId: string;
   sellerId: string;
   channelId: string;
+  shippingCents?: number;
+  buyerProtectionFeeCents?: number;
+  shippingAddressSnapshot?: Record<string, unknown> | null;
+  stripePaymentIntentId?: string;
 }) {
   const [cart] = await db
     .insert(carts)
@@ -77,7 +82,7 @@ async function insertPaidPickupOrder(opts: {
       channelId: opts.channelId,
       status: "succeeded",
       subtotalCents: 5000,
-      shippingCents: 0,
+      shippingCents: opts.shippingCents ?? 0,
       platformFeeCents: 400,
       sellerProceedsCents: 4600,
       totalCents: 5000,
@@ -95,14 +100,14 @@ async function insertPaidPickupOrder(opts: {
       channelId: opts.channelId,
       status: "paid",
       subtotalCents: 5000,
-      shippingCents: 0,
+      shippingCents: opts.shippingCents ?? 0,
       platformFeeCents: 400,
-      buyerProtectionFeeCents: 0,
+      buyerProtectionFeeCents: opts.buyerProtectionFeeCents ?? 0,
       sellerProceedsCents: 4600,
       totalCents: 5000,
       currency: "AUD",
-      shippingAddressSnapshot: null,
-      stripePaymentIntentId: "pi_test_mock_pickup",
+      shippingAddressSnapshot: opts.shippingAddressSnapshot ?? null,
+      stripePaymentIntentId: opts.stripePaymentIntentId ?? "pi_test_mock_pickup",
     })
     .returning();
 
@@ -184,6 +189,33 @@ describe("Pickup collection codes", () => {
       `/api/v1/store/orders/${order.id}/pickup-code`,
     );
     expect(res.statusCode).toBe(404);
+  });
+
+  it("rejects a posted order that happens to have a null shipping snapshot", async () => {
+    const order = await insertPaidPickupOrder({
+      buyerId,
+      sellerId,
+      channelId,
+      shippingCents: 1095,
+      buyerProtectionFeeCents: 250,
+      shippingAddressSnapshot: null,
+      stripePaymentIntentId: "pi_test_mock_posted_like_pickup",
+    });
+
+    const buyerRes = await authedRequest(
+      buyerToken,
+      "GET",
+      `/api/v1/store/orders/${order.id}/pickup-code`,
+    );
+    expect(buyerRes.statusCode).toBe(422);
+
+    const sellerRes = await authedRequest(
+      sellerToken,
+      "PATCH",
+      `/api/v1/seller/orders/${order.id}/confirm-pickup`,
+      { code: "000000" },
+    );
+    expect(sellerRes.statusCode).toBe(422);
   });
 
   it("seller confirms with the correct code: order completes and payout releases instantly", async () => {
@@ -294,6 +326,42 @@ describe("Pickup collection codes", () => {
     expect(finalRes.statusCode).toBe(409);
   });
 
+  it("caps concurrent incorrect guesses at the max attempts", async () => {
+    const order = await makePickupOrder();
+
+    await Promise.all(
+      Array.from({ length: MAX_PICKUP_CODE_ATTEMPTS + 3 }, () =>
+        authedRequest(
+          sellerToken,
+          "PATCH",
+          `/api/v1/seller/orders/${order.id}/confirm-pickup`,
+          { code: "000000" },
+        ),
+      ),
+    );
+
+    const [row] = await db
+      .select({ attempts: pickupCodes.attempts })
+      .from(pickupCodes)
+      .where(eq(pickupCodes.orderId, order.id));
+    expect(row?.attempts).toBe(MAX_PICKUP_CODE_ATTEMPTS);
+
+    const codeRes = await authedRequest(
+      buyerToken,
+      "GET",
+      `/api/v1/store/orders/${order.id}/pickup-code`,
+    );
+    const code = codeRes.json().code as string;
+
+    const finalRes = await authedRequest(
+      sellerToken,
+      "PATCH",
+      `/api/v1/seller/orders/${order.id}/confirm-pickup`,
+      { code },
+    );
+    expect(finalRes.statusCode).toBe(409);
+  });
+
   it("returns 409 when confirming an already-collected order", async () => {
     const order = await makePickupOrder();
     const codeRes = await authedRequest(
@@ -318,5 +386,52 @@ describe("Pickup collection codes", () => {
       { code },
     );
     expect(second.statusCode).toBe(409);
+  });
+
+  it("allows only one concurrent successful redemption", async () => {
+    const order = await makePickupOrder();
+    await db.insert(payoutHolds).values({
+      orderId: order.id,
+      sellerStripeAccountId: "acct_test_seller",
+      amountCents: 4600,
+      currency: "AUD",
+      status: "held",
+    });
+
+    const codeRes = await authedRequest(
+      buyerToken,
+      "GET",
+      `/api/v1/store/orders/${order.id}/pickup-code`,
+    );
+    const code = codeRes.json().code as string;
+
+    const [res1, res2] = await Promise.all([
+      authedRequest(
+        sellerToken,
+        "PATCH",
+        `/api/v1/seller/orders/${order.id}/confirm-pickup`,
+        { code },
+      ),
+      authedRequest(
+        sellerToken,
+        "PATCH",
+        `/api/v1/seller/orders/${order.id}/confirm-pickup`,
+        { code },
+      ),
+    ]);
+
+    expect([res1.statusCode, res2.statusCode].sort((a, b) => a - b)).toEqual([200, 409]);
+
+    const [updatedOrder] = await db
+      .select({ status: orders.status })
+      .from(orders)
+      .where(eq(orders.id, order.id));
+    expect(updatedOrder?.status).toBe("completed");
+
+    const { getStripe } = await import("../../../lib/stripe.js");
+    const stripe = getStripe() as unknown as {
+      transfers: { create: ReturnType<typeof vi.fn> };
+    };
+    expect(stripe.transfers.create).toHaveBeenCalledTimes(1);
   });
 });
