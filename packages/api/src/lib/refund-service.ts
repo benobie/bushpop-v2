@@ -354,6 +354,10 @@ export async function processRefund(
         // Restore inventory
         await restoreInventory(orderId, tx);
       });
+
+      await enqueueEmail({ type: "refund_confirmation_buyer", orderId }).catch((emailErr) => {
+        console.error("[refund-service] Failed to enqueue refund confirmation email:", emailErr);
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       await failPaymentOp(refundOp.id, message);
@@ -514,6 +518,10 @@ export async function processRefund(
       // Restore inventory
       await restoreInventory(orderId, tx);
     });
+
+    await enqueueEmail({ type: "refund_confirmation_buyer", orderId }).catch((emailErr) => {
+      console.error("[refund-service] Failed to enqueue refund confirmation email:", emailErr);
+    });
   } else {
     throw new ConflictError(
       `Payout hold for order ${orderId} is in status '${holdStatus}' — cannot refund.`,
@@ -633,7 +641,7 @@ export async function resumePendingRefunds(): Promise<void> {
           }
 
           // Transition order → refunded (only if still in a recoverable state)
-          await db
+          const recoveredOrder = await db
             .update(orders)
             .set({ status: "refunded" })
             .where(
@@ -641,7 +649,14 @@ export async function resumePendingRefunds(): Promise<void> {
                 eq(orders.id, orderId),
                 inArray(orders.status, ["paid", "shipped", "delivered", "refund_in_progress"]),
               ),
-            );
+            )
+            .returning({ id: orders.id });
+
+          if (recoveredOrder.length > 0) {
+            await enqueueEmail({ type: "refund_confirmation_buyer", orderId }).catch((emailErr) => {
+              console.error("[refund-service] Failed to enqueue refund confirmation email:", emailErr);
+            });
+          }
 
           console.info(`[refund-service] Recovery: refund op ${op.id} succeeded`);
         } else if (op.type === "reversal") {
@@ -712,10 +727,17 @@ export async function resumePendingRefunds(): Promise<void> {
           }
 
           // Transition order → refunded with CAS guard
-          await db
+          const recoveredOrder = await db
             .update(orders)
             .set({ status: "refunded" })
-            .where(and(eq(orders.id, orderId), eq(orders.status, "refund_in_progress")));
+            .where(and(eq(orders.id, orderId), eq(orders.status, "refund_in_progress")))
+            .returning({ id: orders.id });
+
+          if (recoveredOrder.length > 0) {
+            await enqueueEmail({ type: "refund_confirmation_buyer", orderId }).catch((emailErr) => {
+              console.error("[refund-service] Failed to enqueue refund confirmation email:", emailErr);
+            });
+          }
 
           console.info(`[refund-service] Recovery: reversal op ${op.id} succeeded`);
         }
@@ -806,7 +828,7 @@ export async function reconcileRefundOpFromStripe(
     .where(eq(payoutHolds.orderId, orderId))
     .limit(1);
 
-  await db.transaction(async (tx) => {
+  const finalised = await db.transaction(async (tx) => {
     // R2-R2 LB-R2-2: serialise refund + reversal reconcile helpers on the
     // orders row. Both webhooks may arrive concurrently; without this lock
     // the second handler reads stale snapshots (reversal op still
@@ -843,7 +865,7 @@ export async function reconcileRefundOpFromStripe(
           .update(refunds)
           .set({ status: "pending_reversal", stripeRefundId })
           .where(eq(refunds.id, refundRow.id));
-        return;
+        return false;
       }
 
       await tx
@@ -877,7 +899,14 @@ export async function reconcileRefundOpFromStripe(
     }
 
     await restoreInventory(orderId, tx);
+    return true;
   });
+
+  if (finalised) {
+    await enqueueEmail({ type: "refund_confirmation_buyer", orderId }).catch((emailErr) => {
+      console.error("[refund-service] Failed to enqueue refund confirmation email:", emailErr);
+    });
+  }
 }
 
 /**
@@ -943,7 +972,7 @@ export async function reconcileReversalOpFromStripe(
     }
   }
 
-  await db.transaction(async (tx) => {
+  const finalised = await db.transaction(async (tx) => {
     // R2-R2 LB-R2-2 (refined): serialise reversal + refund reconcile helpers
     // on the orders row. Without this, both handlers running concurrently
     // on stale snapshots can leave the order in refund_in_progress forever.
@@ -977,7 +1006,7 @@ export async function reconcileReversalOpFromStripe(
         `[refund-service] Reversal op ${opId} reconciled out-of-order ` +
           `(refund still pending) — deferring order finalisation to refund webhook`,
       );
-      return;
+      return false;
     }
 
     // Normal path: refund row is in pending_reversal, safe to finalise.
@@ -992,7 +1021,14 @@ export async function reconcileReversalOpFromStripe(
       .where(and(eq(orders.id, orderId), eq(orders.status, "refund_in_progress")));
 
     await restoreInventory(orderId, tx);
+    return true;
   });
+
+  if (finalised) {
+    await enqueueEmail({ type: "refund_confirmation_buyer", orderId }).catch((emailErr) => {
+      console.error("[refund-service] Failed to enqueue refund confirmation email:", emailErr);
+    });
+  }
 }
 
 /**
