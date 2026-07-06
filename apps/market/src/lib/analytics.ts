@@ -62,6 +62,22 @@ export type BushpopEvent =
   | {
       event: "order.confirmed";
       props: { channel: string; order_id: string };
+    }
+  | {
+      event: "listing.edited";
+      props: { channel: string; listing_id: string };
+    }
+  | {
+      event: "listing.delisted";
+      props: { channel: string; listing_id: string };
+    }
+  | {
+      event: "listing.relisted";
+      props: { channel: string; listing_id: string };
+    }
+  | {
+      event: "listing.marked_sold";
+      props: { channel: string; listing_id: string };
     };
 
 const PII_KEYS = new Set([
