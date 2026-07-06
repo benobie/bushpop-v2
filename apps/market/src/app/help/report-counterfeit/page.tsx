@@ -35,7 +35,8 @@ export default function ReportCounterfeitPage() {
 
       <TrustSection heading="What happens next">
         <p>
-          We review every report within 24 hours. While we're looking into it, the listing comes down;
+          We review every report as a priority, usually within a day. While we're looking into it, the
+          listing comes down;
           if you've already bought the item, you're refunded under Buyer Protection straight away. You
           don't need to wait on the outcome to get your money back.
         </p>

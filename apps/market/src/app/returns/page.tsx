@@ -45,7 +45,7 @@ export default function ReturnsPage() {
             {supportEmail}
           </a>{" "}
           with your order number and what's happened. For item-not-as-described claims, a photo or two
-          helps us sort it faster. We aim to respond the same day, always within 24 hours.
+          helps us sort it faster. We'll get back to you as fast as we can, usually within a day.
         </p>
       </TrustSection>
 

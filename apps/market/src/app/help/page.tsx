@@ -22,8 +22,8 @@ export default function HelpPage() {
           <a href={`mailto:${supportEmail}`} className="font-medium text-bp-green-bright underline">
             {supportEmail}
           </a>{" "}
-          with your order number and what's going on. A real person reads every message, and we aim to
-          reply the same day, always within 24 hours.
+          with your order number and what's going on. A real person reads every message, and we get
+          back to you as fast as we can, usually within a day.
         </p>
       </TrustSection>
 
