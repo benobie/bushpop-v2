@@ -53,13 +53,22 @@ export function mapToProgressionEvent(source: SourceEvent): ProgressionMapping |
       if (source.metadata?.to === "sold") {
         return { eventName: "listing.sold", userId: source.actorId };
       }
+      const trigger = typeof source.metadata?.trigger === "string" ? source.metadata.trigger : null;
       // Seller-initiated delist (active → paused) reuses "listing.removed" —
       // same retention signal as archive (listing no longer visible to
       // buyers), just not permanent.
-      if (source.metadata?.to === "paused") {
+      if (
+        source.metadata?.from === "active" &&
+        source.metadata?.to === "paused" &&
+        trigger === null
+      ) {
         return { eventName: "listing.removed", userId: source.actorId };
       }
-      if (source.metadata?.to === "active" && source.metadata?.from === "paused") {
+      if (
+        source.metadata?.from === "paused" &&
+        source.metadata?.to === "active" &&
+        trigger === null
+      ) {
         return { eventName: "listing.relisted", userId: source.actorId };
       }
       return null;

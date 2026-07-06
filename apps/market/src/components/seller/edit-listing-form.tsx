@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Label } from "@bushpop/ui";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
@@ -46,6 +46,16 @@ export function EditListingForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [currentListingVersion, setCurrentListingVersion] = useState(version);
+  const [currentInventoryVersion, setCurrentInventoryVersion] = useState(inventoryVersion);
+
+  useEffect(() => {
+    setCurrentListingVersion(version);
+  }, [version]);
+
+  useEffect(() => {
+    setCurrentInventoryVersion(inventoryVersion);
+  }, [inventoryVersion]);
 
   async function submit() {
     const trimmedTitle = formTitle.trim();
@@ -64,13 +74,13 @@ export function EditListingForm({
     setSaved(false);
     try {
       const api = createBrowserApiClient();
-      const { error: listingError } = await api.PATCH("/api/v1/seller/listings/{id}", {
+      const { data: updatedListing, error: listingError } = await api.PATCH("/api/v1/seller/listings/{id}", {
         params: { path: { id: listingId } },
         body: {
           title: trimmedTitle,
           description: formDescription.trim() || undefined,
           priceCents: Math.round(priceDollars * 100),
-          version,
+          version: currentListingVersion,
         },
       });
       if (listingError) {
@@ -82,8 +92,12 @@ export function EditListingForm({
         return;
       }
 
-      if (inventoryVersion !== null) {
-        const { error: inventoryError } = await api.PATCH("/api/v1/seller/inventory/{id}", {
+      if (updatedListing?.version) {
+        setCurrentListingVersion(updatedListing.version);
+      }
+
+      if (currentInventoryVersion !== null) {
+        const { data: updatedInventory, error: inventoryError } = await api.PATCH("/api/v1/seller/inventory/{id}", {
           params: { path: { id: inventoryItemId } },
           body: {
             condition: (formCondition || undefined) as
@@ -96,7 +110,7 @@ export function EditListingForm({
             size: formSize.trim() || undefined,
             colour: formColour.trim() || undefined,
             brand: formBrand.trim() || undefined,
-            version: inventoryVersion,
+            version: currentInventoryVersion,
           },
         });
         if (inventoryError) {
@@ -105,7 +119,11 @@ export function EditListingForm({
               ? String((inventoryError as { message?: unknown }).message)
               : "Listing details saved, but item attributes (condition/size/colour/brand) failed to save — try again.",
           );
+          router.refresh();
           return;
+        }
+        if (updatedInventory?.version) {
+          setCurrentInventoryVersion(updatedInventory.version);
         }
       }
 

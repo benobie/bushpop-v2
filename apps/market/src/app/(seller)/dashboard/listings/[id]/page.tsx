@@ -47,9 +47,13 @@ export default async function DashboardListingDetailPage({
     notFound();
   }
 
-  const { data: inventoryItem } = await api.GET("/api/v1/seller/inventory/{id}", {
+  const { data: inventoryItem, error: inventoryError } = await api.GET("/api/v1/seller/inventory/{id}", {
     params: { path: { id: listing.inventoryItemId } },
   });
+
+  if (inventoryError || !inventoryItem) {
+    notFound();
+  }
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
@@ -103,11 +107,11 @@ export default async function DashboardListingDetailPage({
               description={listing.description}
               priceCents={listing.priceCents}
               version={listing.version}
-              condition={inventoryItem?.condition ?? null}
-              size={inventoryItem?.size ?? null}
-              colour={inventoryItem?.colour ?? null}
-              brand={inventoryItem?.brand ?? null}
-              inventoryVersion={inventoryItem?.version ?? null}
+              condition={inventoryItem.condition ?? null}
+              size={inventoryItem.size ?? null}
+              colour={inventoryItem.colour ?? null}
+              brand={inventoryItem.brand ?? null}
+              inventoryVersion={inventoryItem.version}
             />
           </div>
         </section>

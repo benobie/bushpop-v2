@@ -41,4 +41,13 @@ describe("mapToProgressionEvent — channel_listing.status_changed", () => {
       }),
     ).toBeNull();
   });
+
+  it("does not treat system auto-pauses as seller delists", () => {
+    expect(
+      mapToProgressionEvent({
+        eventName: "channel_listing.status_changed",
+        metadata: { from: "active", to: "paused", trigger: "lifecycle_cascade" },
+      }),
+    ).toBeNull();
+  });
 });
