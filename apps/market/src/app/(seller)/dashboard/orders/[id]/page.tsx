@@ -5,6 +5,7 @@ import { createAuthedApiClient } from "@bushpop/api-client/server";
 import { formatMoney } from "@/lib/format-money";
 import { Badge } from "@bushpop/ui";
 import { MarkShippedForm } from "@/components/seller/mark-shipped-form";
+import { ConfirmPickupForm } from "@/components/seller/confirm-pickup-form";
 
 const STATUS_LABELS: Record<string, string> = {
   paid: "Ready to ship",
@@ -112,26 +113,39 @@ export default async function DashboardOrderDetailPage({
         )}
       </section>
 
-      <section className="mt-6 rounded-xl border border-brand-100 bg-white p-4">
-        <h2 className="text-sm font-semibold text-brand-900">Tracking</h2>
-        <dl className="mt-2 space-y-1 text-sm">
-          <Row label="Carrier" value={order.trackingCarrier ?? "—"} />
-          <Row label="Tracking number" value={order.trackingNumber ?? "—"} />
-        </dl>
-        {order.shippingLabelUrl && (
-          <a
-            href={order.shippingLabelUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-block text-sm font-medium text-brand-500 hover:underline"
-          >
-            Download shipping label →
-          </a>
-        )}
-        <div className="mt-4">
-          <MarkShippedForm orderId={order.id} status={order.status} />
-        </div>
-      </section>
+      {shipTo ? (
+        <section className="mt-6 rounded-xl border border-brand-100 bg-white p-4">
+          <h2 className="text-sm font-semibold text-brand-900">Tracking</h2>
+          <dl className="mt-2 space-y-1 text-sm">
+            <Row label="Carrier" value={order.trackingCarrier ?? "—"} />
+            <Row label="Tracking number" value={order.trackingNumber ?? "—"} />
+          </dl>
+          {order.shippingLabelUrl && (
+            <a
+              href={order.shippingLabelUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-block text-sm font-medium text-brand-500 hover:underline"
+            >
+              Download shipping label →
+            </a>
+          )}
+          <div className="mt-4">
+            <MarkShippedForm orderId={order.id} status={order.status} />
+          </div>
+        </section>
+      ) : (
+        <section className="mt-6 rounded-xl border border-brand-100 bg-white p-4">
+          <h2 className="text-sm font-semibold text-brand-900">Pickup</h2>
+          <p className="mt-2 text-sm text-brand-500">
+            This is a pickup order. Arrange a handover with the buyer, then confirm using the
+            collection code they show you.
+          </p>
+          <div className="mt-4">
+            <ConfirmPickupForm orderId={order.id} status={order.status} />
+          </div>
+        </section>
+      )}
     </main>
   );
 }

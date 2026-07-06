@@ -51,6 +51,13 @@ const envSchema = z.object({
   STARSHIPIT_SUBSCRIPTION_KEY: z.string().min(1).optional(),
 
   SENTRY_DSN: z.string().url().optional(),
+
+  // Pickup collection codes (docs/BRIEF-shipping-performance.md §4). HMAC key
+  // used to derive a buyer's 6-digit code deterministically from orderId, so
+  // no plaintext code is ever stored. Optional so existing deployed envs keep
+  // booting — pickup-code-service.ts falls back to a fixed dev-only secret
+  // outside production and throws if genuinely missing in production.
+  PICKUP_CODE_SECRET: z.string().min(16).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

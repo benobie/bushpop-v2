@@ -46,7 +46,7 @@ export function mapToProgressionEvent(source: SourceEvent): ProgressionMapping |
       return { eventName: "listing.published", userId: source.actorId };
     case "channel_listing.archived":
       return { eventName: "listing.removed", userId: source.actorId };
-    case "channel_listing.status_changed":
+    case "channel_listing.status_changed": {
       // Cascaded sold transitions (lib/inventory-invariants.ts) carry no
       // actorId — Phase B resolves the seller via entityId (channel_listing
       // id) → inventory_items.owner_id at consume/backfill time.
@@ -72,6 +72,7 @@ export function mapToProgressionEvent(source: SourceEvent): ProgressionMapping |
         return { eventName: "listing.relisted", userId: source.actorId };
       }
       return null;
+    }
     case "order.created":
       return { eventName: "order.completed", userId: source.actorId };
     case "item.saved":
