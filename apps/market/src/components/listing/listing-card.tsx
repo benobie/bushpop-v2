@@ -52,6 +52,7 @@ export function ListingCard({ listing, priority = false }: ListingCardProps) {
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-200 group-hover:scale-105"
               priority={priority}
+              fetchPriority={priority ? "high" : "auto"}
             />
           ) : (
             <div className="flex h-full items-center justify-center">
