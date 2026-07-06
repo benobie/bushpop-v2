@@ -49,18 +49,6 @@ export function pdpUrl(itemId: string, imageId: string): string {
 }
 
 /**
- * Card-variant URL for a stored image, falling back to the full-resolution
- * original if the storage key doesn't parse into itemId/imageId. Callers
- * gate on `inventoryItemImages.status = "ready"` before reaching here, so
- * the variant is expected to exist — the fallback is defensive only.
- */
-export function cardOrOriginalUrl(storageKey: string): string {
-  const itemId = extractItemId(storageKey);
-  const imageId = extractImageId(storageKey);
-  return itemId && imageId ? cardUrl(itemId, imageId) : getPublicImageUrl(storageKey);
-}
-
-/**
  * Extract the imageId from a storage key.
  * Storage key format: `items/{itemId}/{imageId}.{ext}`
  */
