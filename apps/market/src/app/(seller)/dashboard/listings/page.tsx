@@ -7,7 +7,7 @@ interface DashboardListingsPageProps {
   searchParams: Promise<{ status?: string }>;
 }
 
-const STATUS_FILTERS = ["all", "draft", "active", "paused"] as const;
+const STATUS_FILTERS = ["all", "draft", "active", "paused", "sold", "archived"] as const;
 type StatusFilter = (typeof STATUS_FILTERS)[number];
 
 const STATUS_LABELS: Record<string, string> = {
@@ -149,30 +149,20 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
               </>
             );
 
-            // Only draft listings map to an inventory-item id the sell
-            // wizard understands — active/paused/sold/archived listings
-            // don't have a detail page yet (a later phase), so they render
-            // as a non-interactive card instead of a broken link into the
-            // wizard (which only handles pre-publish drafts).
-            if (listing.status === "draft") {
-              return (
-                <Link
-                  key={listing.id}
-                  href={`/sell?draft=${listing.inventoryItemId}`}
-                  className="group overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm transition-shadow hover:shadow-md"
-                >
-                  {cardContent}
-                </Link>
-              );
-            }
+            // Drafts continue into the sell wizard (pre-publish, keyed by
+            // inventory item id); everything else goes to the listing
+            // detail page for edit/delist/relist/mark-sold.
+            const href =
+              listing.status === "draft" ? `/sell?draft=${listing.inventoryItemId}` : `/dashboard/listings/${listing.id}`;
 
             return (
-              <div
+              <Link
                 key={listing.id}
-                className="overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm"
+                href={href}
+                className="group overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm transition-shadow hover:shadow-md"
               >
                 {cardContent}
-              </div>
+              </Link>
             );
           })}
         </div>

@@ -253,6 +253,48 @@ describe("Orders — buyer order endpoints", () => {
     const res = await authedRequest(buyerToken, "GET", "/api/v1/store/orders/01JFAKE0000000000000000000");
     expect(res.statusCode).toBe(404);
   });
+
+  it("does not expose the seller's shipping label URL on buyer order endpoints", async () => {
+    const listing = await createActiveTestListing(sellerId, { priceCents: 5000 });
+    const sessionId = await initiateCheckoutFlow(buyerToken, buyerId, sellerId, listing);
+
+    const [session] = await db
+      .select()
+      .from(checkoutSessions)
+      .where(eq(checkoutSessions.id, sessionId));
+
+    const [order] = await db
+      .insert(orders)
+      .values({
+        checkoutSessionId: sessionId,
+        buyerId,
+        sellerId,
+        channelId: session!.channelId,
+        status: "shipped",
+        subtotalCents: 5000,
+        shippingCents: 1525,
+        platformFeeCents: 400,
+        sellerProceedsCents: 6125,
+        totalCents: 6525,
+        currency: "AUD",
+        trackingNumber: "TRACK-123",
+        trackingCarrier: "Australia Post",
+        shippingLabelUrl: "https://labels.example.test/order-label.pdf",
+        stripePaymentIntentId: "pi_test_mock_orders",
+      })
+      .returning();
+
+    const listRes = await authedRequest(buyerToken, "GET", "/api/v1/store/orders");
+    expect(listRes.statusCode).toBe(200);
+    const listBody = listRes.json();
+    expect(listBody.items).toHaveLength(1);
+    expect(listBody.items[0].id).toBe(order!.id);
+    expect(listBody.items[0]).not.toHaveProperty("shippingLabelUrl");
+
+    const detailRes = await authedRequest(buyerToken, "GET", `/api/v1/store/orders/${order!.id}`);
+    expect(detailRes.statusCode).toBe(200);
+    expect(detailRes.json()).not.toHaveProperty("shippingLabelUrl");
+  });
 });
 
 describe("Orders — seller order endpoints", () => {

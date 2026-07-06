@@ -101,6 +101,7 @@ export async function processShippingLabelJob(job: Job<ShippingLabelJobData>): P
       status: "shipped",
       trackingNumber: result.trackingNumber,
       trackingCarrier: result.carrier,
+      shippingLabelUrl: result.labelUrl,
     })
     .where(and(eq(orders.id, orderId), eq(orders.status, "paid")))
     .returning({ id: orders.id });

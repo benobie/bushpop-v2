@@ -60,6 +60,7 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
     trackingNumber: "TRK123",
     trackingCarrier: "Australia Post",
     shippingLabelId: "label_01",
+    shippingLabelUrl: null,
     lastTrackingStatus: null,
     lastTrackingEventAt: null,
     deliveryConfirmedAt: new Date("2026-04-01T10:00:00Z"),

@@ -78,6 +78,22 @@ export type BushpopEvent =
   | {
       event: "search.deleted";
       props: { channel: string };
+    }
+  | {
+      event: "listing.edited";
+      props: { channel: string; listing_id: string };
+    }
+  | {
+      event: "listing.delisted";
+      props: { channel: string; listing_id: string };
+    }
+  | {
+      event: "listing.relisted";
+      props: { channel: string; listing_id: string };
+    }
+  | {
+      event: "listing.marked_sold";
+      props: { channel: string; listing_id: string };
     };
 
 const PII_KEYS = new Set([

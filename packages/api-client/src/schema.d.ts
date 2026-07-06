@@ -4898,6 +4898,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                shippingLabelUrl: string | null;
                             }[];
                             nextCursor: string | null;
                         };
@@ -4985,6 +4986,7 @@ export interface paths {
                             createdAt: string;
                             /** Format: date-time */
                             updatedAt: string;
+                            shippingLabelUrl: string | null;
                         };
                     };
                 };
@@ -5083,11 +5085,70 @@ export interface paths {
                             createdAt: string;
                             /** Format: date-time */
                             updatedAt: string;
+                            shippingLabelUrl: string | null;
                         };
                     };
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/v1/seller/payouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List seller's own payout holds */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                orderId: string;
+                                status: string;
+                                amountCents: number;
+                                currency: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            totalsByStatus: {
+                                status: string;
+                                totalCents: number;
+                            }[];
+                            page: number;
+                            limit: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/orders": {

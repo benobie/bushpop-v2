@@ -41,6 +41,7 @@ import { stripeWebhookRoutes } from "./routes/v1/webhooks/stripe";
 import { starshipitWebhookRoutes } from "./routes/v1/webhooks/starshipit";
 import { storeOrderRoutes } from "./routes/v1/store/orders/routes";
 import { sellerOrderRoutes } from "./routes/v1/seller/orders/routes";
+import { sellerPayoutRoutes } from "./routes/v1/seller/payouts/routes";
 import { adminOrderRoutes } from "./routes/v1/admin/orders/routes";
 import { adminPayoutRoutes } from "./routes/v1/admin/payouts/routes";
 import { adminListingRoutes } from "./routes/v1/admin/listings";
@@ -216,6 +217,7 @@ export async function buildServer() {
   await app.register(starshipitWebhookRoutes);
   await app.register(storeOrderRoutes);
   await app.register(sellerOrderRoutes);
+  await app.register(sellerPayoutRoutes);
   await app.register(adminOrderRoutes);
   await app.register(adminPayoutRoutes);
   await app.register(adminListingRoutes);
