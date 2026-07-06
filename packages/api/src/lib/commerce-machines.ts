@@ -89,7 +89,13 @@ export const CHECKOUT_ACTIVE_STATUSES: readonly CheckoutStatus[] = [
 // Terminal states: completed, cancelled, refunded
 
 export const ORDER_STATUS_MACHINE: StateMachine<OrderStatus> = {
-  paid: ["shipped", "cancelled", "shipment_stale_review", "refund_in_progress", "refunded"],
+  // "completed" direct from "paid" is the pickup path only (pickup-code-service.ts):
+  // a pickup order has no carrier tracking to move through shipped/delivered,
+  // and D3 (docs/BRIEF-shipping-performance.md §4) collapses the whole
+  // handover + buyer-confirm sequence into one instant event — collection-code
+  // redemption. Posted orders never take this edge; they still go through
+  // shipped → delivered → completed.
+  paid: ["shipped", "cancelled", "shipment_stale_review", "refund_in_progress", "refunded", "completed"],
   shipped: ["delivered", "delivery_assumed", "refund_in_progress"],
   delivered: ["completed", "refund_in_progress"],
   delivery_assumed: ["completed", "refund_in_progress"],

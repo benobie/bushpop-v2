@@ -4,6 +4,7 @@ import { orders, orderItems } from "@bushpop/db/schema";
 import { NotFoundError, ConflictError } from "../../../../lib/errors.js";
 import { formatOrder } from "../../store/orders/service.js";
 import { dispatchEvent } from "../../../../lib/events.js";
+import { redeemPickupCode } from "../../../../lib/pickup-code-service.js";
 
 function groupItemsByOrder(items: Array<typeof orderItems.$inferSelect>) {
   const map = new Map<string, Array<typeof orderItems.$inferSelect>>();
@@ -142,4 +143,13 @@ export async function markOrderShipped(
 
   // Fetch updated order with items
   return getSellerOrder(orderId, sellerId, order.channelId);
+}
+
+/**
+ * Confirm a pickup order's collection code at handover. Thin pass-through to
+ * the shared pickup-code service (packages/api/src/lib/pickup-code-service.ts)
+ * so the money-safety logic (CAS, instant payout release) lives in one place.
+ */
+export async function confirmOrderPickup(orderId: string, sellerId: string, code: string) {
+  return redeemPickupCode(orderId, sellerId, code);
 }
