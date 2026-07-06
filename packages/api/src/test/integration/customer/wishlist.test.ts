@@ -231,4 +231,24 @@ describe("Customer Wishlist API", () => {
 
     expect(res.statusCode).toBe(404);
   });
+
+  it("reports favorited status for a wishlisted listing", async () => {
+    const listing = await createWishlistListing();
+
+    await authedRequest(buyerToken, "POST", "/api/v1/customer/wishlist", { listingId: listing.id });
+
+    const res = await authedRequest(buyerToken, "GET", `/api/v1/customer/wishlist/${listing.id}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ favorited: true });
+  });
+
+  it("reports not favorited for a listing never added to the wishlist", async () => {
+    const listing = await createWishlistListing();
+
+    const res = await authedRequest(buyerToken, "GET", `/api/v1/customer/wishlist/${listing.id}`);
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ favorited: false });
+  });
 });

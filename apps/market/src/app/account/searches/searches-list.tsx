@@ -27,7 +27,16 @@ const FILTER_LABELS: Record<string, string> = {
   maxPrice: "Max price",
 };
 
+/** Filters here are always flat string/number/boolean values — the API's schema
+ * technically allows nested objects/arrays too, but this UI never produces
+ * them, so anything else is treated as unrenderable rather than stringified
+ * into garbage like "[object Object]". */
+function isPrimitiveFilterValue(value: unknown): value is string | number | boolean {
+  return typeof value === "string" || typeof value === "number" || typeof value === "boolean";
+}
+
 function filterValueLabel(key: string, value: unknown): string {
+  if (!isPrimitiveFilterValue(value)) return String(value);
   const str = String(value);
   if (key === "categorySlug") return categoryLabel(str);
   if (key === "condition") return conditionLabel(str) ?? str;
@@ -38,7 +47,7 @@ function filterValueLabel(key: string, value: unknown): string {
 function runAgainHref(search: SavedSearchItem): string {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(search.filters)) {
-    if (value !== undefined && value !== null && value !== "") {
+    if (isPrimitiveFilterValue(value)) {
       params.set(key, String(value));
     }
   }
@@ -57,15 +66,18 @@ export function SearchesList({ items }: { items: SavedSearchItem[] }) {
 
   async function handleDelete(id: string) {
     setDeletingId(id);
-    const api = createBrowserApiClient();
-    const { response } = await api.DELETE("/api/v1/customer/saved-searches/{id}", {
-      params: { path: { id } },
-    });
-    if (response.ok) {
-      track({ event: "search.deleted", props: { channel: DEFAULT_CHANNEL } });
-      setList((current) => current.filter((s) => s.id !== id));
+    try {
+      const api = createBrowserApiClient();
+      const { response } = await api.DELETE("/api/v1/customer/saved-searches/{id}", {
+        params: { path: { id } },
+      });
+      if (response.ok) {
+        track({ event: "search.deleted", props: { channel: DEFAULT_CHANNEL } });
+        setList((current) => current.filter((s) => s.id !== id));
+      }
+    } finally {
+      setDeletingId(null);
     }
-    setDeletingId(null);
   }
 
   if (list.length === 0) {

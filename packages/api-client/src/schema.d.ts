@@ -568,7 +568,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Check whether a listing is wishlisted */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    listingId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            favorited: boolean;
+                        };
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         /** Remove a listing from wishlist */

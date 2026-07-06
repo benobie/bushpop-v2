@@ -42,32 +42,36 @@ export function FavButton({
     setFavorited(next);
     setPending(true);
 
-    const api = createBrowserApiClient();
-    const { response } =
-      next
-        ? await api.POST("/api/v1/customer/wishlist", { body: { listingId } })
-        : await api.DELETE("/api/v1/customer/wishlist/{listingId}", {
-            params: { path: { listingId } },
-          });
+    try {
+      const api = createBrowserApiClient();
+      const { response } =
+        next
+          ? await api.POST("/api/v1/customer/wishlist", { body: { listingId } })
+          : await api.DELETE("/api/v1/customer/wishlist/{listingId}", {
+              params: { path: { listingId } },
+            });
 
-    if (response.status === 401) {
+      if (response.status === 401) {
+        setFavorited(!next);
+        const returnTo = `${pathname}${window.location.search}`;
+        router.push(`/sign-in?next=${encodeURIComponent(returnTo)}`);
+        return;
+      }
+
+      if (!response.ok) {
+        setFavorited(!next);
+        return;
+      }
+
+      track({
+        event: next ? "wishlist.added" : "wishlist.removed",
+        props: { channel: DEFAULT_CHANNEL, listing_id: listingId },
+      });
+    } catch {
       setFavorited(!next);
+    } finally {
       setPending(false);
-      router.push(`/sign-in?next=${encodeURIComponent(pathname)}`);
-      return;
     }
-
-    if (!response.ok) {
-      setFavorited(!next);
-      setPending(false);
-      return;
-    }
-
-    track({
-      event: next ? "wishlist.added" : "wishlist.removed",
-      props: { channel: DEFAULT_CHANNEL, listing_id: listingId },
-    });
-    setPending(false);
   }
 
   if (variant === "inline") {

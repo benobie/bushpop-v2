@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { DEFAULT_CHANNEL } from "@bushpop/config";
+import { createAuthedApiClient } from "@bushpop/api-client/server";
 import { getListing } from "@/lib/data/listings";
+import { getOptionalCustomer } from "@/lib/require-auth";
 import { ImageGallery } from "@/components/listing/image-gallery";
 import { AddToBagButton } from "@/components/listing/add-to-bag-button";
 import { FavButton } from "@/components/listing/fav-button";
@@ -58,6 +60,16 @@ export default async function PDPPage({ params }: PDPProps) {
   );
 
   const measurementEntries = listing.measurements ? Object.entries(listing.measurements) : [];
+
+  const customer = await getOptionalCustomer();
+  let initialFavorited = false;
+  if (customer) {
+    const api = await createAuthedApiClient();
+    const { data } = await api.GET("/api/v1/customer/wishlist/{listingId}", {
+      params: { path: { listingId: listing.id } },
+    });
+    initialFavorited = data?.favorited ?? false;
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
@@ -125,7 +137,7 @@ export default async function PDPPage({ params }: PDPProps) {
                 priceCents={listing.priceCents}
               />
             </div>
-            <FavButton listingId={listing.id} variant="inline" />
+            <FavButton listingId={listing.id} variant="inline" initialFavorited={initialFavorited} />
           </div>
 
           {/* Measurements */}

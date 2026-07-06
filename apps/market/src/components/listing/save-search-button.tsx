@@ -37,31 +37,35 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
 
   async function handleSave() {
     setStatus("saving");
-    const api = createBrowserApiClient();
-    const { response } = await api.POST("/api/v1/customer/saved-searches", {
-      body: { query: queryValue, filters, name: name.trim() || undefined },
-    });
+    try {
+      const api = createBrowserApiClient();
+      const { response } = await api.POST("/api/v1/customer/saved-searches", {
+        body: { query: queryValue, filters, name: name.trim() || undefined },
+      });
 
-    if (response.status === 401) {
-      const returnTo = `${window.location.pathname}${window.location.search}`;
-      window.location.href = `/sign-in?next=${encodeURIComponent(returnTo)}`;
-      return;
-    }
-    if (response.status === 409) {
-      setStatus("duplicate");
-      return;
-    }
-    if (response.status === 422) {
-      setStatus("limit");
-      return;
-    }
-    if (!response.ok) {
+      if (response.status === 401) {
+        const returnTo = `${window.location.pathname}${window.location.search}`;
+        window.location.href = `/sign-in?next=${encodeURIComponent(returnTo)}`;
+        return;
+      }
+      if (response.status === 409) {
+        setStatus("duplicate");
+        return;
+      }
+      if (response.status === 422) {
+        setStatus("limit");
+        return;
+      }
+      if (!response.ok) {
+        setStatus("error");
+        return;
+      }
+
+      track({ event: "search.saved", props: { channel: DEFAULT_CHANNEL, query: queryValue } });
+      setStatus("saved");
+    } catch {
       setStatus("error");
-      return;
     }
-
-    track({ event: "search.saved", props: { channel: DEFAULT_CHANNEL, query: queryValue } });
-    setStatus("saved");
   }
 
   if (status === "saved") {

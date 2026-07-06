@@ -32,13 +32,17 @@ export function FavouritesGrid({ items }: { items: FavouriteItem[] }) {
     const removed = list.find((i) => i.listingId === listingId);
     setList((current) => current.filter((i) => i.listingId !== listingId));
 
-    const api = createBrowserApiClient();
-    const { response } = await api.DELETE("/api/v1/customer/wishlist/{listingId}", {
-      params: { path: { listingId } },
-    });
+    try {
+      const api = createBrowserApiClient();
+      const { response } = await api.DELETE("/api/v1/customer/wishlist/{listingId}", {
+        params: { path: { listingId } },
+      });
 
-    if (!response.ok && removed) {
-      setList((current) => [...current, removed]);
+      if (!response.ok && removed) {
+        setList((current) => [...current, removed]);
+      }
+    } catch {
+      if (removed) setList((current) => [...current, removed]);
     }
   }
 

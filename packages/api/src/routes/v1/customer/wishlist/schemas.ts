@@ -36,3 +36,7 @@ export const wishlistListResponseSchema = z.object({
   items: z.array(wishlistItemResponseSchema),
   nextCursor: z.string().nullable(),
 });
+
+export const wishlistStatusResponseSchema = z.object({
+  favorited: z.boolean(),
+});

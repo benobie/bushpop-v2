@@ -17,7 +17,7 @@ type WishlistEntry = {
   createdAt: Date;
 };
 
-async function getWishlistEntry(
+export async function getWishlistEntry(
   userId: string,
   channelListingId: string,
 ): Promise<WishlistEntry | undefined> {
