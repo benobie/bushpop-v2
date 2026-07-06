@@ -79,7 +79,7 @@ async function LatestListings() {
       {/* Rail is FLEX, never grid — grid+overflow-x silently enables vertical
           scroll instead of horizontal (shipped 3x in the prototype). */}
       <Rail>
-        {items.map((listing) => (
+        {items.map((listing, index) => (
           <RailItem key={listing.id} className="w-[42%] flex-shrink-0 sm:w-[28%] md:w-[22%]">
             <Link href={`/listing/${listing.handle}`}>
               <Pcard
@@ -90,6 +90,7 @@ async function LatestListings() {
                 brand={listing.brand ?? undefined}
                 size={listing.size ?? undefined}
                 badges={<FoilBadge variant="fresh">New</FoilBadge>}
+                priority={index < 2}
               />
             </Link>
           </RailItem>
@@ -146,7 +147,8 @@ async function CategoryDuo() {
               <img
                 src={tile.imageUrl}
                 alt={tile.name}
-                loading="lazy"
+                loading="eager"
+                fetchPriority="high"
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             )}

@@ -33,9 +33,11 @@ interface ListingCardItem {
 
 interface ListingCardProps {
   listing: ListingCardItem;
+  /** Mark as LCP-critical (first visible grid row only) — sets next/image `priority`. */
+  priority?: boolean;
 }
 
-export function ListingCard({ listing }: ListingCardProps) {
+export function ListingCard({ listing, priority = false }: ListingCardProps) {
   return (
     <Link href={`/listing/${listing.handle}`} className="group block">
       <Card className="overflow-hidden transition-shadow hover:shadow-md">
@@ -48,6 +50,7 @@ export function ListingCard({ listing }: ListingCardProps) {
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-200 group-hover:scale-105"
+              priority={priority}
             />
           ) : (
             <div className="flex h-full items-center justify-center">
