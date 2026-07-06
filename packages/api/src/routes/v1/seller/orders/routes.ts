@@ -2,8 +2,14 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { requireAuth } from "../../../../middleware/require-auth.js";
 import { requireRole } from "../../../../middleware/require-role.js";
-import { listOrdersQuerySchema, sellerOrderResponseSchema, markShippedBodySchema } from "./schemas.js";
-import { listSellerOrders, getSellerOrder, markOrderShipped } from "./service.js";
+import {
+  listOrdersQuerySchema,
+  sellerOrderResponseSchema,
+  markShippedBodySchema,
+  confirmPickupBodySchema,
+  confirmPickupResponseSchema,
+} from "./schemas.js";
+import { listSellerOrders, getSellerOrder, markOrderShipped, confirmOrderPickup } from "./service.js";
 
 const sellerPreHandlers = [requireAuth, requireRole("seller")];
 
@@ -73,6 +79,39 @@ export async function sellerOrderRoutes(app: FastifyInstance) {
         trackingNumber: body.trackingNumber,
         carrier: body.carrier,
       });
+    },
+  );
+
+  // PATCH /api/v1/seller/orders/:id/confirm-pickup — redeem the buyer's
+  // collection code at handover. Rate-limited per-seller (not just per-IP)
+  // against a 6-digit brute force; @fastify/rate-limit runs as onRequest
+  // (before preHandler auth) so req.user is undefined when keyGenerator
+  // fires — allowList bypasses tests the same way checkout-groups does.
+  app.patch(
+    "/api/v1/seller/orders/:id/confirm-pickup",
+    {
+      preHandler: sellerPreHandlers,
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: "5 minutes",
+          keyGenerator: (req: { user?: { id: string } | null; ip: string }) =>
+            req.user?.id ?? req.ip,
+          allowList: () => process.env.NODE_ENV === "test",
+        },
+      },
+      schema: {
+        tags: ["Seller - Orders"],
+        summary: "Confirm pickup handover via the buyer's collection code",
+        params: z.object({ id: z.string().length(26) }),
+        body: confirmPickupBodySchema,
+        response: { 200: confirmPickupResponseSchema },
+      },
+    },
+    async (request) => {
+      const { id } = request.params as { id: string };
+      const body = request.body as z.infer<typeof confirmPickupBodySchema>;
+      return confirmOrderPickup(id, request.user!.id, body.code);
     },
   );
 }

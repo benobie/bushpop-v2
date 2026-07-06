@@ -19,6 +19,7 @@ export default defineConfig({
     "./src/schema/ai-generations.ts",
     "./src/schema/bulk-batches.ts",
     "./src/schema/progression-events.ts",
+    "./src/schema/pickup.ts",
   ],
   out: "./drizzle",
   dialect: "postgresql",
