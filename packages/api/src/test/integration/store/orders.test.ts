@@ -212,6 +212,41 @@ describe("Orders — payment_intent.succeeded webhook creates order", () => {
   });
 });
 
+describe("Checkout — PaymentIntent payment method types", () => {
+  let buyerToken: string;
+  let buyerId: string;
+  let sellerId: string;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+
+    const buyer = await signUpTestUser();
+    buyerId = buyer.user.id;
+    buyerToken = buyer.sessionToken;
+
+    const seller = await signUpTestUser();
+    sellerId = seller.user.id;
+    await grantSellerRole(sellerId, { withDefaultAddress: true });
+    await setupSellerWithStripe(sellerId);
+    await createStripeReadySeller(sellerId);
+  });
+
+  it("restricts the PaymentIntent to card only, excluding Link", async () => {
+    const listing = await createActiveTestListing(sellerId, { priceCents: 5000 });
+    await initiateCheckoutFlow(buyerToken, buyerId, sellerId, listing);
+
+    const { getStripe } = await import("../../../lib/stripe.js");
+    const stripe = getStripe() as unknown as {
+      paymentIntents: { create: ReturnType<typeof vi.fn> };
+    };
+
+    expect(stripe.paymentIntents.create).toHaveBeenCalledWith(
+      expect.objectContaining({ payment_method_types: ["card"] }),
+      expect.anything(),
+    );
+  });
+});
+
 describe("Orders — buyer order endpoints", () => {
   let buyerToken: string;
   let buyerId: string;
