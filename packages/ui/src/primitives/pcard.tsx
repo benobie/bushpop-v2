@@ -23,6 +23,8 @@ export interface PcardProps extends React.HTMLAttributes<HTMLDivElement> {
   favorited?: boolean;
   onFavoriteToggle?: (next: boolean) => void;
   favoriteLabel?: string;
+  /** Mark as LCP-critical — disables lazy loading + hints fetchPriority=high. Use for the first 1-2 above-the-fold cards only. */
+  priority?: boolean;
 }
 
 /** Product card, treatment D (LOCKED). At-rest light = buttons only; cards light on hover only. */
@@ -43,6 +45,7 @@ const Pcard = React.forwardRef<HTMLDivElement, PcardProps>(
       favorited = false,
       onFavoriteToggle,
       favoriteLabel = "Save",
+      priority = false,
       ...props
     },
     ref,
@@ -76,7 +79,12 @@ const Pcard = React.forwardRef<HTMLDivElement, PcardProps>(
         <div ref={imgRef} className="bp-pimg">
           {badges}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageSrc} alt={imageAlt} loading="lazy" />
+          <img
+            src={imageSrc}
+            alt={imageAlt}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
+          />
           <button
             type="button"
             className={cn("bp-fav", favorited && "bp-fav-on")}

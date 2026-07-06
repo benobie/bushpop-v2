@@ -12,7 +12,7 @@ import {
   listingScores,
 } from "@bushpop/db/schema";
 import { getMeiliClient } from "./meilisearch.js";
-import { getPublicImageUrl } from "./image-url.js";
+import { cardOrOriginalUrl } from "./image-url.js";
 import { getRedis } from "./redis.js";
 
 // ---------------------------------------------------------------------------
@@ -196,8 +196,11 @@ export async function fetchActiveListingsForSeller(userId: string): Promise<Full
 export function buildListingDocument(row: FullListingRow): ListingDocument {
   const { listing, item, seller, image, category, score } = row;
 
+  // U2-perf: browse/search cards render at ~160-240px wide, so serve the
+  // card-800 variant instead of the full-resolution original (the join above
+  // gates on status="ready", so the variant is guaranteed to exist).
   const primaryImageUrl =
-    image?.storageKey ? getPublicImageUrl(image.storageKey) : null;
+    image?.storageKey ? cardOrOriginalUrl(image.storageKey) : null;
 
   const tags = (item.aiTags ?? []) as string[];
 

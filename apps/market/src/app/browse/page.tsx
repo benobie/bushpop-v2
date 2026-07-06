@@ -98,8 +98,8 @@ export default async function BrowsePage({
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-            {result.items.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
+            {result.items.map((listing, index) => (
+              <ListingCard key={listing.id} listing={listing} priority={index < 4} />
             ))}
           </div>
 
