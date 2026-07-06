@@ -55,6 +55,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 640px"
             priority
+            fetchPriority="high"
           />
         )}
       </div>
