@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { requireAuth } from "../../../../middleware/require-auth.js";
 import { requireRole } from "../../../../middleware/require-role.js";
-import { listOrdersQuerySchema, orderResponseSchema, markShippedBodySchema } from "./schemas.js";
+import { listOrdersQuerySchema, sellerOrderResponseSchema, markShippedBodySchema } from "./schemas.js";
 import { listSellerOrders, getSellerOrder, markOrderShipped } from "./service.js";
 
 const sellerPreHandlers = [requireAuth, requireRole("seller")];
@@ -19,7 +19,7 @@ export async function sellerOrderRoutes(app: FastifyInstance) {
         querystring: listOrdersQuerySchema,
         response: {
           200: z.object({
-            items: z.array(orderResponseSchema),
+            items: z.array(sellerOrderResponseSchema),
             nextCursor: z.string().nullable(),
           }),
         },
@@ -44,7 +44,7 @@ export async function sellerOrderRoutes(app: FastifyInstance) {
         tags: ["Seller - Orders"],
         summary: "Get seller order detail",
         params: z.object({ id: z.string().length(26) }),
-        response: { 200: orderResponseSchema },
+        response: { 200: sellerOrderResponseSchema },
       },
     },
     async (request) => {
@@ -63,7 +63,7 @@ export async function sellerOrderRoutes(app: FastifyInstance) {
         summary: "Mark order as shipped",
         params: z.object({ id: z.string().length(26) }),
         body: markShippedBodySchema,
-        response: { 200: orderResponseSchema },
+        response: { 200: sellerOrderResponseSchema },
       },
     },
     async (request) => {

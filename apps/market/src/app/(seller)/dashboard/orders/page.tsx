@@ -78,12 +78,14 @@ export default async function DashboardOrdersPage({ searchParams }: DashboardOrd
     <main className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-xl font-bold text-brand-900">Orders</h1>
 
-      <Link
-        href="/dashboard/listings"
-        className="mt-2 inline-block text-sm text-brand-500 hover:underline"
-      >
-        View listings →
-      </Link>
+      <div className="mt-2 flex gap-4">
+        <Link href="/dashboard/listings" className="text-sm text-brand-500 hover:underline">
+          View listings →
+        </Link>
+        <Link href="/dashboard/payouts" className="text-sm text-brand-500 hover:underline">
+          View payouts →
+        </Link>
+      </div>
 
       <div className="mt-6 flex flex-wrap gap-2">
         {STATUS_FILTERS.map((s) => (
