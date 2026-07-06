@@ -11,7 +11,7 @@ import { ulid } from "ulid";
  */
 export const progressionEvents = pgTable("progression_events", {
   id: varchar("id", { length: 26 }).primaryKey().$defaultFn(() => ulid()),
-  // listing.published | listing.sold | listing.removed | order.completed | item.saved | user.followed
+  // listing.published | listing.sold | listing.removed | listing.relisted | order.completed | item.saved | user.followed
   eventName: varchar("event_name", { length: 50 }).notNull(),
   // The user this event should be credited to (seller for listing.*, buyer for order.completed/item.saved).
   // Nullable — some source events (e.g. system-cascaded status changes) carry no actor.

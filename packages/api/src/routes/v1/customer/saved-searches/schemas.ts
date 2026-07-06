@@ -3,7 +3,10 @@ import { z } from "zod";
 export const createSavedSearchBody = z.object({
   query: z.string().min(1),
   filters: z.record(z.unknown()).default({}),
-  channelId: z.string().length(26),
+  // Optional — resolved from request.channel.id server-side when omitted.
+  // The client has no reliable way to know the channel's DB id (single-tenant,
+  // no [channel] URL segment); accepted for backward compat only.
+  channelId: z.string().length(26).optional(),
   name: z.string().max(100).optional(),
 });
 

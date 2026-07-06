@@ -508,6 +508,7 @@ export interface paths {
                             items: {
                                 id: string;
                                 listingId: string;
+                                listingHandle: string;
                                 title: string;
                                 priceCents: number;
                                 currency: string;
@@ -567,7 +568,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Check whether a listing is wishlisted */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    listingId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            favorited: boolean;
+                        };
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         /** Remove a listing from wishlist */
@@ -659,7 +684,7 @@ export interface paths {
                         filters?: {
                             [key: string]: unknown;
                         };
-                        channelId: string;
+                        channelId?: string;
                         name?: string;
                     };
                 };
@@ -4810,6 +4835,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/store/orders/{id}/pickup-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the buyer's pickup collection code for a pickup order */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            orderId: string;
+                            code: string;
+                            /** Format: date-time */
+                            issuedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/seller/orders": {
         parameters: {
             query?: never;
@@ -4891,6 +4959,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                shippingLabelUrl: string | null;
                             }[];
                             nextCursor: string | null;
                         };
@@ -4984,6 +5053,7 @@ export interface paths {
                             createdAt: string;
                             /** Format: date-time */
                             updatedAt: string;
+                            shippingLabelUrl: string | null;
                         };
                     };
                 };
@@ -5088,11 +5158,120 @@ export interface paths {
                             createdAt: string;
                             /** Format: date-time */
                             updatedAt: string;
+                            shippingLabelUrl: string | null;
                         };
                     };
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/v1/seller/orders/{id}/confirm-pickup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Confirm pickup handover via the buyer's collection code */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            orderId: string;
+                            /** @enum {string} */
+                            status: "completed";
+                            /** Format: date-time */
+                            redeemedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/seller/payouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List seller's own payout holds */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                orderId: string;
+                                status: string;
+                                amountCents: number;
+                                currency: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            totalsByStatus: {
+                                status: string;
+                                totalCents: number;
+                            }[];
+                            page: number;
+                            limit: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/orders": {

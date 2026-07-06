@@ -45,6 +45,7 @@ beforeEach(async () => {
       webhook_dead_letters,
       processed_webhook_events,
       payout_holds,
+      pickup_codes,
       order_items,
       orders,
       checkout_sessions,

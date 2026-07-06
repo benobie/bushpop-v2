@@ -35,6 +35,16 @@ describe("Customer Saved Searches API", () => {
       });
     });
 
+    it("defaults channelId to the request channel when omitted", async () => {
+      const res = await authedRequest(sessionToken, "POST", "/api/v1/customer/saved-searches", {
+        query: "no channel id supplied",
+        filters: { category: "jackets" },
+      });
+
+      expect(res.statusCode).toBe(201);
+      expect(res.json()).toMatchObject({ channelId });
+    });
+
     it("creates a saved search without a name", async () => {
       const res = await authedRequest(sessionToken, "POST", "/api/v1/customer/saved-searches", {
         channelId,
@@ -183,6 +193,19 @@ describe("Customer Saved Searches API", () => {
           { query: "boots", name: "Boots", channelId },
         ],
       });
+    });
+
+    it("defaults to the request channel when channelId query param is omitted", async () => {
+      await authedRequest(sessionToken, "POST", "/api/v1/customer/saved-searches", {
+        channelId,
+        query: "no channel query",
+        filters: { category: "shoes" },
+      });
+
+      const res = await authedRequest(sessionToken, "GET", "/api/v1/customer/saved-searches");
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json().items).toMatchObject([{ query: "no channel query", channelId }]);
     });
   });
 

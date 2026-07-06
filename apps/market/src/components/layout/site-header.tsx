@@ -31,6 +31,7 @@ export async function SiteHeader() {
       auth={!!customer}
       bagTotal={bagTotalCents}
       bagCount={bagCount}
+      savedHref="/account/favourites"
     />
   );
 }

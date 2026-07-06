@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import { DEFAULT_CHANNEL } from "@bushpop/config";
+import { createAuthedApiClient } from "@bushpop/api-client/server";
 import { getListing } from "@/lib/data/listings";
+import { getOptionalCustomer } from "@/lib/require-auth";
 import { ImageGallery } from "@/components/listing/image-gallery";
 import { AddToBagButton } from "@/components/listing/add-to-bag-button";
+import { FavButton } from "@/components/listing/fav-button";
 import { ViewTracker } from "@/components/analytics/view-tracker";
 import { formatMoney } from "@/lib/format-money";
 import { conditionLabel } from "@/lib/condition-labels";
@@ -57,6 +60,16 @@ export default async function PDPPage({ params }: PDPProps) {
   );
 
   const measurementEntries = listing.measurements ? Object.entries(listing.measurements) : [];
+
+  const customer = await getOptionalCustomer();
+  let initialFavorited = false;
+  if (customer) {
+    const api = await createAuthedApiClient();
+    const { data } = await api.GET("/api/v1/customer/wishlist/{listingId}", {
+      params: { path: { listingId: listing.id } },
+    });
+    initialFavorited = data?.favorited ?? false;
+  }
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
@@ -114,13 +127,18 @@ export default async function PDPPage({ params }: PDPProps) {
             </p>
           </div>
 
-          {/* Add to bag */}
-          <AddToBagButton
-            listingId={listing.id}
-            channel={DEFAULT_CHANNEL}
-            disabled={listing.status !== "active"}
-            priceCents={listing.priceCents}
-          />
+          {/* Add to bag + favourite */}
+          <div className="flex items-start gap-3">
+            <div className="flex-1">
+              <AddToBagButton
+                listingId={listing.id}
+                channel={DEFAULT_CHANNEL}
+                disabled={listing.status !== "active"}
+                priceCents={listing.priceCents}
+              />
+            </div>
+            <FavButton listingId={listing.id} variant="inline" initialFavorited={initialFavorited} />
+          </div>
 
           {/* Measurements */}
           {measurementEntries.length > 0 && (

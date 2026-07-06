@@ -122,6 +122,40 @@ export function shippingConfirmationBuyerTemplate(params: ShippingConfirmationBu
   };
 }
 
+export interface RefundConfirmationBuyerParams {
+  orderId: string;
+  buyerName: string;
+  amountCents: number;
+  currency: string;
+  channelName: string;
+}
+
+export function refundConfirmationBuyerTemplate(params: RefundConfirmationBuyerParams): {
+  subject: string;
+  text: string;
+} {
+  return {
+    subject: `Your ${params.channelName} order #${params.orderId.slice(-8).toUpperCase()} has been refunded`,
+    text: [
+      `Hi ${params.buyerName},`,
+      "",
+      `Your ${params.channelName} order has been refunded.`,
+      "",
+      `Order ID: ${params.orderId}`,
+      `Refund amount: ${formatCents(params.amountCents, params.currency)}`,
+      "",
+      "The refund goes back to your original payment method. How long it takes",
+      "to appear depends on your bank or card issuer — this is standard for card",
+      "refunds and outside our control.",
+      "",
+      "Questions about this refund? Just reply to this email.",
+      "",
+      "Thanks,",
+      `The ${params.channelName} Team`,
+    ].join("\n"),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Phase 3a notification templates (placeholder — content TBD)
 // ---------------------------------------------------------------------------

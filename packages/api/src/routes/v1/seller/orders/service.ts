@@ -4,6 +4,7 @@ import { orders, orderItems } from "@bushpop/db/schema";
 import { NotFoundError, ConflictError } from "../../../../lib/errors.js";
 import { formatOrder } from "../../store/orders/service.js";
 import { dispatchEvent } from "../../../../lib/events.js";
+import { redeemPickupCode } from "../../../../lib/pickup-code-service.js";
 
 function groupItemsByOrder(items: Array<typeof orderItems.$inferSelect>) {
   const map = new Map<string, Array<typeof orderItems.$inferSelect>>();
@@ -14,6 +15,16 @@ function groupItemsByOrder(items: Array<typeof orderItems.$inferSelect>) {
     map.get(item.orderId)!.push(item);
   }
   return map;
+}
+
+function formatSellerOrder(
+  order: typeof orders.$inferSelect,
+  items: Array<typeof orderItems.$inferSelect>,
+) {
+  return {
+    ...formatOrder(order, items),
+    shippingLabelUrl: order.shippingLabelUrl ?? null,
+  };
 }
 
 /**
@@ -54,7 +65,7 @@ export async function listSellerOrders(
   const itemMap = groupItemsByOrder(itemRows);
 
   return {
-    items: data.map((o) => formatOrder(o, itemMap.get(o.id) ?? [])),
+    items: data.map((o) => formatSellerOrder(o, itemMap.get(o.id) ?? [])),
     nextCursor: hasMore ? data[data.length - 1]!.createdAt.toISOString() : null,
   };
 }
@@ -74,7 +85,7 @@ export async function getSellerOrder(orderId: string, sellerId: string, channelI
 
   const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
 
-  return formatOrder(order, items);
+  return formatSellerOrder(order, items);
 }
 
 /**
@@ -132,4 +143,13 @@ export async function markOrderShipped(
 
   // Fetch updated order with items
   return getSellerOrder(orderId, sellerId, order.channelId);
+}
+
+/**
+ * Confirm a pickup order's collection code at handover. Thin pass-through to
+ * the shared pickup-code service (packages/api/src/lib/pickup-code-service.ts)
+ * so the money-safety logic (CAS, instant payout release) lives in one place.
+ */
+export async function confirmOrderPickup(orderId: string, sellerId: string, code: string) {
+  return redeemPickupCode(orderId, sellerId, code);
 }
