@@ -150,6 +150,7 @@ export const OrderSchema = z.object({
   trackingCarrier: z.string().nullable(),
   // Phase 2B additions
   shippingLabelId: z.string().nullable(),
+  shippingLabelUrl: z.string().nullable(),
   lastTrackingStatus: z.string().nullable(),
   lastTrackingEventAt: z.date().nullable(),
   deliveryConfirmedAt: z.date().nullable(),

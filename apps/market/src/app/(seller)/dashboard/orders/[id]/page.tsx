@@ -118,6 +118,16 @@ export default async function DashboardOrderDetailPage({
           <Row label="Carrier" value={order.trackingCarrier ?? "—"} />
           <Row label="Tracking number" value={order.trackingNumber ?? "—"} />
         </dl>
+        {order.shippingLabelUrl && (
+          <a
+            href={order.shippingLabelUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-block text-sm font-medium text-brand-500 hover:underline"
+          >
+            Download shipping label →
+          </a>
+        )}
         <div className="mt-4">
           <MarkShippedForm orderId={order.id} status={order.status} />
         </div>

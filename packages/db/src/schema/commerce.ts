@@ -1,4 +1,4 @@
-import { pgTable, varchar, integer, boolean, timestamp, unique, index, jsonb, check, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, varchar, integer, boolean, timestamp, unique, index, jsonb, check, foreignKey, text } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { ulid } from "ulid";
 import { user } from "./auth";
@@ -120,6 +120,11 @@ export const orders = pgTable("orders", {
   trackingCarrier: varchar("tracking_carrier", { length: 100 }),
   // Phase 2B: extended tracking + SLA columns
   shippingLabelId: varchar("shipping_label_id", { length: 255 }),
+  // Public URL to the generated label PDF (from the shipping provider),
+  // surfaced to the seller for download — separate from shippingLabelId,
+  // which is a money-safety "is this order tracked" signal read by
+  // payout-hold-service and must not be repurposed.
+  shippingLabelUrl: text("shipping_label_url"),
   lastTrackingStatus: varchar("last_tracking_status", { length: 100 }),
   lastTrackingEventAt: timestamp("last_tracking_event_at", { withTimezone: true }),
   deliveryConfirmedAt: timestamp("delivery_confirmed_at", { withTimezone: true }),

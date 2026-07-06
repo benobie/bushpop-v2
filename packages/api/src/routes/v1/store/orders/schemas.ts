@@ -47,6 +47,7 @@ export const orderResponseSchema = z.object({
   senderAddressSnapshot: addressSnapshotSchema.nullable(),
   trackingNumber: z.string().nullable(),
   trackingCarrier: z.string().nullable(),
+  shippingLabelUrl: z.string().nullable(),
   stripePaymentIntentId: z.string().nullable(),
   items: z.array(orderItemResponseSchema),
   createdAt: z.string().datetime(),

@@ -183,6 +183,13 @@
       "when": 1783188368936,
       "tag": "0025_organic_silverclaw",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1783327871964,
+      "tag": "0026_eager_white_tiger",
+      "breakpoints": true
     }
   ]
 }

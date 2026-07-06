@@ -38,6 +38,7 @@ export function formatOrder(
     senderAddressSnapshot: (order.senderAddressSnapshot as Record<string, unknown> | null) ?? null,
     trackingNumber: order.trackingNumber ?? null,
     trackingCarrier: order.trackingCarrier ?? null,
+    shippingLabelUrl: order.shippingLabelUrl ?? null,
     stripePaymentIntentId: order.stripePaymentIntentId ?? null,
     items: items.map((i) => ({
       id: i.id,
