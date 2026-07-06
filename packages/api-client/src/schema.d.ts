@@ -4684,7 +4684,6 @@ export interface paths {
                                 } | null;
                                 trackingNumber: string | null;
                                 trackingCarrier: string | null;
-                                shippingLabelUrl: string | null;
                                 stripePaymentIntentId: string | null;
                                 items: {
                                     id: string;
@@ -4772,7 +4771,6 @@ export interface paths {
                             } | null;
                             trackingNumber: string | null;
                             trackingCarrier: string | null;
-                            shippingLabelUrl: string | null;
                             stripePaymentIntentId: string | null;
                             items: {
                                 id: string;
