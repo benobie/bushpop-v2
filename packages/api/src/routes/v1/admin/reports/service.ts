@@ -1,6 +1,6 @@
 import { and, desc, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
-import { listingReports, channelListings, inventoryItems } from "@bushpop/db/schema";
+import { listingReports, channelListings, inventoryItems, user } from "@bushpop/db/schema";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type * as schema from "@bushpop/db/schema";
 import { transition, InvalidTransitionError } from "../../../../lib/state-machine.js";
@@ -78,9 +78,17 @@ export async function listReports(options: ListReportsOptions) {
       .select({
         report: listingReports,
         channelId: channelListings.channelId,
+        listingTitle: channelListings.title,
+        listingHandle: channelListings.handle,
+        listingStatus: channelListings.status,
+        priceCents: channelListings.priceCents,
+        currency: channelListings.currency,
+        hiddenAt: channelListings.hiddenAt,
+        reporterEmail: user.email,
       })
       .from(listingReports)
       .innerJoin(channelListings, eq(listingReports.channelListingId, channelListings.id))
+      .leftJoin(user, eq(listingReports.reporterId, user.id))
       .where(whereClause)
       .orderBy(desc(listingReports.createdAt))
       .limit(limit)
@@ -95,7 +103,9 @@ export async function listReports(options: ListReportsOptions) {
   const total = countResult[0]?.count ?? 0;
 
   return {
-    items: items.map(({ report, channelId: reportChannelId }) => formatReport(report, reportChannelId)),
+    items: items.map(({ report, channelId: reportChannelId, ...enrichment }) =>
+      formatReport(report, reportChannelId, enrichment),
+    ),
     total,
     page,
     limit,
@@ -222,7 +232,37 @@ export async function patchReport(
     throw new Error("[patchReport] transaction did not assign updatedReport");
   }
 
-  return formatReport(updatedReport, report.channelId);
+  return fetchEnrichedReport(reportId);
+}
+
+/**
+ * Re-select a report with its listing/reporter enrichment for API responses.
+ * Used after patchReport commits, since the transaction only returns the bare row.
+ */
+async function fetchEnrichedReport(reportId: string) {
+  const [row] = await db
+    .select({
+      report: listingReports,
+      channelId: channelListings.channelId,
+      listingTitle: channelListings.title,
+      listingHandle: channelListings.handle,
+      listingStatus: channelListings.status,
+      priceCents: channelListings.priceCents,
+      currency: channelListings.currency,
+      hiddenAt: channelListings.hiddenAt,
+      reporterEmail: user.email,
+    })
+    .from(listingReports)
+    .innerJoin(channelListings, eq(listingReports.channelListingId, channelListings.id))
+    .leftJoin(user, eq(listingReports.reporterId, user.id))
+    .where(eq(listingReports.id, reportId));
+
+  if (!row) {
+    throw new NotFoundError("Report not found");
+  }
+
+  const { report, channelId, ...enrichment } = row;
+  return formatReport(report, channelId, enrichment);
 }
 
 /**
@@ -260,16 +300,33 @@ async function sendReportNotification(opts: {
   );
 }
 
-function formatReport(report: ReportRecord, channelId: string) {
+interface ReportEnrichment {
+  listingTitle: string | null;
+  listingHandle: string | null;
+  listingStatus: string | null;
+  priceCents: number | null;
+  currency: string | null;
+  hiddenAt: Date | null;
+  reporterEmail: string | null;
+}
+
+function formatReport(report: ReportRecord, channelId: string, enrichment: ReportEnrichment) {
   return {
     id: report.id,
     channelListingId: report.channelListingId,
     channelId,
     reporterId: report.reporterId,
+    reporterEmail: enrichment.reporterEmail,
     reason: report.reason,
     description: report.description,
     status: report.status,
     version: report.version,
+    listingTitle: enrichment.listingTitle,
+    listingHandle: enrichment.listingHandle,
+    listingStatus: enrichment.listingStatus,
+    priceCents: enrichment.priceCents,
+    currency: enrichment.currency,
+    hiddenAt: enrichment.hiddenAt ? enrichment.hiddenAt.toISOString() : null,
     createdAt: report.createdAt.toISOString(),
     updatedAt: report.updatedAt.toISOString(),
   };

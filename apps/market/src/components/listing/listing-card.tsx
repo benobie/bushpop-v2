@@ -10,6 +10,7 @@ import Image from "next/image";
 import { Card, CardContent, Badge } from "@bushpop/ui";
 import { formatMoney } from "@/lib/format-money";
 import { conditionLabel } from "@/lib/condition-labels";
+import { FavButton } from "./fav-button";
 
 interface ListingCardItem {
   id: string;
@@ -33,11 +34,13 @@ interface ListingCardItem {
 
 interface ListingCardProps {
   listing: ListingCardItem;
+  /** Mark as LCP-critical (first visible grid row only) — sets next/image `priority`. */
+  priority?: boolean;
 }
 
-export function ListingCard({ listing }: ListingCardProps) {
+export function ListingCard({ listing, priority = false }: ListingCardProps) {
   return (
-    <Link href={`/listing/${listing.handle}`} className="group block">
+    <Link href={`/listing/${listing.handle}`} className="bp-pcard group block">
       <Card className="overflow-hidden transition-shadow hover:shadow-md">
         {/* Image area */}
         <div className="relative aspect-[3/4] w-full overflow-hidden bg-brand-100">
@@ -48,12 +51,15 @@ export function ListingCard({ listing }: ListingCardProps) {
               fill
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-200 group-hover:scale-105"
+              priority={priority}
+              fetchPriority={priority ? "high" : "auto"}
             />
           ) : (
             <div className="flex h-full items-center justify-center">
               <span className="text-4xl text-brand-300">◻</span>
             </div>
           )}
+          <FavButton listingId={listing.id} />
         </div>
 
         <CardContent className="p-3">

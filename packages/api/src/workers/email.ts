@@ -1,13 +1,14 @@
 import { Queue, Worker, type Job } from "bullmq";
-import { aliasedTable, and, eq, sql } from "drizzle-orm";
+import { aliasedTable, and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
-import { channelListings, channels, notifications, orderItems, orders, user } from "@bushpop/db/schema";
+import { channelListings, channels, notifications, orderItems, orders, refunds, user } from "@bushpop/db/schema";
 import { DEFAULT_CHANNEL, getChannelConfig } from "@bushpop/config";
 import {
   getEmailSender,
   orderConfirmationBuyerTemplate,
   orderNotificationSellerTemplate,
   listingPublishedSellerTemplate,
+  refundConfirmationBuyerTemplate,
   reportActionedTemplate,
   reportReinstatedTemplate,
   scoreNudgeTemplate,
@@ -34,6 +35,7 @@ export type EmailJobType =
   | "order_confirmation_buyer"
   | "order_notification_seller"
   | "shipping_confirmation_buyer"
+  | "refund_confirmation_buyer"
   | "tracking_exception_admin"
   | "score_nudge"
   | "report_actioned"
@@ -297,6 +299,20 @@ async function processNotificationEmail(job: Job<EmailJobData>): Promise<void> {
   console.info(`[email] Sent ${type} for entity ${entityId}`);
 }
 
+/**
+ * Idempotency-Key sent to Resend on every order-triggered send. Without this,
+ * a BullMQ retry of an already-sent job (e.g. the worker crashes after Resend
+ * accepts the message but before the job is marked complete) re-sends the
+ * same email — Resend dedupes repeated sends with the same key. Falls back
+ * to the same `type-orderId` string already used as the BullMQ jobId when no
+ * notificationId is present, so every direct order-lifecycle send (order
+ * confirmation, shipping confirmation, refund confirmation, admin alert) is
+ * covered, not just the notification-outbox-tracked types.
+ */
+function resendIdempotencyKey(type: EmailJobType, orderId: string, notificationId?: string): string {
+  return notificationId ?? `${type}-${orderId}`;
+}
+
 async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
   const { type, orderId, notificationId, notificationLeaseHeld = false } = job.data;
 
@@ -326,7 +342,12 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
       throw new Error(`[email] Order ${orderId} not found`);
     }
 
-    if (order.status === "cancelled") {
+    // A cancelled order has nothing left to confirm/ship — except a refund
+    // confirmation, whose whole point is to fire once the order lands in a
+    // refunded/cancelled terminal state (admin cancellations refund via the
+    // same processRefund() path and set status to "cancelled", not
+    // "refunded" — this must not silently skip the buyer's refund email).
+    if (order.status === "cancelled" && type !== "refund_confirmation_buyer") {
       return;
     }
 
@@ -347,7 +368,7 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         to: order.buyerEmail,
         subject,
         text,
-        headers: notificationId ? { "Idempotency-Key": notificationId } : undefined,
+        headers: { "Idempotency-Key": resendIdempotencyKey(type, orderId, notificationId) },
       });
 
       if (notificationId) {
@@ -373,7 +394,7 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         to: order.sellerEmail,
         subject,
         text,
-        headers: notificationId ? { "Idempotency-Key": notificationId } : undefined,
+        headers: { "Idempotency-Key": resendIdempotencyKey(type, orderId, notificationId) },
       });
 
       if (notificationId) {
@@ -396,7 +417,37 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         to: order.buyerEmail,
         subject,
         text,
-        headers: notificationId ? { "Idempotency-Key": notificationId } : undefined,
+        headers: { "Idempotency-Key": resendIdempotencyKey(type, orderId, notificationId) },
+      });
+
+      if (notificationId) {
+        await markNotificationSent(notificationId, result.providerMessageId);
+      }
+    } else if (type === "refund_confirmation_buyer") {
+      const [refund] = await db
+        .select({ amountCents: refunds.amountCents })
+        .from(refunds)
+        .where(and(eq(refunds.orderId, orderId), eq(refunds.status, "processed")))
+        .orderBy(desc(refunds.createdAt))
+        .limit(1);
+
+      if (!refund) {
+        throw new Error(`[email] No processed refund found for order ${orderId}`);
+      }
+
+      const { subject, text } = refundConfirmationBuyerTemplate({
+        orderId,
+        buyerName: order.buyerName,
+        amountCents: refund.amountCents,
+        currency: order.currency,
+        channelName: order.channelName,
+      });
+
+      const result = await send({
+        to: order.buyerEmail,
+        subject,
+        text,
+        headers: { "Idempotency-Key": resendIdempotencyKey(type, orderId, notificationId) },
       });
 
       if (notificationId) {
@@ -415,7 +466,7 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         to: adminEmail,
         subject,
         text,
-        headers: notificationId ? { "Idempotency-Key": notificationId } : undefined,
+        headers: { "Idempotency-Key": resendIdempotencyKey(type, orderId, notificationId) },
       });
 
       if (notificationId) {

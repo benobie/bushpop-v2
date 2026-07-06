@@ -508,6 +508,7 @@ export interface paths {
                             items: {
                                 id: string;
                                 listingId: string;
+                                listingHandle: string;
                                 title: string;
                                 priceCents: number;
                                 currency: string;
@@ -567,7 +568,31 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Check whether a listing is wishlisted */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    listingId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            favorited: boolean;
+                        };
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         /** Remove a listing from wishlist */
@@ -659,7 +684,7 @@ export interface paths {
                         filters?: {
                             [key: string]: unknown;
                         };
-                        channelId: string;
+                        channelId?: string;
                         name?: string;
                     };
                 };
@@ -4873,6 +4898,7 @@ export interface paths {
                                 createdAt: string;
                                 /** Format: date-time */
                                 updatedAt: string;
+                                shippingLabelUrl: string | null;
                             }[];
                             nextCursor: string | null;
                         };
@@ -4960,6 +4986,7 @@ export interface paths {
                             createdAt: string;
                             /** Format: date-time */
                             updatedAt: string;
+                            shippingLabelUrl: string | null;
                         };
                     };
                 };
@@ -5058,11 +5085,70 @@ export interface paths {
                             createdAt: string;
                             /** Format: date-time */
                             updatedAt: string;
+                            shippingLabelUrl: string | null;
                         };
                     };
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/v1/seller/payouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List seller's own payout holds */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                    status?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                id: string;
+                                orderId: string;
+                                status: string;
+                                amountCents: number;
+                                currency: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
+                            totalsByStatus: {
+                                status: string;
+                                totalCents: number;
+                            }[];
+                            page: number;
+                            limit: number;
+                            total: number;
+                            totalPages: number;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/admin/orders": {
@@ -5772,12 +5858,20 @@ export interface paths {
                                 channelListingId: string;
                                 channelId: string;
                                 reporterId: string;
+                                reporterEmail: string | null;
                                 /** @enum {string} */
                                 reason: "counterfeit" | "inappropriate" | "misleading" | "prohibited" | "other";
                                 description: string | null;
                                 /** @enum {string} */
                                 status: "pending" | "reviewed" | "actioned" | "dismissed";
                                 version: number;
+                                listingTitle: string | null;
+                                listingHandle: string | null;
+                                listingStatus: string | null;
+                                priceCents: number | null;
+                                currency: string | null;
+                                /** Format: date-time */
+                                hiddenAt: string | null;
                                 /** Format: date-time */
                                 createdAt: string;
                                 /** Format: date-time */
@@ -5843,12 +5937,20 @@ export interface paths {
                             channelListingId: string;
                             channelId: string;
                             reporterId: string;
+                            reporterEmail: string | null;
                             /** @enum {string} */
                             reason: "counterfeit" | "inappropriate" | "misleading" | "prohibited" | "other";
                             description: string | null;
                             /** @enum {string} */
                             status: "pending" | "reviewed" | "actioned" | "dismissed";
                             version: number;
+                            listingTitle: string | null;
+                            listingHandle: string | null;
+                            listingStatus: string | null;
+                            priceCents: number | null;
+                            currency: string | null;
+                            /** Format: date-time */
+                            hiddenAt: string | null;
                             /** Format: date-time */
                             createdAt: string;
                             /** Format: date-time */
@@ -5882,6 +5984,55 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @enum {string} */
+                        reason: "counterfeit" | "inappropriate" | "misleading" | "prohibited" | "other";
+                        description?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            /** @enum {string} */
+                            status: "pending";
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/moderation/flags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Manually flag a listing for review (admin only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        channelListingId: string;
                         /** @enum {string} */
                         reason: "counterfeit" | "inappropriate" | "misleading" | "prohibited" | "other";
                         description?: string;

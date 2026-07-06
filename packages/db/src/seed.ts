@@ -1,11 +1,70 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import sharp from "sharp";
 import { db } from "./client";
 import { channels } from "./schema/channels";
 import { user } from "./schema/auth";
 import { userRoles, sellerProfiles, addresses } from "./schema/user-domain";
 import { inventoryItems, inventoryItemImages } from "./schema/inventory";
 import { channelListings } from "./schema/listings";
+import { categories } from "./schema/categories";
 import { ulid } from "ulid";
+
+// Fixture listing images are synthesized here (solid-colour JPEGs via sharp)
+// and uploaded to R2, rather than referencing apps/web/public/demo/ — the
+// engine's .dockerignore excludes apps/web/* from the api image's build
+// context (Launch-1 content site deploys separately to CF Pages), so a seed
+// running inside the deployed engine container can't reach those files.
+// Prior versions of this seed inserted an inventory_item_images row pointing
+// at `items/{id}/primary.jpg` WITHOUT ever uploading anything to R2, so the
+// storefront's getPublicImageUrl() served a 404 for every seeded listing
+// (staging incident, batch 39). Uploading here fails loudly (throws, exits
+// the seed non-zero) instead of leaving a row that points at nothing.
+function getR2Client(): S3Client {
+  return new S3Client({
+    region: "auto",
+    endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+    },
+  });
+}
+
+// R2 is deliberately unconfigured in engine-ci.yml's test job (it only wires
+// DB/Redis/Meili — the API test suite never fetches real image bytes). Skip
+// the upload there rather than failing the whole seed; every other
+// environment this seed runs in (dev, staging, prod) always has R2 set, so
+// a real upload failure there still throws below instead of being swallowed.
+const R2_CONFIGURED = Boolean(
+  process.env.R2_ACCOUNT_ID && process.env.R2_ACCESS_KEY_ID && process.env.R2_BUCKET_NAME,
+);
+
+async function uploadFixtureImage(storageKey: string, colour: { r: number; g: number; b: number }): Promise<void> {
+  if (!R2_CONFIGURED) {
+    console.warn(`R2 not configured — skipping fixture image upload for ${storageKey}`);
+    return;
+  }
+
+  const body = await sharp({
+    create: { width: 800, height: 800, channels: 3, background: colour },
+  })
+    .jpeg({ quality: 85 })
+    .toBuffer();
+  if (body.length === 0) {
+    throw new Error(`Generated fixture image for ${storageKey} is empty`);
+  }
+
+  const r2 = getR2Client();
+  await r2.send(
+    new PutObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME!,
+      Key: storageKey,
+      Body: body,
+      ContentType: "image/jpeg",
+    }),
+  );
+}
 
 async function seed() {
   console.log("Seeding database...");
@@ -122,13 +181,29 @@ async function seedDevListings() {
   });
 
   const fixtures = [
-    { title: "Vintage Levi's 501 Jeans", brand: "Levi's", size: "32", colour: "blue", condition: "good", shippingClass: "m", priceCents: 6500 },
-    { title: "Wool Overcoat", brand: "Country Road", size: "M", colour: "camel", condition: "excellent", shippingClass: "l", priceCents: 12000 },
-    { title: "Silk Slip Dress", brand: "Zimmermann", size: "8", colour: "black", condition: "excellent", shippingClass: "s", priceCents: 9500 },
-    { title: "Leather Ankle Boots", brand: "R.M. Williams", size: "9", colour: "tan", condition: "good", shippingClass: "xl", priceCents: 14000 },
-    { title: "Linen Shirt", brand: "Bassike", size: "L", colour: "white", condition: "good", shippingClass: "s", priceCents: 4500 },
-    { title: "Gold Hoop Earrings", brand: "Sarah & Sebastian", size: "OS", colour: "gold", condition: "excellent", shippingClass: "xs", priceCents: 3000 },
+    { title: "Vintage Levi's 501 Jeans", brand: "Levi's", size: "32", colour: "blue", condition: "good", shippingClass: "m", priceCents: 6500, categorySlug: "jeans", imageColour: { r: 60, g: 90, b: 150 } },
+    { title: "Wool Overcoat", brand: "Country Road", size: "M", colour: "camel", condition: "excellent", shippingClass: "l", priceCents: 12000, categorySlug: "coats", imageColour: { r: 170, g: 130, b: 90 } },
+    { title: "Silk Slip Dress", brand: "Zimmermann", size: "8", colour: "black", condition: "excellent", shippingClass: "s", priceCents: 9500, categorySlug: "midi-dresses", imageColour: { r: 30, g: 30, b: 30 } },
+    { title: "Leather Ankle Boots", brand: "R.M. Williams", size: "9", colour: "tan", condition: "good", shippingClass: "xl", priceCents: 14000, categorySlug: "boots", imageColour: { r: 150, g: 110, b: 70 } },
+    { title: "Linen Shirt", brand: "Bassike", size: "L", colour: "white", condition: "good", shippingClass: "s", priceCents: 4500, categorySlug: "shirts", imageColour: { r: 230, g: 228, b: 220 } },
+    { title: "Gold Hoop Earrings", brand: "Sarah & Sebastian", size: "OS", colour: "gold", condition: "excellent", shippingClass: "xs", priceCents: 3000, categorySlug: "jewellery", imageColour: { r: 200, g: 170, b: 80 } },
   ];
+
+  // Category IDs are looked up by slug (@bushpop/config CATEGORY_LEAVES) rather
+  // than hardcoded — resolves to null if `db:seed:categories` hasn't run yet,
+  // which is non-fatal (categoryId is nullable) but leaves PLP category
+  // filtering with nothing to filter on.
+  const categorySlugs = [...new Set(fixtures.map((f) => f.categorySlug))];
+  const categoryRows = await db
+    .select({ id: categories.id, slug: categories.slug })
+    .from(categories)
+    .where(inArray(categories.slug, categorySlugs));
+  const categoryIdBySlug = new Map(categoryRows.map((c) => [c.slug, c.id]));
+  if (categoryIdBySlug.size === 0) {
+    console.warn(
+      "No categories found — run `pnpm --filter @bushpop/db db:seed:categories` first for PLP category filtering to have data.",
+    );
+  }
 
   for (const f of fixtures) {
     const [item] = await db
@@ -140,6 +215,7 @@ async function seedDevListings() {
         availabilityStatus: "available",
         lifecycleState: "for_sale",
         brand: f.brand,
+        categoryId: categoryIdBySlug.get(f.categorySlug) ?? null,
         size: f.size,
         colour: f.colour,
         condition: f.condition,
@@ -147,9 +223,12 @@ async function seedDevListings() {
       })
       .returning();
 
+    const storageKey = `items/${item!.id}/primary.jpg`;
+    await uploadFixtureImage(storageKey, f.imageColour);
+
     await db.insert(inventoryItemImages).values({
       inventoryItemId: item!.id,
-      storageKey: `items/${item!.id}/primary.jpg`,
+      storageKey,
       contentType: "image/jpeg",
       status: "ready",
       position: 0,

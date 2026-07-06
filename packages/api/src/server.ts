@@ -19,6 +19,7 @@ import { meRoutes } from "./routes/v1/customer/me";
 import { wishlistRoutes } from "./routes/v1/customer/wishlist/routes";
 import { customerSavedSearchRoutes } from "./routes/v1/customer/saved-searches/routes";
 import { adminReportRoutes } from "./routes/v1/admin/reports/routes";
+import { adminModerationRoutes } from "./routes/v1/admin/moderation";
 import { storeListingReportRoutes } from "./routes/v1/store/listing-reports";
 import { adminUserRoutes } from "./routes/v1/admin/users";
 import { sellerInventoryRoutes } from "./routes/v1/seller/inventory/routes";
@@ -40,6 +41,7 @@ import { stripeWebhookRoutes } from "./routes/v1/webhooks/stripe";
 import { starshipitWebhookRoutes } from "./routes/v1/webhooks/starshipit";
 import { storeOrderRoutes } from "./routes/v1/store/orders/routes";
 import { sellerOrderRoutes } from "./routes/v1/seller/orders/routes";
+import { sellerPayoutRoutes } from "./routes/v1/seller/payouts/routes";
 import { adminOrderRoutes } from "./routes/v1/admin/orders/routes";
 import { adminPayoutRoutes } from "./routes/v1/admin/payouts/routes";
 import { adminListingRoutes } from "./routes/v1/admin/listings";
@@ -215,6 +217,7 @@ export async function buildServer() {
   await app.register(starshipitWebhookRoutes);
   await app.register(storeOrderRoutes);
   await app.register(sellerOrderRoutes);
+  await app.register(sellerPayoutRoutes);
   await app.register(adminOrderRoutes);
   await app.register(adminPayoutRoutes);
   await app.register(adminListingRoutes);
@@ -223,6 +226,15 @@ export async function buildServer() {
   await app.register(adminEmailJobRoutes);
   await app.register(adminReportRoutes);
   await app.register(storeListingReportRoutes);
+  // Moderation queue v1 (B4) ships dark — the admin-flag intake route is new
+  // attack surface (an admin can flag any listing directly), even though it's
+  // admin-role-gated. Mirrors the MULTI_VENDOR_CHECKOUT_ENABLED precedent above.
+  // The existing GET/PATCH /api/v1/admin/reports routes predate this flag
+  // (forked in from piklo-v2) and stay always-on — they're read/transition-only
+  // and already admin-gated. Track F (multi-vendor) is hard-gated on this queue.
+  if (process.env.MODERATION_QUEUE_ENABLED === "true") {
+    await app.register(adminModerationRoutes);
+  }
 
   // MeiliSearch bootstrap — runs in Fastify ready() hook, before app.listen()
   // Skipped in test environment (tests manage their own index lifecycle)

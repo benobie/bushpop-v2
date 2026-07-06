@@ -16,6 +16,16 @@ function groupItemsByOrder(items: Array<typeof orderItems.$inferSelect>) {
   return map;
 }
 
+function formatSellerOrder(
+  order: typeof orders.$inferSelect,
+  items: Array<typeof orderItems.$inferSelect>,
+) {
+  return {
+    ...formatOrder(order, items),
+    shippingLabelUrl: order.shippingLabelUrl ?? null,
+  };
+}
+
 /**
  * List orders for a seller (cursor-paginated by createdAt desc).
  */
@@ -54,7 +64,7 @@ export async function listSellerOrders(
   const itemMap = groupItemsByOrder(itemRows);
 
   return {
-    items: data.map((o) => formatOrder(o, itemMap.get(o.id) ?? [])),
+    items: data.map((o) => formatSellerOrder(o, itemMap.get(o.id) ?? [])),
     nextCursor: hasMore ? data[data.length - 1]!.createdAt.toISOString() : null,
   };
 }
@@ -74,7 +84,7 @@ export async function getSellerOrder(orderId: string, sellerId: string, channelI
 
   const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
 
-  return formatOrder(order, items);
+  return formatSellerOrder(order, items);
 }
 
 /**
