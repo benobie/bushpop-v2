@@ -1,13 +1,28 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input, Card, CardHeader, CardContent, CardFooter } from "@bushpop/ui";
 import { signIn } from "@/lib/auth-client";
 
+/** Only ever redirect to a same-origin relative path — never an absolute/external URL. */
+function safeNext(next: string | null): string {
+  if (next && next.startsWith("/") && !next.startsWith("//")) return next;
+  return "/";
+}
+
 export default function SignInPage() {
+  return (
+    <Suspense fallback={<Card />}>
+      <SignInForm />
+    </Suspense>
+  );
+}
+
+function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +42,7 @@ export default function SignInPage() {
       }
       // Bust RSC cache so session is visible immediately (FM-2)
       router.refresh();
-      router.push("/");
+      router.push(safeNext(searchParams.get("next")));
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);

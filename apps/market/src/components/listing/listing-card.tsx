@@ -10,6 +10,7 @@ import Image from "next/image";
 import { Card, CardContent, Badge } from "@bushpop/ui";
 import { formatMoney } from "@/lib/format-money";
 import { conditionLabel } from "@/lib/condition-labels";
+import { FavButton } from "./fav-button";
 
 interface ListingCardItem {
   id: string;
@@ -39,7 +40,7 @@ interface ListingCardProps {
 
 export function ListingCard({ listing, priority = false }: ListingCardProps) {
   return (
-    <Link href={`/listing/${listing.handle}`} className="group block">
+    <Link href={`/listing/${listing.handle}`} className="bp-pcard group block">
       <Card className="overflow-hidden transition-shadow hover:shadow-md">
         {/* Image area */}
         <div className="relative aspect-[3/4] w-full overflow-hidden bg-brand-100">
@@ -57,6 +58,7 @@ export function ListingCard({ listing, priority = false }: ListingCardProps) {
               <span className="text-4xl text-brand-300">◻</span>
             </div>
           )}
+          <FavButton listingId={listing.id} />
         </div>
 
         <CardContent className="p-3">

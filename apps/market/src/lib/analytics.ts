@@ -64,6 +64,22 @@ export type BushpopEvent =
       props: { channel: string; order_id: string };
     }
   | {
+      event: "wishlist.added";
+      props: { channel: string; listing_id: string };
+    }
+  | {
+      event: "wishlist.removed";
+      props: { channel: string; listing_id: string };
+    }
+  | {
+      event: "search.saved";
+      props: { channel: string; query: string };
+    }
+  | {
+      event: "search.deleted";
+      props: { channel: string };
+    }
+  | {
       event: "listing.edited";
       props: { channel: string; listing_id: string };
     }

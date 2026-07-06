@@ -22,6 +22,7 @@ export const wishlistMutationResponseSchema = z.object({
 export const wishlistItemResponseSchema = z.object({
   id: z.string(),
   listingId: z.string(),
+  listingHandle: z.string(),
   title: z.string(),
   priceCents: z.number(),
   currency: z.string(),
@@ -34,4 +35,8 @@ export const wishlistItemResponseSchema = z.object({
 export const wishlistListResponseSchema = z.object({
   items: z.array(wishlistItemResponseSchema),
   nextCursor: z.string().nullable(),
+});
+
+export const wishlistStatusResponseSchema = z.object({
+  favorited: z.boolean(),
 });

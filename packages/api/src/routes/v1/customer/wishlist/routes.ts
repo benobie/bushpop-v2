@@ -7,11 +7,13 @@ import {
   wishlistQuerySchema,
   wishlistMutationResponseSchema,
   wishlistListResponseSchema,
+  wishlistStatusResponseSchema,
 } from "./schemas.js";
 import {
   addToWishlist,
   removeFromWishlist,
   listWishlist,
+  getWishlistEntry,
 } from "./service.js";
 
 export async function wishlistRoutes(app: FastifyInstance) {
@@ -49,6 +51,21 @@ export async function wishlistRoutes(app: FastifyInstance) {
     const { listingId } = request.params as { listingId: string };
     await removeFromWishlist(request.user!.id, listingId);
     return reply.status(204).send();
+  });
+
+  // GET /api/v1/customer/wishlist/:listingId
+  app.get("/api/v1/customer/wishlist/:listingId", {
+    preHandler: [requireAuth],
+    schema: {
+      tags: ["Customer - Wishlist"],
+      summary: "Check whether a listing is wishlisted",
+      params: wishlistParamsSchema,
+      response: { 200: wishlistStatusResponseSchema },
+    },
+  }, async (request) => {
+    const { listingId } = request.params as { listingId: string };
+    const entry = await getWishlistEntry(request.user!.id, listingId);
+    return { favorited: !!entry };
   });
 
   // GET /api/v1/customer/wishlist
