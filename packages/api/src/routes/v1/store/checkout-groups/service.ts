@@ -458,6 +458,9 @@ export async function createQuoteAndPaymentIntent(
       {
         amount: groupTotal,
         currency: currency.toLowerCase(),
+        // W4 decision: card + Apple/Google Pay only — see the matching
+        // exclusion in checkout/service.ts for why Link is excluded here too.
+        payment_method_types: ["card"],
         ...(chargeType === "destination" && singleSeller
           ? {
               transfer_data: {

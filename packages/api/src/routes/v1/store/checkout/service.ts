@@ -297,7 +297,8 @@ export async function initiateCheckout(
         // W4 decision: card + Apple/Google Pay only (both ride on the
         // "card" payment method type). Explicitly excludes Link, which
         // Stripe otherwise enables by account default and renders its
-        // inline capture UI for even though it's unverified for production.
+        // inline capture UI for it even though Link is unverified for
+        // production.
         payment_method_types: ["card"],
         metadata: {
           checkoutSessionId: sessionId!,
