@@ -21,6 +21,12 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: "22"
+          # check-redirects.mjs is zero-dependency (Node 22 built-in fetch
+          # only) — no pnpm install happens in this job. setup-node@v5
+          # defaults package-manager-cache to true and autodetects the repo's
+          # packageManager field, which fails looking for a pnpm binary that
+          # is never installed here. Disable it explicitly.
+          package-manager-cache: false
 
       - name: Run redirect fixture check
         # TODO cutover: flip --base to https://bushpop.com.au after DNS cut
