@@ -132,9 +132,15 @@ test("happy path — add to bag through a paid, confirmed order", async ({ page,
   await deliverWebhook(paymentIntent);
 
   // "It's yours." — the real order, created by the real webhook handler
-  // above, rendered with the real enriched item title/photo.
+  // above, rendered with the real enriched item title/photo. OrderPoller
+  // (order-poller.tsx) starts its own 2s-interval/15-attempt (30s) poll
+  // budget the moment the confirmation page loads — before this spec's
+  // own Stripe-poll-then-deliver-webhook round trip (up to ~10s) even
+  // starts — so on a loaded CI runner the two budgets can stack close to
+  // the wire. Confirmed via CI screenshot: the heading rendered correctly,
+  // just a beat after a bare 30s assertion window.
   await expect(page.getByRole("heading", { name: "It's yours." })).toBeVisible({
-    timeout: 30_000,
+    timeout: 45_000,
   });
   await expect(page.getByText(listing.title, { exact: false })).toBeVisible();
 });
@@ -197,10 +203,14 @@ test("declined card — shows the failed-payment banner", async ({ page, listing
   await fillStripeTestCard(page, "4000000000000002");
   await page.getByTestId("pay-button").click();
 
-  await expect(page).toHaveURL(/\/checkout\/confirmation\?.*redirect_status=failed/, {
-    timeout: 30_000,
-  });
-  await expect(page.getByTestId("checkout-payment-failed")).toBeVisible();
+  // A same-request decline resolves confirmPayment() synchronously with
+  // result.error — Stripe.js never navigates to return_url for this case
+  // (only a definitive success, or certain async next-action flows,
+  // trigger the redirect). PaymentSection renders the error inline and
+  // stays on /checkout — confirmed via CI screenshot showing exactly this
+  // (Card declined, Banner visible, still on /checkout).
+  await expect(page).toHaveURL(/\/checkout$/, { timeout: 30_000 });
+  await expect(page.getByTestId("payment-error")).toBeVisible();
 });
 
 /**
