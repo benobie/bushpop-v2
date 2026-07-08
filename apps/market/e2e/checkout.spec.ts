@@ -150,7 +150,7 @@ test("happy path — add to bag through a paid, confirmed order", async ({ page,
   // the wire. Confirmed via CI screenshot: the heading rendered correctly,
   // just a beat after a bare 30s assertion window.
   await expect(page.getByRole("heading", { name: "It's yours." })).toBeVisible({
-    timeout: 45_000,
+    timeout: 55_000,
   });
   await expect(page.getByText(listing.title, { exact: false })).toBeVisible();
 });
