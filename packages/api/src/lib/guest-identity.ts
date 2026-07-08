@@ -2,6 +2,14 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
 import { addresses, carts, cartItems } from "@bushpop/db/schema";
 
+/**
+ * Domain better-auth's `anonymous` plugin uses for placeholder guest emails
+ * (`<id>@guest.bushpop.com.au`). Single source of truth — lib/auth.ts wires
+ * it into the plugin config, and workers/email.ts uses it to skip sends to
+ * these undeliverable placeholder addresses.
+ */
+export const GUEST_EMAIL_DOMAIN = "guest.bushpop.com.au";
+
 function isUniqueViolation(error: unknown): boolean {
   if (typeof error !== "object" || error === null) return false;
   const e = error as { code?: unknown; cause?: { code?: unknown } };

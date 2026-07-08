@@ -158,6 +158,30 @@ async function processStarshipitPoll(_job: Job): Promise<void> {
               .update(orders)
               .set({ lastTrackingStatus: trackingStatus.status, lastTrackingEventAt: eventAt })
               .where(eq(orders.id, order.id));
+          } else {
+            // Drives the buyer's shipping_confirmation_buyer email via
+            // event-consumer.ts's order.shipped handler. Defensive today —
+            // the poll query only selects already-shipped orders so this CAS
+            // never wins — but keeps the email contract intact if that query
+            // ever broadens to paid orders. Gated on the CAS win, so at most
+            // once per order.
+            await dispatchEvent({
+              eventName: "order.shipped",
+              category: "order",
+              actorId: "system",
+              entityType: "order",
+              entityId: order.id,
+              channelId: order.channelId,
+              metadata: {
+                trackingNumber,
+                carrier: order.trackingCarrier ?? null,
+              },
+            }).catch((err: unknown) => {
+              console.error(
+                `[starshipit-poll] Failed to dispatch order.shipped for order ${order.id}:`,
+                err,
+              );
+            });
           }
           console.info(`[starshipit-poll] Order ${order.id}: dispatched event processed`);
           break;
