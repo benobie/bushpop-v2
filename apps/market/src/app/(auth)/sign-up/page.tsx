@@ -1,15 +1,34 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Input, Card, CardHeader, CardContent, CardFooter } from "@bushpop/ui";
 import { signUp } from "@/lib/auth-client";
 
+/** Only ever redirect to a same-origin relative path — never an absolute/external URL. */
+function safeNext(next: string | null): string {
+  if (next && next.startsWith("/") && !next.startsWith("//")) return next;
+  return "/";
+}
+
 export default function SignUpPage() {
+  return (
+    <Suspense fallback={<Card />}>
+      <SignUpForm />
+    </Suspense>
+  );
+}
+
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  // BF-08 guest commerce — the post-purchase "create an account" prompt
+  // prefills the guest's checkout email (?email=) so an ex-guest doesn't
+  // have to retype it; ?next= sends them back to their order after signup
+  // (usually /orders) instead of always landing on the homepage.
+  const [email, setEmail] = useState(() => searchParams.get("email") ?? "");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,7 +46,7 @@ export default function SignUpPage() {
         return;
       }
       router.refresh();
-      router.push("/");
+      router.push(safeNext(searchParams.get("next")));
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);

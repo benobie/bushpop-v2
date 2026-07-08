@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { requireAuth } from "../../../../middleware/require-auth.js";
 import { idempotencyMiddleware } from "../../../../middleware/idempotency.js";
+import { ValidationError } from "../../../../lib/errors.js";
 import {
   initiateCheckoutBody,
   checkoutIdParam,
@@ -10,6 +11,7 @@ import {
 } from "./schemas.js";
 import {
   initiateCheckout,
+  setGuestCheckoutEmail,
   getCheckoutSession,
   cancelCheckoutSession,
 } from "./service.js";
@@ -30,9 +32,22 @@ export async function checkoutRoutes(app: FastifyInstance) {
       response: { 200: checkoutResponseSchema },
     },
   }, async (request, reply) => {
-    const { shippingAddressId } = request.body as { shippingAddressId: string };
+    const { shippingAddressId, buyerEmail } = request.body as {
+      shippingAddressId: string;
+      buyerEmail?: string;
+    };
     const buyerId = request.user!.id;
     const channelId = request.channel!.id;
+
+    // BF-08 guest commerce — an anonymous session has a placeholder email;
+    // require + apply the real one before reserving inventory or touching
+    // Stripe. Never runs for a real account, even if buyerEmail is sent.
+    if (request.user!.isAnonymous) {
+      if (!buyerEmail) {
+        throw new ValidationError("Enter your email to check out as a guest.");
+      }
+      await setGuestCheckoutEmail(buyerId, buyerEmail);
+    }
 
     const result = await initiateCheckout(buyerId, channelId, shippingAddressId);
     return reply.status(200).send(result);

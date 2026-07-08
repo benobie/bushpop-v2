@@ -9,11 +9,21 @@ import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Routes that require authentication (optimistic check only).
- * `/bag` is deliberately NOT here (BF-08, guest commerce) — a guest with no
- * session at all just sees an empty bag; add-to-bag bootstraps a real
- * (anonymous) session on first use, so `/bag` works unmodified after that.
+ * `/bag` and `/checkout` are deliberately NOT here (BF-08, guest commerce)
+ * — a guest with no session at all just gets redirected to /bag (empty cart)
+ * by the page itself; anyone who's added to bag already has a real
+ * (anonymous) session by the time they reach checkout, so both routes work
+ * unmodified after that first add-to-bag.
  */
-const PROTECTED_PREFIXES = ["/account", "/dashboard", "/sell", "/checkout", "/orders"];
+const PROTECTED_PREFIXES = ["/account", "/dashboard", "/sell", "/orders"];
+
+/**
+ * BF-08 guest commerce — the one `/orders/*` page a guest with NO session
+ * must be able to reach: their order-confirmation email link. The token in
+ * the URL is the ownership proof (verified API-side), not this page's auth
+ * state — see guest-order-access.ts.
+ */
+const GUEST_ORDER_PAGE = /^\/orders\/[^/]+\/guest\/?$/;
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -40,9 +50,9 @@ export function proxy(request: NextRequest) {
   }
 
   // ── 3. Optimistic auth guard (FM-1 — NOT a trust boundary) ──
-  const isProtected = PROTECTED_PREFIXES.some((prefix) =>
-    pathname.startsWith(prefix),
-  );
+  const isProtected =
+    PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix)) &&
+    !GUEST_ORDER_PAGE.test(pathname);
   if (isProtected) {
     const hasSession =
       request.cookies.has("better-auth.session_token") ||

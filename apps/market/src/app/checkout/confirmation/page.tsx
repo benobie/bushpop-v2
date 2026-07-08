@@ -26,7 +26,7 @@ function getString(v: string | string[] | undefined): string | undefined {
 export default async function ConfirmationPage({
   searchParams,
 }: ConfirmationPageProps) {
-  await requireAuth();
+  const customer = await requireAuth();
 
   const sp = await searchParams;
   const sessionId = getString(sp.session);
@@ -76,7 +76,11 @@ export default async function ConfirmationPage({
   // this shell stays a plain container.
   return (
     <main className="mx-auto max-w-2xl px-4 py-8 sm:py-10" data-testid="checkout-confirmation-page">
-      <OrderPoller sessionId={sessionId} />
+      <OrderPoller
+        sessionId={sessionId}
+        isGuest={customer.user.isAnonymous}
+        guestEmail={customer.user.email}
+      />
     </main>
   );
 }

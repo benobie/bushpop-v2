@@ -8,8 +8,15 @@ import {
   checkoutSessions,
   addresses,
   channels,
+  user,
 } from "@bushpop/db/schema";
-import { AppError, ConflictError, NotFoundError, ValidationError } from "../../../../lib/errors.js";
+import {
+  AppError,
+  ConflictError,
+  GuestEmailAlreadyRegisteredError,
+  NotFoundError,
+  ValidationError,
+} from "../../../../lib/errors.js";
 import { assertCheckoutReady } from "../../../../lib/seller-readiness.js";
 import { assertSingleSellerCart } from "../../../../lib/cart-sellers.js";
 import { reserveItems, releaseItems, getInventoryStatuses } from "../../../../lib/inventory-reservation.js";
@@ -68,6 +75,38 @@ function calculateTotals(
 }
 
 // ── Public API ──
+
+function isUniqueViolation(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+  const e = error as { code?: unknown; cause?: { code?: unknown } };
+  return e.code === "23505" || e.cause?.code === "23505";
+}
+
+/**
+ * BF-08 guest commerce — overwrite an anonymous buyer's placeholder email
+ * with the address they entered at checkout. Scoped to is_anonymous = true
+ * so this can never touch a real account's email via the checkout body.
+ * Order-confirmation email (workers/email.ts) reads user.email directly, so
+ * this must run before initiateCheckout creates the PaymentIntent.
+ */
+export async function setGuestCheckoutEmail(userId: string, email: string): Promise<void> {
+  try {
+    const result = await db
+      .update(user)
+      .set({ email, updatedAt: new Date() })
+      .where(and(eq(user.id, userId), eq(user.isAnonymous, true)))
+      .returning({ id: user.id });
+
+    if (result.length === 0) {
+      throw new ValidationError("Could not set checkout email for this guest session.");
+    }
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      throw new GuestEmailAlreadyRegisteredError();
+    }
+    throw err;
+  }
+}
 
 /**
  * Initiate checkout for the buyer's current cart.

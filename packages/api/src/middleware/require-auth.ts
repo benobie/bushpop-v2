@@ -13,6 +13,11 @@ declare module "fastify" {
       name: string;
       image: string | null;
       emailVerified: boolean;
+      // BF-08 guest commerce — true for a session created via the
+      // `anonymous` plugin (no account, placeholder email). Route handlers
+      // that touch email (e.g. checkout) must gate any email-changing
+      // behaviour on this flag — never write to a real account's email.
+      isAnonymous: boolean;
     } | null;
     sessionId: string | null;
   }
@@ -33,6 +38,7 @@ export async function requireAuth(request: FastifyRequest, _reply: FastifyReply)
     name: session.user.name,
     image: session.user.image ?? null,
     emailVerified: session.user.emailVerified,
+    isAnonymous: Boolean((session.user as { isAnonymous?: boolean }).isAnonymous),
   };
   request.sessionId = session.session.id;
 }

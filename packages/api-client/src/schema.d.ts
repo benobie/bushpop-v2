@@ -458,6 +458,7 @@ export interface paths {
                                 name: string;
                                 image: string | null;
                                 emailVerified: boolean;
+                                isAnonymous: boolean;
                             };
                             roles: string[];
                             channel: {
@@ -4215,6 +4216,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         shippingAddressId: string;
+                        /** Format: email */
+                        buyerEmail?: string;
                     };
                 };
             };
@@ -4322,6 +4325,181 @@ export interface paths {
         get?: never;
         put?: never;
         /** Cancel a checkout session (created or payment_pending only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            cancelled: boolean;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/checkout-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a multi-vendor checkout group — reserve inventory + create Stripe PaymentIntent */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        shippingAddressId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            orderGroupId: string;
+                            clientSecret: string;
+                            /** @enum {string} */
+                            chargeType: "destination" | "sct";
+                            totals: {
+                                subtotalCents: number;
+                                shippingCents: number;
+                                platformFeeCents: number;
+                                sellerProceedsCents: number;
+                                totalCents: number;
+                                currency: string;
+                            };
+                            allocations: {
+                                allocationId: string;
+                                sellerId: string;
+                                /** @enum {string} */
+                                status: "pending" | "charge_reserved" | "transfer_pending" | "transfer_retrying" | "transferred" | "transfer_blocked" | "shipped" | "delivered" | "refunded" | "cancelled";
+                                subtotalCents: number;
+                                shippingCents: number;
+                                platformFeeCents: number;
+                                sellerProceedsCents: number;
+                                totalCents: number;
+                                itemIds: string[];
+                            }[];
+                            /** Format: date-time */
+                            expiresAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/checkout-groups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a checkout group by ID (buyer only) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            orderGroupId: string;
+                            /** @enum {string} */
+                            status: "created" | "payment_pending" | "requires_action" | "confirming" | "paid_unallocated" | "allocating" | "allocated" | "partially_failed" | "expired" | "payment_declined" | "cancelled";
+                            /** @enum {string} */
+                            chargeType: "destination" | "sct";
+                            totals: {
+                                subtotalCents: number;
+                                shippingCents: number;
+                                platformFeeCents: number;
+                                sellerProceedsCents: number;
+                                totalCents: number;
+                                currency: string;
+                            };
+                            allocations: {
+                                allocationId: string;
+                                sellerId: string;
+                                /** @enum {string} */
+                                status: "pending" | "charge_reserved" | "transfer_pending" | "transfer_retrying" | "transferred" | "transfer_blocked" | "shipped" | "delivered" | "refunded" | "cancelled";
+                                subtotalCents: number;
+                                shippingCents: number;
+                                platformFeeCents: number;
+                                sellerProceedsCents: number;
+                                totalCents: number;
+                                itemIds: string[];
+                            }[];
+                            /** Format: date-time */
+                            expiresAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/checkout-groups/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel a checkout group (created or payment_pending only) */
         post: {
             parameters: {
                 query?: never;
@@ -4949,6 +5127,99 @@ export interface paths {
                             code: string;
                             /** Format: date-time */
                             issuedAt: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/store/orders/{id}/guest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an order via its guest access token (no session required) */
+        get: {
+            parameters: {
+                query: {
+                    token: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: string;
+                            checkoutSessionId: string;
+                            buyerId: string;
+                            sellerId: string;
+                            channelId: string;
+                            /** @enum {string} */
+                            status: "paid" | "shipped" | "delivered" | "completed" | "cancelled" | "delivery_assumed" | "shipment_stale_review" | "refund_in_progress" | "refunded";
+                            subtotalCents: number;
+                            shippingCents: number;
+                            platformFeeCents: number;
+                            buyerProtectionFeeCents: number;
+                            sellerProceedsCents: number;
+                            totalCents: number;
+                            currency: string;
+                            shippingAddressSnapshot: {
+                                line1: string;
+                                line2?: string;
+                                suburb: string;
+                                state: string;
+                                postcode: string;
+                                country: string;
+                            } | null;
+                            senderAddressSnapshot: {
+                                line1: string;
+                                line2?: string;
+                                suburb: string;
+                                state: string;
+                                postcode: string;
+                                country: string;
+                            } | null;
+                            trackingNumber: string | null;
+                            trackingCarrier: string | null;
+                            stripePaymentIntentId: string | null;
+                            items: {
+                                id: string;
+                                orderId: string;
+                                channelListingId: string;
+                                priceCents: number;
+                                currency: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                title: string | null;
+                                coverImage: string | null;
+                                handle: string | null;
+                                size: string | null;
+                                condition: string | null;
+                                brand: string | null;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
                         };
                     };
                 };

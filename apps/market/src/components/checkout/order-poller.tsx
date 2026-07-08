@@ -18,6 +18,10 @@ import { DEFAULT_CHANNEL } from "@bushpop/config";
 interface OrderPollerProps {
   /** The sessionId from the checkout session, passed via confirmation page searchParams */
   sessionId: string;
+  /** BF-08 guest commerce — true when the buyer checked out anonymously. */
+  isGuest?: boolean;
+  /** The guest's checkout email — prefilled into the post-purchase sign-up link. */
+  guestEmail?: string;
 }
 
 type OrderStatus =
@@ -81,7 +85,7 @@ interface Order {
 const MAX_POLLS = 15;
 const POLL_INTERVAL_MS = 2000;
 
-export function OrderPoller({ sessionId }: OrderPollerProps) {
+export function OrderPoller({ sessionId, isGuest, guestEmail }: OrderPollerProps) {
   const [order, setOrder] = useState<Order | null>(null);
   const [timedOut, setTimedOut] = useState(false);
   const [pollCount, setPollCount] = useState(0);
@@ -215,6 +219,29 @@ export function OrderPoller({ sessionId }: OrderPollerProps) {
             </p>
           </div>
         </div>
+
+        {isGuest && (
+          <div
+            className="mt-7 flex items-start gap-3 rounded-[var(--radius-bp-rect)] border border-[var(--color-bp-line)] bg-[var(--color-bp-surface-2)] px-[18px] py-4"
+            data-testid="guest-signup-prompt"
+          >
+            <div>
+              <h3 className="text-[14.5px] font-bold text-[var(--color-bp-ink)]">
+                Save this order to your account
+              </h3>
+              <p className="mt-0.5 text-[13.5px] text-[var(--color-bp-ink-2)]">
+                Create an account with this email to track every order in one place — takes a
+                few seconds.
+              </p>
+              <Link
+                href={`/sign-up?next=${encodeURIComponent("/orders")}${guestEmail ? `&email=${encodeURIComponent(guestEmail)}` : ""}`}
+                className="mt-2 inline-block text-[13.5px] font-bold text-[var(--color-bp-green-bright)] underline"
+              >
+                Create an account
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
           <Button asChild variant="primary" size="lg" className="flex-1">

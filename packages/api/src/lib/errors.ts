@@ -82,3 +82,20 @@ export class MultiSellerCheckoutNotSupportedError extends AppError {
     this.name = "MultiSellerCheckoutNotSupportedError";
   }
 }
+
+/**
+ * BF-08 guest commerce — a guest entered an email at checkout that already
+ * belongs to a real account. This is a deliberate sign-in prompt, not a
+ * generic validation failure — the frontend uses the distinct code to show
+ * a "sign in instead" CTA rather than a bare error message.
+ */
+export class GuestEmailAlreadyRegisteredError extends AppError {
+  constructor() {
+    super(
+      "An account already exists with this email. Please sign in to continue.",
+      409,
+      "GUEST_EMAIL_ALREADY_REGISTERED",
+    );
+    this.name = "GuestEmailAlreadyRegisteredError";
+  }
+}

@@ -17,6 +17,7 @@ import {
 } from "../lib/email/index.js";
 import { GUEST_EMAIL_DOMAIN } from "../lib/guest-identity.js";
 import { getRedis } from "../lib/redis.js";
+import { deriveGuestOrderToken } from "../lib/guest-order-access.js";
 
 const EMAIL_QUEUE = "email";
 
@@ -390,6 +391,14 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
     const items = await fetchOrderItems(orderId);
 
     if (type === "order_confirmation_buyer") {
+      // BF-08 guest commerce — a guest has no account to sign back into, so
+      // the confirmation email carries a standing link to their order (same
+      // token the guest order-access route verifies). Never generated for a
+      // real account — they already have session-based /orders access.
+      const orderUrl = order.buyerIsAnonymous
+        ? `${process.env.WEB_URL ?? "http://localhost:3000"}/orders/${orderId}/guest?token=${deriveGuestOrderToken(orderId, order.buyerId)}`
+        : undefined;
+
       const { subject, text } = orderConfirmationBuyerTemplate({
         orderId,
         buyerName: order.buyerName,
@@ -397,6 +406,7 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         currency: order.currency,
         items,
         channelName: order.channelName,
+        orderUrl,
       });
 
       const result = await send({
