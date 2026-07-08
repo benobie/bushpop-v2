@@ -74,6 +74,16 @@ test.afterAll(async () => {
 });
 
 test("happy path — add to bag through a paid, confirmed order", async ({ page, listing }) => {
+  // Playwright's default per-test timeout is 30s (no top-level `timeout`
+  // in playwright.config.ts — only webServer's own boot timeout is set
+  // there). That default was silently capping the "It's yours." assertion
+  // below at 30s regardless of the 45_000 passed to that one expect() call
+  // — a per-test deadline always wins over a longer per-assertion timeout.
+  // This test does two real Stripe round trips (confirmPayment, then
+  // poll-for-succeeded + deliver webhook) plus OrderPoller's own 30s poll
+  // budget, so it legitimately needs more than the default.
+  test.setTimeout(60_000);
+
   await page.goto(`/listing/${listing.handle}`);
 
   await page.getByRole("button", { name: "Add to bag" }).click();
