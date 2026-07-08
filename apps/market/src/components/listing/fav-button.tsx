@@ -7,7 +7,7 @@
  * renders a listing card) — a 401 from the wishlist API is itself the
  * signed-out signal, so we just redirect to sign-in with a `next` param.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
 import { HeartIcon, cn } from "@bushpop/ui";
@@ -33,6 +33,10 @@ export function FavButton({
   const [pending, setPending] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    setFavorited(initialFavorited);
+  }, [initialFavorited, listingId]);
 
   async function handleClick(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();

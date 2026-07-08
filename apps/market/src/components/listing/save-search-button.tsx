@@ -9,7 +9,7 @@
  * optional and added afterward from /account/searches (searches-list.tsx),
  * not gated here as a required second step.
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
@@ -34,10 +34,18 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
   }
   const hasCriteria = !!(q && q.trim()) || Object.keys(filters).length > 0;
   const queryValue = q && q.trim() ? q.trim() : "*";
+  const criteriaSignature = `${queryValue}|${FILTER_KEYS.map((key) => `${key}:${searchParams.get(key) ?? ""}`).join("|")}`;
+  const latestCriteriaRef = useRef(criteriaSignature);
+
+  useEffect(() => {
+    latestCriteriaRef.current = criteriaSignature;
+    setStatus("idle");
+  }, [criteriaSignature]);
 
   if (!hasCriteria) return null;
 
   async function handleSave() {
+    const saveCriteria = criteriaSignature;
     setStatus("saving");
     try {
       const api = createBrowserApiClient();
@@ -48,6 +56,9 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
       if (response.status === 401) {
         const returnTo = `${window.location.pathname}${window.location.search}`;
         window.location.href = `/sign-in?next=${encodeURIComponent(returnTo)}`;
+        return;
+      }
+      if (latestCriteriaRef.current !== saveCriteria) {
         return;
       }
       if (response.status === 409) {
@@ -66,6 +77,9 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
       track({ event: "search.saved", props: { channel: DEFAULT_CHANNEL, query: queryValue } });
       setStatus("saved");
     } catch {
+      if (latestCriteriaRef.current !== saveCriteria) {
+        return;
+      }
       setStatus("error");
     }
   }
