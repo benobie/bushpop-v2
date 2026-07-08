@@ -42,20 +42,28 @@ const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
 type BuyerStorageState = Awaited<ReturnType<typeof createAuthenticatedBuyer>>["storageState"];
 
 const test = base.extend<
-  { storageState: BuyerStorageState },
-  { buyerStorageState: BuyerStorageState; listing: SeededListing }
+  { storageState: BuyerStorageState; listing: SeededListing },
+  { buyerStorageState: BuyerStorageState }
 >({
-  // Worker-scoped: the auth endpoint is real-rate-limited (10/min) — see
-  // sell-wizard.spec.ts's identical note.
-  listing: [
+  // Test-scoped (NOT worker-scoped): the happy-path test performs a real
+  // purchase, which correctly flips the listing to `sold` (verified in
+  // store/checkout-flow.test.ts's own assertions) — sharing one listing
+  // across both tests in this file meant whichever test ran second was
+  // racing that transition and could get "Cannot add listing to cart:
+  // listing status is 'sold'" depending on how much time had elapsed
+  // since the first test's webhook delivery. Each test gets its own
+  // seller + listing instead; only the buyer identity below stays
+  // worker-scoped (auth sign-up is real-rate-limited at 10/min, and a
+  // shared buyer isn't a resource either test consumes).
+  listing: async (
     // eslint-disable-next-line no-empty-pattern
-    async ({}, use) => {
-      const { userId } = await createAuthenticatedSeller(BASE_URL);
-      const seeded = await createActiveListing(userId);
-      await use(seeded);
-    },
-    { scope: "worker" },
-  ],
+    {},
+    use,
+  ) => {
+    const { userId } = await createAuthenticatedSeller(BASE_URL);
+    const seeded = await createActiveListing(userId);
+    await use(seeded);
+  },
   buyerStorageState: [
     // eslint-disable-next-line no-empty-pattern
     async ({}, use) => {
@@ -76,21 +84,13 @@ test.afterAll(async () => {
 test("happy path — add to bag through a paid, confirmed order", async ({ page, listing }) => {
   // Playwright's default per-test timeout is 30s (no top-level `timeout`
   // in playwright.config.ts — only webServer's own boot timeout is set
-  // there). That default was silently capping the "It's yours." assertion
-  // below at 30s regardless of the 45_000 passed to that one expect() call
-  // — a per-test deadline always wins over a longer per-assertion timeout.
-  // This test does two real Stripe round trips (confirmPayment, then
-  // poll-for-succeeded + deliver webhook) plus OrderPoller's own 30s poll
-  // budget, so it legitimately needs more than the default. Even a 60s
-  // ceiling with a 55s inner assertion wasn't consistently enough on this
-  // CI runner — every observed failure's accessibility snapshot shows the
-  // real order fully rendered ('It's yours.', real order number) at the
-  // moment of timeout, so this is CI-runner latency stacking across a real
-  // multi-hop round trip (Stripe confirm → poll for succeeded → deliver
-  // webhook → order creation → OrderPoller's own 2s/15-attempt poll),
-  // never a functional failure. Widened with real margin rather than
-  // nudging by a few more seconds each retry.
-  test.setTimeout(90_000);
+  // there). This test does two real Stripe round trips (confirmPayment,
+  // then poll-for-succeeded + deliver webhook) plus OrderPoller's own
+  // ~30.5s poll budget, so it legitimately needs more than the default —
+  // 60s comfortably covers all of that plus CI jitter. (The 90s/85s figures
+  // that were here before were chasing a mistaken timing theory — see the
+  // root-cause note on the "It's yours." assertion below.)
+  test.setTimeout(60_000);
 
   await page.goto(`/listing/${listing.handle}`);
 
@@ -151,14 +151,25 @@ test("happy path — add to bag through a paid, confirmed order", async ({ page,
 
   // "It's yours." — the real order, created by the real webhook handler
   // above, rendered with the real enriched item title/photo. OrderPoller
-  // (order-poller.tsx) starts its own 2s-interval/15-attempt (30s) poll
-  // budget the moment the confirmation page loads — before this spec's
-  // own Stripe-poll-then-deliver-webhook round trip (up to ~10s) even
-  // starts — so on a loaded CI runner the two budgets can stack close to
-  // the wire. Confirmed via CI screenshot: the heading rendered correctly,
-  // just a beat after a bare 30s assertion window.
-  await expect(page.getByRole("heading", { name: "It's yours." })).toBeVisible({
-    timeout: 85_000,
+  // (order-poller.tsx) starts its own 2s-interval/15-attempt (~30.5s) poll
+  // budget the moment the confirmation page loads, so 40s covers a full
+  // worst-case poll cycle plus CI jitter.
+  //
+  // Root cause of the prior "flake" (batch 45): this was never a timing
+  // issue. order-poller.tsx renders the heading as `It&rsquo;s yours.`
+  // (curly apostrophe U+2019, matching the rest of that component's copy —
+  // "it&rsquo;s delivered", "doesn&rsquo;t arrive", etc.), but this locator
+  // searched for a straight apostrophe (U+0027). Playwright's accessible-name
+  // matching does not normalize punctuation, so the two can never match —
+  // confirmed from a CI trace: the order was fetched and "It's yours."
+  // (curly quote) was visibly rendered and stable on screen from ~2s after
+  // the assertion started clear through to the end of the run, while this
+  // assertion still reported "element not found" the entire time. No amount
+  // of timeout widening could have fixed a permanent string mismatch, which
+  // is exactly what batch 44's five escalating timeout bumps (30s→90s)
+  // ran into. Matching via regex here so either apostrophe form passes.
+  await expect(page.getByRole("heading", { name: /It.s yours\./ })).toBeVisible({
+    timeout: 40_000,
   });
   await expect(page.getByText(listing.title, { exact: false })).toBeVisible();
 });
