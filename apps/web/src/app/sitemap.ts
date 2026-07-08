@@ -32,6 +32,8 @@ const READY_PATHS: { path: string; priority: number }[] = [
   { path: "/guides/op-shops-canberra/", priority: 0.7 },
   { path: "/guides/op-shops-newcastle/", priority: 0.7 },
   { path: "/guides/op-shops-hobart/", priority: 0.7 },
+  { path: "/guides/op-shops-wollongong/", priority: 0.7 },
+  { path: "/guides/op-shops-geelong/", priority: 0.7 },
   { path: "/guides/vinted-australia/", priority: 0.6 },
   { path: "/guides/washing-symbols/", priority: 0.6 },
   { path: "/guides/fabric-care-guide/", priority: 0.6 },
