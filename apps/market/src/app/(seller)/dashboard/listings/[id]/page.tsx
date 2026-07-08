@@ -57,19 +57,19 @@ export default async function DashboardListingDetailPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <Link href="/dashboard/listings" className="text-sm text-brand-500 hover:underline">
+      <Link href="/dashboard/listings" className="text-sm text-bp-ink-2 hover:underline">
         ← My listings
       </Link>
 
       <div className="mt-2 flex items-start justify-between gap-4">
-        <h1 className="text-lg font-bold text-brand-900">{listing.title}</h1>
+        <h1 className="text-lg font-bold text-bp-ink">{listing.title}</h1>
         <Badge variant={getStatusVariant(listing.status)}>
           {STATUS_LABELS[listing.status] ?? listing.status}
         </Badge>
       </div>
 
       {listing.primaryImageUrl && (
-        <div className="relative mt-4 aspect-square w-32 overflow-hidden rounded-lg bg-brand-100">
+        <div className="relative mt-4 aspect-square w-32 overflow-hidden rounded-lg bg-bp-surface-2">
           <Image
             src={listing.primaryImageUrl}
             alt={listing.title}
@@ -80,9 +80,9 @@ export default async function DashboardListingDetailPage({
         </div>
       )}
 
-      <section className="mt-6 rounded-xl border border-brand-100 bg-white p-4">
-        <h2 className="text-sm font-semibold text-brand-900">Listing status</h2>
-        <p className="mt-1 text-sm text-brand-500">
+      <section className="mt-6 rounded-xl border border-bp-line bg-white p-4">
+        <h2 className="text-sm font-semibold text-bp-ink">Listing status</h2>
+        <p className="mt-1 text-sm text-bp-ink-2">
           {listing.status === "archived"
             ? "This listing is archived and can no longer be edited or relisted."
             : "Delist to pull this item off Bushpop temporarily, or mark it sold if it sold elsewhere."}
@@ -97,8 +97,8 @@ export default async function DashboardListingDetailPage({
       </section>
 
       {listing.status !== "archived" && (
-        <section className="mt-6 rounded-xl border border-brand-100 bg-white p-4">
-          <h2 className="text-sm font-semibold text-brand-900">Edit details</h2>
+        <section className="mt-6 rounded-xl border border-bp-line bg-white p-4">
+          <h2 className="text-sm font-semibold text-bp-ink">Edit details</h2>
           <div className="mt-3">
             <EditListingForm
               listingId={listing.id}

@@ -18,22 +18,22 @@ export default async function AdminAiUsagePage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-brand-900">AI draft usage</h1>
-      <p className="mt-1 text-sm text-brand-500">
+      <h1 className="text-xl font-bold text-bp-ink">AI draft usage</h1>
+      <p className="mt-1 text-sm text-bp-ink-2">
         Cost + status of every AI listing-draft generation. Read-only.
       </p>
 
       <div className="mt-4 grid gap-4 sm:grid-cols-3">
-        <div className="rounded-lg border border-brand-100 p-4">
-          <p className="text-xs text-brand-500">Total generations</p>
+        <div className="rounded-lg border border-bp-line p-4">
+          <p className="text-xs text-bp-ink-2">Total generations</p>
           <p className="mt-1 text-2xl font-bold">{summary?.totalGenerations ?? 0}</p>
         </div>
-        <div className="rounded-lg border border-brand-100 p-4">
-          <p className="text-xs text-brand-500">Total cost</p>
+        <div className="rounded-lg border border-bp-line p-4">
+          <p className="text-xs text-bp-ink-2">Total cost</p>
           <p className="mt-1 text-2xl font-bold">{formatUsd(summary?.totalCostUsdMicros ?? 0)}</p>
         </div>
-        <div className="rounded-lg border border-brand-100 p-4">
-          <p className="text-xs text-brand-500">By provider</p>
+        <div className="rounded-lg border border-bp-line p-4">
+          <p className="text-xs text-bp-ink-2">By provider</p>
           <ul className="mt-1 text-sm">
             {(summary?.byProvider ?? []).map((p) => (
               <li key={p.provider}>
@@ -46,15 +46,15 @@ export default async function AdminAiUsagePage() {
 
       <div className="mt-4 flex flex-wrap gap-2 text-sm">
         {(summary?.byStatus ?? []).map((s) => (
-          <span key={s.status} className="rounded bg-brand-50 px-2 py-1 text-brand-700">
+          <span key={s.status} className="rounded bg-bp-surface-2 px-2 py-1 text-bp-ink-2">
             {s.status}: {s.count}
           </span>
         ))}
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-lg border border-brand-100">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-bp-line">
         <table className="w-full text-sm">
-          <thead className="bg-brand-50 text-left text-brand-600">
+          <thead className="bg-bp-surface-2 text-left text-bp-ink-2">
             <tr>
               <th className="p-2">Item</th>
               <th className="p-2">Provider / model</th>
@@ -65,16 +65,16 @@ export default async function AdminAiUsagePage() {
               <th className="p-2">Created</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-brand-100">
+          <tbody className="divide-y divide-bp-line">
             {(recent?.items ?? []).length === 0 && (
               <tr>
-                <td colSpan={7} className="p-4 text-brand-500">
+                <td colSpan={7} className="p-4 text-bp-ink-2">
                   No AI generations recorded.
                 </td>
               </tr>
             )}
             {(recent?.items ?? []).map((gen) => (
-              <tr key={gen.id} className="hover:bg-brand-50">
+              <tr key={gen.id} className="hover:bg-bp-surface-2">
                 <td className="p-2 font-mono text-xs">{gen.inventoryItemId.slice(-8)}</td>
                 <td className="p-2">
                   {gen.provider} / {gen.model}
@@ -83,7 +83,7 @@ export default async function AdminAiUsagePage() {
                 <td className="p-2">{gen.status}</td>
                 <td className="p-2">{formatUsd(gen.costUsdMicros)}</td>
                 <td className="p-2">{gen.latencyMs != null ? `${gen.latencyMs}ms` : "—"}</td>
-                <td className="p-2 text-brand-500">
+                <td className="p-2 text-bp-ink-2">
                   {new Date(gen.createdAt).toLocaleString("en-AU")}
                 </td>
               </tr>

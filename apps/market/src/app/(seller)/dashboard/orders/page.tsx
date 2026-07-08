@@ -76,13 +76,13 @@ export default async function DashboardOrdersPage({ searchParams }: DashboardOrd
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-xl font-bold text-brand-900">Orders</h1>
+      <h1 className="text-xl font-bold text-bp-ink">Orders</h1>
 
       <div className="mt-2 flex gap-4">
-        <Link href="/dashboard/listings" className="text-sm text-brand-500 hover:underline">
+        <Link href="/dashboard/listings" className="text-sm text-bp-ink-2 hover:underline">
           View listings →
         </Link>
-        <Link href="/dashboard/payouts" className="text-sm text-brand-500 hover:underline">
+        <Link href="/dashboard/payouts" className="text-sm text-bp-ink-2 hover:underline">
           View payouts →
         </Link>
       </div>
@@ -95,8 +95,8 @@ export default async function DashboardOrdersPage({ searchParams }: DashboardOrd
             className={[
               "rounded-full border px-4 py-1 text-sm font-medium transition-colors",
               statusFilter === s
-                ? "border-brand-700 bg-brand-700 text-white"
-                : "border-brand-200 text-brand-600 hover:border-brand-400",
+                ? "border-bp-obsidian bg-bp-obsidian text-white"
+                : "border-bp-line text-bp-ink-2 hover:border-bp-line-2",
             ].join(" ")}
           >
             {STATUS_LABELS[s]}
@@ -111,7 +111,7 @@ export default async function DashboardOrdersPage({ searchParams }: DashboardOrd
       )}
 
       {orders.length === 0 && !error && (
-        <div className="mt-12 text-center text-brand-500">
+        <div className="mt-12 text-center text-bp-ink-2">
           {statusFilter === "all" ? "No orders yet." : `No ${STATUS_LABELS[statusFilter]?.toLowerCase()} orders.`}
         </div>
       )}
@@ -122,21 +122,21 @@ export default async function DashboardOrdersPage({ searchParams }: DashboardOrd
             <Link
               key={order.id}
               href={`/dashboard/orders/${order.id}`}
-              className="block rounded-xl border border-brand-100 bg-white px-4 py-4 shadow-sm transition-shadow hover:shadow-md"
+              className="block rounded-xl border border-bp-line bg-white px-4 py-4 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-xs text-brand-400">
+                  <p className="text-xs text-bp-ink-3">
                     {new Date(order.createdAt).toLocaleDateString("en-AU", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
                     })}
                   </p>
-                  <p className="text-sm font-medium text-brand-700">
+                  <p className="text-sm font-medium text-bp-ink-2">
                     {order.items.length} {order.items.length === 1 ? "item" : "items"}
                   </p>
-                  <p className="text-base font-bold text-brand-900">
+                  <p className="text-base font-bold text-bp-ink">
                     {formatMoney(order.sellerProceedsCents, order.currency)} payout
                   </p>
                 </div>
@@ -144,7 +144,7 @@ export default async function DashboardOrdersPage({ searchParams }: DashboardOrd
                   <Badge variant={getStatusVariant(order.status)}>
                     {STATUS_LABELS[order.status] ?? order.status}
                   </Badge>
-                  <span className="text-xs text-brand-400">View →</span>
+                  <span className="text-xs text-bp-ink-3">View →</span>
                 </div>
               </div>
             </Link>

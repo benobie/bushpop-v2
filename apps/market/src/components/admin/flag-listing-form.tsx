@@ -47,26 +47,26 @@ export function FlagListingForm() {
   }
 
   return (
-    <div className="rounded-lg border border-brand-100 bg-brand-50 p-4">
-      <h2 className="text-sm font-semibold text-brand-900">Flag a listing</h2>
-      <p className="mt-1 text-xs text-brand-500">
+    <div className="rounded-lg border border-bp-line bg-bp-surface-2 p-4">
+      <h2 className="text-sm font-semibold text-bp-ink">Flag a listing</h2>
+      <p className="mt-1 text-xs text-bp-ink-2">
         Internal-only intake — for staff-initiated flags. Public buyer reports arrive via the same
         queue automatically.
       </p>
       <div className="mt-3 flex flex-wrap items-end gap-2">
-        <label className="flex flex-col text-xs text-brand-600">
+        <label className="flex flex-col text-xs text-bp-ink-2">
           Channel listing ID
           <input
-            className="mt-1 rounded border border-brand-200 px-2 py-1.5 text-sm"
+            className="mt-1 rounded border border-bp-line px-2 py-1.5 text-sm"
             value={channelListingId}
             onChange={(e) => setChannelListingId(e.target.value)}
             placeholder="01ABC…"
           />
         </label>
-        <label className="flex flex-col text-xs text-brand-600">
+        <label className="flex flex-col text-xs text-bp-ink-2">
           Reason
           <select
-            className="mt-1 rounded border border-brand-200 px-2 py-1.5 text-sm"
+            className="mt-1 rounded border border-bp-line px-2 py-1.5 text-sm"
             value={reason}
             onChange={(e) => setReason(e.target.value as (typeof REASONS)[number])}
           >
@@ -77,10 +77,10 @@ export function FlagListingForm() {
             ))}
           </select>
         </label>
-        <label className="flex flex-1 flex-col text-xs text-brand-600">
+        <label className="flex flex-1 flex-col text-xs text-bp-ink-2">
           Description (optional)
           <input
-            className="mt-1 rounded border border-brand-200 px-2 py-1.5 text-sm"
+            className="mt-1 rounded border border-bp-line px-2 py-1.5 text-sm"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Why this listing needs review"

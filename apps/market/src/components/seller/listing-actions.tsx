@@ -94,9 +94,9 @@ export function ListingActions({ listingId, status, version }: ListingActionsPro
     const copy = CONFIRM_COPY[pending];
     const to = pending === "delist" ? "paused" : pending === "relist" ? "active" : "sold";
     return (
-      <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm">
-        <p className="font-semibold text-brand-900">{copy.title}</p>
-        <p className="mt-1 text-brand-600">{copy.body}</p>
+      <div className="rounded-lg border border-bp-line bg-bp-surface-2 p-4 text-sm">
+        <p className="font-semibold text-bp-ink">{copy.title}</p>
+        <p className="mt-1 text-bp-ink-2">{copy.body}</p>
         {error && <p className="mt-2 text-red-600">{error}</p>}
         <div className="mt-3 flex gap-2">
           <Button
@@ -144,9 +144,9 @@ export function ListingActions({ listingId, status, version }: ListingActionsPro
         </>
       )}
       {effectiveStatus === "draft" && (
-        <p className="text-sm text-brand-500">Finish publishing this draft from the sell wizard.</p>
+        <p className="text-sm text-bp-ink-2">Finish publishing this draft from the sell wizard.</p>
       )}
-      {effectiveStatus === "sold" && <p className="text-sm text-brand-500">This item is marked sold.</p>}
+      {effectiveStatus === "sold" && <p className="text-sm text-bp-ink-2">This item is marked sold.</p>}
     </div>
   );
 }

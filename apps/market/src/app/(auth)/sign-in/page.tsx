@@ -52,10 +52,10 @@ function SignInForm() {
   return (
     <Card>
       <CardHeader>
-        <h2 className="font-display text-xl font-semibold text-brand-800">
+        <h2 className="font-display text-xl font-semibold text-bp-ink">
           Sign in
         </h2>
-        <p className="text-sm text-brand-500">
+        <p className="text-sm text-bp-ink-2">
           Enter your email and password to continue
         </p>
       </CardHeader>
@@ -65,7 +65,7 @@ function SignInForm() {
             <p className="text-sm text-red-600">{error}</p>
           )}
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-brand-700">
+            <label htmlFor="email" className="text-sm font-medium text-bp-ink-2">
               Email
             </label>
             <Input
@@ -79,7 +79,7 @@ function SignInForm() {
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium text-brand-700">
+            <label htmlFor="password" className="text-sm font-medium text-bp-ink-2">
               Password
             </label>
             <Input
@@ -96,9 +96,9 @@ function SignInForm() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Signing in..." : "Sign in"}
           </Button>
-          <p className="text-sm text-brand-500">
+          <p className="text-sm text-bp-ink-2">
             Don&apos;t have an account?{" "}
-            <Link href="/sign-up" className="text-interactive hover:underline">
+            <Link href="/sign-up" className="text-bp-ink-2 hover:underline">
               Sign up
             </Link>
           </p>

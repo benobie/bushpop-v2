@@ -8,15 +8,15 @@ export default async function AdminFeesPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-brand-900">Fees</h1>
-      <p className="mt-1 text-sm text-brand-500">
+      <h1 className="text-xl font-bold text-bp-ink">Fees</h1>
+      <p className="mt-1 text-sm text-bp-ink-2">
         Read-only. Changes go through the <code>fees.ts</code> review path — never edited here.
       </p>
 
-      <section className="mt-4 rounded-lg border border-brand-100 p-4">
-        <h2 className="text-sm font-semibold text-brand-900">Seller commission</h2>
+      <section className="mt-4 rounded-lg border border-bp-line p-4">
+        <h2 className="text-sm font-semibold text-bp-ink">Seller commission</h2>
         <table className="mt-2 w-full text-sm">
-          <thead className="text-left text-brand-600">
+          <thead className="text-left text-bp-ink-2">
             <tr>
               <th className="p-1">Effective from</th>
               <th className="p-1">Rate</th>
@@ -35,10 +35,10 @@ export default async function AdminFeesPage() {
         </table>
       </section>
 
-      <section className="mt-4 rounded-lg border border-brand-100 p-4">
-        <h2 className="text-sm font-semibold text-brand-900">Buyer Protection fee</h2>
+      <section className="mt-4 rounded-lg border border-bp-line p-4">
+        <h2 className="text-sm font-semibold text-bp-ink">Buyer Protection fee</h2>
         <table className="mt-2 w-full text-sm">
-          <thead className="text-left text-brand-600">
+          <thead className="text-left text-bp-ink-2">
             <tr>
               <th className="p-1">Effective from</th>
               <th className="p-1">Rate</th>
@@ -55,7 +55,7 @@ export default async function AdminFeesPage() {
             ))}
           </tbody>
         </table>
-        <p className="mt-2 text-xs text-brand-500">$0 on pickup orders, uncapped, no promo.</p>
+        <p className="mt-2 text-xs text-bp-ink-2">$0 on pickup orders, uncapped, no promo.</p>
       </section>
     </div>
   );

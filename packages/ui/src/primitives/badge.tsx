@@ -8,17 +8,17 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-brand-100 text-brand-800",
+          "border-transparent bg-bp-surface-2 text-bp-ink",
         draft:
-          "border-transparent bg-brand-200 text-brand-700",
+          "border-transparent bg-bp-surface-3 text-bp-ink-2",
         active:
           "border-transparent bg-trust-100 text-trust-800",
         paused:
-          "border-transparent bg-brand-100 text-brand-600",
+          "border-transparent bg-bp-surface-2 text-bp-ink-2",
         sold:
-          "border-transparent bg-brand-800 text-white",
+          "border-transparent bg-bp-obsidian text-white",
         outline:
-          "border-brand-300 text-brand-700",
+          "border-bp-line-2 text-bp-ink-2",
       },
     },
     defaultVariants: {

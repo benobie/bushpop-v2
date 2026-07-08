@@ -116,11 +116,11 @@ export function SearchesList({ items }: { items: SavedSearchItem[] }) {
   if (list.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-20 text-center">
-        <p className="text-lg text-brand-500">No saved searches yet</p>
-        <p className="text-sm text-brand-400">
+        <p className="text-lg text-bp-ink-2">No saved searches yet</p>
+        <p className="text-sm text-bp-ink-3">
           Filter listings on Browse or Search, then use "Save this search" to keep it here.
         </p>
-        <Link href="/browse" className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white">
+        <Link href="/browse" className="rounded-lg bg-bp-obsidian px-4 py-2 text-sm font-semibold text-white">
           Browse listings
         </Link>
       </div>
@@ -136,7 +136,7 @@ export function SearchesList({ items }: { items: SavedSearchItem[] }) {
         return (
           <div
             key={search.id}
-            className="flex items-center justify-between gap-4 rounded-xl border border-brand-200 px-4 py-4"
+            className="flex items-center justify-between gap-4 rounded-xl border border-bp-line px-4 py-4"
           >
             <div className="min-w-0 flex-1">
               {editingId === search.id ? (
@@ -162,13 +162,13 @@ export function SearchesList({ items }: { items: SavedSearchItem[] }) {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <p className="truncate text-sm font-medium text-brand-800">
+                  <p className="truncate text-sm font-medium text-bp-ink">
                     {search.name || (search.query !== "*" ? search.query : "Filtered browse")}
                   </p>
                   <button
                     type="button"
                     onClick={() => startEditing(search)}
-                    className="shrink-0 text-xs text-brand-400 underline hover:text-brand-600"
+                    className="shrink-0 text-xs text-bp-ink-3 underline hover:text-bp-ink-2"
                   >
                     {search.name ? "Rename" : "Add label"}
                   </button>
@@ -179,7 +179,7 @@ export function SearchesList({ items }: { items: SavedSearchItem[] }) {
                   {filterEntries.map(([key, value]) => (
                     <span
                       key={key}
-                      className="rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 text-xs text-brand-600"
+                      className="rounded-full border border-bp-line bg-bp-surface-2 px-2 py-0.5 text-xs text-bp-ink-2"
                     >
                       {FILTER_LABELS[key] ?? key}: {filterValueLabel(key, value)}
                     </span>

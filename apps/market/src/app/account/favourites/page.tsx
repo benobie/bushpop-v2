@@ -47,14 +47,14 @@ export default async function FavouritesPage() {
   if (error && items.length === 0) {
     return (
       <main className="mx-auto max-w-4xl px-4 py-8">
-        <p className="text-center text-brand-500">Could not load your favourites. Please try again.</p>
+        <p className="text-center text-bp-ink-2">Could not load your favourites. Please try again.</p>
       </main>
     );
   }
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="mb-6 font-display text-2xl font-bold text-brand-900">Favourites</h1>
+      <h1 className="mb-6 font-display text-2xl font-bold text-bp-ink">Favourites</h1>
       <FavouritesGrid items={items} />
     </main>
   );

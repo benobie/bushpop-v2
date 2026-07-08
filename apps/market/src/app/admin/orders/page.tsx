@@ -20,15 +20,15 @@ export default async function AdminOrdersPage({
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-brand-900">Orders</h1>
-      <p className="mt-1 text-sm text-brand-500">
+      <h1 className="text-xl font-bold text-bp-ink">Orders</h1>
+      <p className="mt-1 text-sm text-bp-ink-2">
         {data?.total ?? 0} total. The refund action is the only write on this page.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2 text-sm">
         <Link
           href="/admin/orders"
-          className={`rounded px-2 py-1 ${!status ? "bg-brand-900 text-white" : "bg-brand-50 text-brand-600"}`}
+          className={`rounded px-2 py-1 ${!status ? "bg-bp-obsidian text-white" : "bg-bp-surface-2 text-bp-ink-2"}`}
         >
           all
         </Link>
@@ -36,16 +36,16 @@ export default async function AdminOrdersPage({
           <Link
             key={s}
             href={`/admin/orders?status=${s}`}
-            className={`rounded px-2 py-1 ${status === s ? "bg-brand-900 text-white" : "bg-brand-50 text-brand-600"}`}
+            className={`rounded px-2 py-1 ${status === s ? "bg-bp-obsidian text-white" : "bg-bp-surface-2 text-bp-ink-2"}`}
           >
             {s}
           </Link>
         ))}
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-brand-100">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-bp-line">
         <table className="w-full text-sm">
-          <thead className="bg-brand-50 text-left text-brand-600">
+          <thead className="bg-bp-surface-2 text-left text-bp-ink-2">
             <tr>
               <th className="p-2">Order</th>
               <th className="p-2">Status</th>
@@ -54,25 +54,25 @@ export default async function AdminOrdersPage({
               <th className="p-2">Created</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-brand-100">
+          <tbody className="divide-y divide-bp-line">
             {items.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-4 text-brand-500">
+                <td colSpan={5} className="p-4 text-bp-ink-2">
                   No orders found.
                 </td>
               </tr>
             )}
             {items.map((order) => (
-              <tr key={order.id} className="hover:bg-brand-50">
+              <tr key={order.id} className="hover:bg-bp-surface-2">
                 <td className="p-2">
-                  <Link href={`/admin/orders/${order.id}`} className="font-mono text-brand-700 underline">
+                  <Link href={`/admin/orders/${order.id}`} className="font-mono text-bp-ink-2 underline">
                     {order.id.slice(-8)}
                   </Link>
                 </td>
                 <td className="p-2">{order.status}</td>
                 <td className="p-2">{formatMoney(order.totalCents, order.currency)}</td>
                 <td className="p-2">{order.trackingNumber ?? "—"}</td>
-                <td className="p-2 text-brand-500">
+                <td className="p-2 text-bp-ink-2">
                   {new Date(order.createdAt).toLocaleString("en-AU")}
                 </td>
               </tr>

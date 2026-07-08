@@ -88,8 +88,8 @@ export function FavButton({
       <button
         type="button"
         className={cn(
-          "flex items-center gap-2 rounded-lg border border-brand-200 px-4 py-2 text-sm font-medium transition-colors",
-          favorited ? "border-bp-red text-bp-red" : "text-brand-700 hover:bg-brand-50",
+          "flex items-center gap-2 rounded-lg border border-bp-line px-4 py-2 text-sm font-medium transition-colors",
+          favorited ? "border-bp-red text-bp-red" : "text-bp-ink-2 hover:bg-bp-surface-2",
           className,
         )}
         aria-pressed={favorited}

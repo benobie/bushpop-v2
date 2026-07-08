@@ -30,7 +30,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
   if (sorted.length === 0) {
     return (
       <div
-        className="w-full rounded-xl bg-brand-100 flex items-center justify-center text-brand-300"
+        className="w-full rounded-xl bg-bp-surface-2 flex items-center justify-center text-bp-ink-3"
         style={{ aspectRatio }}
       >
         <svg className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -44,7 +44,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
     <div className="space-y-3">
       {/* Hero image — CSS aspect-ratio for CLS prevention (FM-R3-4) */}
       <div
-        className="relative w-full overflow-hidden rounded-xl bg-brand-100"
+        className="relative w-full overflow-hidden rounded-xl bg-bp-surface-2"
         style={{ aspectRatio: aspectRatio ?? 0.75 }}
       >
         {active && (
@@ -71,7 +71,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
               className={[
                 "relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border-2 transition-all",
                 idx === activeIndex
-                  ? "border-brand-700"
+                  ? "border-bp-obsidian"
                   : "border-transparent opacity-60 hover:opacity-100",
               ].join(" ")}
               aria-label={`View photo ${idx + 1}`}

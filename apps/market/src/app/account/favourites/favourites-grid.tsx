@@ -55,11 +55,11 @@ export function FavouritesGrid({ items }: { items: FavouriteItem[] }) {
   if (list.length === 0) {
     return (
       <div className="flex flex-col items-center gap-4 py-20 text-center">
-        <p className="text-lg text-brand-500">No favourites yet</p>
-        <p className="text-sm text-brand-400">Tap the heart on any listing to save it here.</p>
+        <p className="text-lg text-bp-ink-2">No favourites yet</p>
+        <p className="text-sm text-bp-ink-3">Tap the heart on any listing to save it here.</p>
         <Link
           href="/browse"
-          className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white"
+          className="rounded-lg bg-bp-obsidian px-4 py-2 text-sm font-semibold text-white"
         >
           Browse listings
         </Link>
