@@ -52,7 +52,15 @@ export function PaymentSection({ sessionId, totalCents, currency }: PaymentSecti
 
   return (
     <form onSubmit={handlePay} className="space-y-6">
-      <PaymentElement />
+      {/*
+        Link's inline "save my information" email/mobile capture widget
+        renders regardless of the PaymentIntent's payment_method_types
+        (that only controls whether Link is a *selectable* method) — it's
+        a separate Elements-level toggle. Disabled here since it's not
+        activated for production (see checkout/service.ts's Link exclusion)
+        and the extra required fields blocked automated card-only checkout.
+      */}
+      <PaymentElement options={{ wallets: { link: "never" } }} />
 
       {error && (
         <Banner variant="error" data-testid="payment-error">
