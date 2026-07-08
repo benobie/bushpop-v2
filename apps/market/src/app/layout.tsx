@@ -9,6 +9,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteHeaderSkeleton } from "@/components/layout/site-header-skeleton";
 import { MarketFooter } from "@/components/layout/market-footer";
 import { MarketBottomBar } from "@/components/layout/market-bottom-bar";
+import { ChatwootWidget } from "@/components/chatwoot-widget";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -63,6 +64,7 @@ export default function RootLayout({
                 <Suspense fallback={null}>
                   <MarketBottomBar />
                 </Suspense>
+                <ChatwootWidget />
               </SessionProvider>
             </PostHogProvider>
           </ChannelProvider>

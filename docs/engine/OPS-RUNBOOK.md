@@ -99,7 +99,7 @@ Authoritative source: `packages/config/src/env.ts`. Values are set in the **Cool
 | --- | --- | --- |
 | `${VAR}` — no default | Coolify UI value survives deploys (nothing to reset to). This is where real secrets belong. | `BUSHPOP_DB_PASSWORD`, `MEILI_MASTER_KEY`, `BETTER_AUTH_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STARSHIPIT_API_KEY`, `STARSHIPIT_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (build arg) |
 | `${VAR:-realvalue}` — non-empty default | **Clobbered back to the compose default on every deploy.** To change one of these, edit the compose file and redeploy — a Coolify UI edit will not stick. | `WEB_URL` (`https://market.bushpop.xyz`), `ADMIN_URL` (`https://admin.bushpop.xyz`), `API_URL` (`https://api.bushpop.xyz`), `CHANNEL_SLUG` (`bushpop`), `R2_BUCKET_NAME` (`bushpop-images`), `R2_PUBLIC_URL` (the r2.dev pub URL below), `ADMIN_EMAIL` (`admin@bushpop.com.au`) |
-| `${VAR:-}` — empty-string default | Coolify UI value survives (default is empty), but **`validateEnv` treats `""` as unset** (PR #42) — so an unset one silently behaves as "not configured", never as an observable empty string. | `STARSHIPIT_SUBSCRIPTION_KEY`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SENTRY_DSN`, `NEXT_PUBLIC_POSTHOG_KEY` (build arg) |
+| `${VAR:-}` — empty-string default | Coolify UI value survives (default is empty), but **`validateEnv` treats `""` as unset** (PR #42) — so an unset one silently behaves as "not configured", never as an observable empty string. | `STARSHIPIT_SUBSCRIPTION_KEY`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SENTRY_DSN`, `NEXT_PUBLIC_POSTHOG_KEY` (build arg), `NEXT_PUBLIC_CHATWOOT_BASE_URL` (build arg), `NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN` (build arg) |
 | `DATABASE_URL`, `REDIS_URL`, `MEILISEARCH_HOST` | Hardcoded in compose to internal service DNS names (`bushpop-db`/`bushpop-redis`/`bushpop-meilisearch`) — not Coolify-editable at all, by design. | — |
 
 Notes on specific vars:
@@ -107,6 +107,7 @@ Notes on specific vars:
 - `R2_PUBLIC_URL` currently defaults to the bucket's r2.dev public URL (`https://pub-3c7f819593c94086b71e9663605d4c11.r2.dev`, bucket `bushpop-images`) — **NOT** `bushpop-media`. At cutover, swap the `web` and `api` compose defaults to the custom domain `media.bushpop.com.au` and attach it to the R2 bucket.
 - `STRIPE_WEBHOOK_SECRET` is a **placeholder** on staging today, pending Phase 5 (queue item 2 in `docs/HANDOFF-ZERO-CONTEXT.md` §10) — real Stripe test key is already wired for the PaymentIntent leg, but webhook signatures won't verify until a real `whsec_…` replaces the placeholder.
 - `RESEND_API_KEY` is **optional** (mock sender fallback) — earlier docs claiming it hard-fails boot are wrong. Resend is live-verified on staging (sends as `noreply@bushpop.com.au`).
+- `NEXT_PUBLIC_CHATWOOT_BASE_URL` / `NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN` are **build-time**, same mechanism as the Stripe/PostHog keys above — the widget (`apps/market/src/components/chatwoot-widget.tsx`) no-ops unless both are set. Dormant on staging as of 08/07; activation steps + the real values pointer are in `docs/support-widget.md`.
 
 ### Deploy procedure
 
