@@ -66,7 +66,7 @@ export function AddressForm({ onCreated, onCancel }: AddressFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" data-testid="address-form">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Label htmlFor="line1">Address line 1</Label>
@@ -136,7 +136,7 @@ export function AddressForm({ onCreated, onCancel }: AddressFormProps) {
       )}
 
       <div className="flex gap-3">
-        <Button type="submit" variant="primary" disabled={loading}>
+        <Button type="submit" variant="primary" disabled={loading} data-testid="address-form-submit">
           {loading ? "Saving…" : "Save address"}
         </Button>
         {onCancel && (
@@ -145,6 +145,7 @@ export function AddressForm({ onCreated, onCancel }: AddressFormProps) {
             variant="ghost"
             onClick={onCancel}
             disabled={loading}
+            data-testid="address-form-cancel"
           >
             Cancel
           </Button>

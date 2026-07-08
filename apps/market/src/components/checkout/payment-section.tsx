@@ -6,7 +6,8 @@
  */
 import { useState } from "react";
 import { useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
-import { Button } from "@bushpop/ui";
+import { Button, Banner } from "@bushpop/ui";
+import { formatMoney } from "@/lib/format-money";
 
 interface PaymentSectionProps {
   /** The Stripe checkout session ID — included in the return_url so confirmation page can poll orders */
@@ -22,10 +23,7 @@ export function PaymentSection({ sessionId, totalCents, currency }: PaymentSecti
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const formattedTotal = new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency,
-  }).format(totalCents / 100);
+  const formattedTotal = formatMoney(totalCents, currency);
 
   async function handlePay(e: React.FormEvent) {
     e.preventDefault();
@@ -54,10 +52,20 @@ export function PaymentSection({ sessionId, totalCents, currency }: PaymentSecti
 
   return (
     <form onSubmit={handlePay} className="space-y-6">
-      <PaymentElement />
+      {/*
+        Link's inline "save my information" email/mobile capture widget
+        renders regardless of the PaymentIntent's payment_method_types
+        (that only controls whether Link is a *selectable* method) — it's
+        a separate Elements-level toggle. Disabled here since it's not
+        activated for production (see checkout/service.ts's Link exclusion)
+        and the extra required fields blocked automated card-only checkout.
+      */}
+      <PaymentElement options={{ wallets: { link: "never" } }} />
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+        <Banner variant="error" data-testid="payment-error">
+          {error}
+        </Banner>
       )}
 
       <Button
@@ -66,6 +74,7 @@ export function PaymentSection({ sessionId, totalCents, currency }: PaymentSecti
         size="lg"
         className="w-full"
         disabled={!stripe || !elements || loading}
+        data-testid="pay-button"
       >
         {loading ? "Processing…" : `Pay ${formattedTotal}`}
       </Button>

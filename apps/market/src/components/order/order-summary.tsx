@@ -2,9 +2,13 @@
  * Shared order summary — used on confirmation page and orders pages.
  * Presentational server/client component (no data fetching).
  *
- * Order items carry no title/image from the API — renders minimal (price + index).
+ * Order items are enriched (title/coverImage/handle/size/condition/brand)
+ * the same "look up fresh" way as the cart response — nulls only if the
+ * underlying listing/inventory item has since been deleted.
  */
-import { Badge } from "@bushpop/ui";
+import Image from "next/image";
+import Link from "next/link";
+import { Badge, SummaryRow } from "@bushpop/ui";
 import { formatMoney } from "@/lib/format-money";
 
 interface OrderItem {
@@ -14,6 +18,12 @@ interface OrderItem {
   priceCents: number;
   currency: string;
   createdAt: string;
+  title: string | null;
+  coverImage: string | null;
+  handle: string | null;
+  size: string | null;
+  condition: string | null;
+  brand: string | null;
 }
 
 interface ShippingAddress {
@@ -40,7 +50,6 @@ interface OrderSummaryProps {
   status: OrderStatus;
   subtotalCents: number;
   shippingCents: number;
-  platformFeeCents: number;
   buyerProtectionFeeCents: number;
   totalCents: number;
   currency: string;
@@ -90,13 +99,13 @@ export function OrderSummary({
   createdAt,
 }: OrderSummaryProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="order-summary">
       {/* Status */}
       <div className="flex items-center gap-3">
-        <Badge variant={getStatusVariant(status)}>
+        <Badge variant={getStatusVariant(status)} data-testid="order-status-badge">
           {STATUS_LABELS[status] ?? status}
         </Badge>
-        <span className="text-sm text-brand-500">
+        <span className="text-sm text-[var(--color-bp-ink-2)]">
           {new Date(createdAt).toLocaleDateString("en-AU", {
             day: "numeric",
             month: "long",
@@ -106,49 +115,68 @@ export function OrderSummary({
       </div>
 
       {/* Items */}
-      <div className="divide-y divide-brand-100 rounded-xl border border-brand-200">
-        {items.map((item, idx) => (
-          <div key={item.id} className="flex justify-between px-4 py-3">
-            <div>
-              <p className="text-sm font-medium text-brand-800">Item {idx + 1}</p>
-              <p className="text-xs text-brand-400">{item.channelListingId}</p>
+      <div className="divide-y divide-[var(--color-bp-line)] rounded-[var(--radius-bp-rect)] border border-[var(--color-bp-line)]">
+        {items.map((item) => {
+          const meta = [item.condition, item.brand].filter(Boolean).join(" · ");
+          return (
+            <div key={item.id} className="flex gap-3 px-4 py-3" data-testid="order-item-row">
+              {item.handle ? (
+                <Link
+                  href={`/listing/${item.handle}`}
+                  className="relative h-16 w-[52px] flex-shrink-0 overflow-hidden rounded-[9px] bg-[var(--color-bp-surface-2)]"
+                  aria-label={item.title ?? "View listing"}
+                >
+                  {item.coverImage ? (
+                    <Image
+                      src={item.coverImage}
+                      alt={item.title ?? "Listing photo"}
+                      fill
+                      className="object-cover"
+                      sizes="52px"
+                    />
+                  ) : null}
+                </Link>
+              ) : (
+                <div
+                  className="relative h-16 w-[52px] flex-shrink-0 overflow-hidden rounded-[9px] bg-[var(--color-bp-surface-2)]"
+                  aria-label={item.title ?? "Listing no longer available"}
+                />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-[var(--color-bp-ink)]">
+                  {item.title ?? "Listing no longer available"}
+                </p>
+                {(meta || item.size) && (
+                  <p className="mt-0.5 text-xs text-[var(--color-bp-ink-2)]">
+                    {[meta, item.size ? `Size ${item.size}` : null].filter(Boolean).join(" · ")}
+                  </p>
+                )}
+              </div>
+              <p className="flex-shrink-0 whitespace-nowrap text-sm font-semibold text-[var(--color-bp-ink)]">
+                {formatMoney(item.priceCents, item.currency)}
+              </p>
             </div>
-            <p className="text-sm font-semibold text-brand-900">
-              {formatMoney(item.priceCents, item.currency)}
-            </p>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Totals */}
         <div className="space-y-1 px-4 py-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-brand-600">Subtotal</span>
-            <span>{formatMoney(subtotalCents, currency)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-brand-600">Shipping</span>
-            <span>{formatMoney(shippingCents, currency)}</span>
-          </div>
+          <SummaryRow label="Subtotal" value={formatMoney(subtotalCents, currency)} />
+          <SummaryRow label="Shipping" value={formatMoney(shippingCents, currency)} />
           {buyerProtectionFeeCents > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-brand-600">Buyer Protection</span>
-              <span>{formatMoney(buyerProtectionFeeCents, currency)}</span>
-            </div>
+            <SummaryRow label="Buyer Protection" value={formatMoney(buyerProtectionFeeCents, currency)} />
           )}
-          <div className="flex justify-between border-t border-brand-100 pt-2 text-sm font-bold">
-            <span>Total</span>
-            <span>{formatMoney(totalCents, currency)}</span>
-          </div>
+          <SummaryRow emphasis label="Total" value={formatMoney(totalCents, currency)} />
         </div>
       </div>
 
       {/* Shipping address */}
       {shippingAddressSnapshot && (
         <div>
-          <h3 className="mb-1 text-sm font-semibold text-brand-800">
+          <h3 className="mb-1 text-sm font-semibold text-[var(--color-bp-ink)]">
             Shipping to
           </h3>
-          <address className="not-italic text-sm text-brand-600">
+          <address className="not-italic text-sm text-[var(--color-bp-ink-2)]">
             <p>{shippingAddressSnapshot.line1}</p>
             {shippingAddressSnapshot.line2 && (
               <p>{shippingAddressSnapshot.line2}</p>

@@ -46,7 +46,15 @@ export async function createAuthenticatedSeller(baseURL: string): Promise<Seller
       // apps/market/src/proxy.ts (FM-17) rejects any non-GET /api/* request
       // without this header as a CSRF guard — the app's own authClient sets
       // it automatically, a raw request context must set it explicitly.
-      headers: { "x-requested-with": "XMLHttpRequest" },
+      // Origin is also explicit: when a spec overrides Playwright's built-in
+      // `storageState` fixture (checkout.spec.ts does, to seed a signed-in
+      // buyer context), Playwright routes this same-process request context
+      // through its browser network instrumentation, which synthesises a
+      // literal `Origin: null` header — better-auth's CSRF guard rejects that
+      // as MISSING_OR_NULL_ORIGIN. A plain request.newContext() outside a
+      // browser context never hits this, which is why sell-wizard.spec.ts
+      // (no storageState override) never saw it.
+      headers: { "x-requested-with": "XMLHttpRequest", origin: baseURL },
       data: { email, password, name: "E2E Seller" },
     });
 
@@ -88,6 +96,64 @@ export async function createAuthenticatedSeller(baseURL: string): Promise<Seller
       stripeOnboardingStatus: "complete",
       defaultShippingAddressId: address!.id,
       verifiedAt: new Date(),
+    });
+
+    const storageState = await context.storageState();
+
+    return { storageState, userId: createdUser.id, email };
+  } finally {
+    await context.dispose();
+  }
+}
+
+export interface BuyerFixture {
+  storageState: StorageState;
+  userId: string;
+  email: string;
+}
+
+/**
+ * Same real-sign-up approach as createAuthenticatedSeller, minus the
+ * sellerProfiles/Stripe insert — a buyer needs no seller role. Adds one
+ * default shipping address so the checkout flow's address step has
+ * something pre-selected (checkout redirects to /bag on an empty cart, but
+ * with no addresses the flow would fall straight into "add new address").
+ */
+export async function createAuthenticatedBuyer(baseURL: string): Promise<BuyerFixture> {
+  const uniqueSuffix = `${process.pid}-${Math.random().toString(36).slice(2, 10)}`;
+  const email = `e2e-buyer-${uniqueSuffix}@bushpop.test`;
+  const password = "E2e-test-password-1!";
+
+  const context = await playwrightRequest.newContext({ baseURL });
+
+  try {
+    const signUpResponse = await context.post("/api/auth/sign-up/email", {
+      // Origin set explicitly — see createAuthenticatedSeller's comment above.
+      headers: { "x-requested-with": "XMLHttpRequest", origin: baseURL },
+      data: { email, password, name: "E2E Buyer" },
+    });
+
+    if (!signUpResponse.ok()) {
+      throw new Error(
+        `Buyer sign-up failed: ${signUpResponse.status()} ${await signUpResponse.text()}`,
+      );
+    }
+
+    const [createdUser] = await db.select().from(user).where(eq(user.email, email));
+
+    if (!createdUser) {
+      throw new Error(`Sign-up succeeded but no user row was found for ${email}`);
+    }
+
+    await db.insert(addresses).values({
+      userId: createdUser.id,
+      label: "Home",
+      line1: "1 Test Street",
+      suburb: "Sydney",
+      state: "NSW",
+      postcode: "2000",
+      country: "AU",
+      isDefault: true,
     });
 
     const storageState = await context.storageState();

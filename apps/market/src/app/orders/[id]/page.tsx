@@ -49,7 +49,6 @@ export default async function OrderDetailPage({
         status={order.status}
         subtotalCents={order.subtotalCents}
         shippingCents={order.shippingCents}
-        platformFeeCents={order.platformFeeCents}
         buyerProtectionFeeCents={order.buyerProtectionFeeCents}
         totalCents={order.totalCents}
         currency={order.currency}
