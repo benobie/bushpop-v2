@@ -211,11 +211,17 @@ async function handleTrackingEvent(
 
   switch (action) {
     case "dispatched": {
-      // Carrier acceptance = shipment confirmed: paid → shipped
+      // Carrier acceptance = shipment confirmed: paid → shipped.
+      // Persist the tracking number when the order doesn't have one yet
+      // (label created out-of-band, or the label worker crashed before its
+      // own DB write) — never overwrite an existing value. The payload
+      // carries no carrier field, so trackingCarrier is left as-is.
+      const trackingNumberForOrder = order.trackingNumber ?? tracking_number ?? null;
       const result = await db
         .update(orders)
         .set({
           status: "shipped",
+          trackingNumber: trackingNumberForOrder,
           lastTrackingStatus: status ?? null,
           lastTrackingEventAt: eventAt,
         })
@@ -229,6 +235,25 @@ async function handleTrackingEvent(
 
       if (result.length > 0) {
         log.info({ orderId, status }, "[starshipit-webhook] Order transitioned paid → shipped");
+        // Drives the buyer's shipping_confirmation_buyer email via
+        // event-consumer.ts's order.shipped handler — same event the label
+        // worker and seller manual mark-shipped paths emit. Gated on the CAS
+        // win, so it fires at most once per order even under webhook
+        // redelivery (the other producers dispatch on their own CAS win).
+        await dispatchEvent({
+          eventName: "order.shipped",
+          category: "order",
+          actorId: "system",
+          entityType: "order",
+          entityId: orderId,
+          channelId: order.channelId,
+          metadata: {
+            trackingNumber: trackingNumberForOrder,
+            carrier: order.trackingCarrier ?? null,
+          },
+        }).catch((err: unknown) => {
+          log.error({ orderId, err }, "[starshipit-webhook] Failed to dispatch order.shipped");
+        });
       } else {
         // Order was not in paid status — update tracking fields only
         await db

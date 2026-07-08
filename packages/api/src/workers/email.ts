@@ -15,6 +15,7 @@ import {
   shippingConfirmationBuyerTemplate,
   trackingExceptionAdminTemplate,
 } from "../lib/email/index.js";
+import { GUEST_EMAIL_DOMAIN } from "../lib/guest-identity.js";
 import { getRedis } from "../lib/redis.js";
 
 const EMAIL_QUEUE = "email";
@@ -106,6 +107,7 @@ interface OrderWithParties {
   shippingAddressSnapshot: unknown;
   buyerEmail: string;
   buyerName: string;
+  buyerIsAnonymous: boolean | null;
   sellerEmail: string;
   sellerName: string;
   channelName: string;
@@ -136,6 +138,7 @@ async function fetchOrderWithParties(orderId: string): Promise<OrderWithParties 
       shippingAddressSnapshot: orders.shippingAddressSnapshot,
       buyerEmail: buyerAlias.email,
       buyerName: buyerAlias.name,
+      buyerIsAnonymous: buyerAlias.isAnonymous,
       sellerEmail: sellerAlias.email,
       sellerName: sellerAlias.name,
       channelName: channels.name,
@@ -351,6 +354,38 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
       return;
     }
 
+    // Anonymous-guest orders (BF-08 guest bag) carry a placeholder
+    // `<id>@guest.bushpop.com.au` buyer email that is undeliverable — sending
+    // would bounce and hurt Resend sender reputation, so skip buyer-facing
+    // emails for them (the job completes; no DLQ noise).
+    // TODO(PR #106 guest checkout): setGuestCheckoutEmail will overwrite the
+    // placeholder with the buyer's real email at checkout, so once that
+    // merges this guard only catches orders that predate email capture. The
+    // guest order-access HMAC link belongs in these buyer emails at that
+    // point — this is the integration site.
+    // Both conditions required: the placeholder-domain suffix alone must not
+    // suppress a real (non-anonymous) account that happens to use this
+    // domain, and isAnonymous alone must not suppress a guest whose real
+    // email PR #106 has captured onto the user row.
+    if (
+      (type === "order_confirmation_buyer" ||
+        type === "shipping_confirmation_buyer" ||
+        type === "refund_confirmation_buyer") &&
+      order.buyerIsAnonymous === true &&
+      order.buyerEmail.endsWith(`@${GUEST_EMAIL_DOMAIN}`)
+    ) {
+      console.warn(
+        `[email] Skipping ${type} for order ${orderId} — buyer email is an anonymous-guest placeholder (undeliverable)`,
+      );
+      // Buyer-facing order emails never carry a notificationId today, but if
+      // one ever does, leaving the claimed notification in "sending" would
+      // have the sweeper re-claim it forever — record it terminal instead.
+      if (notificationId) {
+        await markNotificationSent(notificationId, undefined);
+      }
+      return;
+    }
+
     const send = getEmailSender();
     const items = await fetchOrderItems(orderId);
 
@@ -401,15 +436,19 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
         await markNotificationSent(notificationId, result.providerMessageId);
       }
     } else if (type === "shipping_confirmation_buyer") {
-      if (!order.trackingNumber || !order.trackingCarrier) {
+      if (!order.trackingNumber) {
         throw new Error(`[email] Order ${orderId} has no tracking info`);
       }
 
+      // Carrier can be legitimately absent when the Starshipit webhook was
+      // the paid → shipped transition point (its payload has no carrier
+      // field) — the template omits the Carrier line rather than failing
+      // the buyer's email into the DLQ.
       const { subject, text } = shippingConfirmationBuyerTemplate({
         orderId,
         buyerName: order.buyerName,
         trackingNumber: order.trackingNumber,
-        trackingCarrier: order.trackingCarrier,
+        trackingCarrier: order.trackingCarrier ?? undefined,
         channelName: order.channelName,
       });
 
