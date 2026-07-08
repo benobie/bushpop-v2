@@ -13,6 +13,7 @@ import { createBrowserApiClient } from "@bushpop/api-client/browser";
 import { HeartIcon, cn } from "@bushpop/ui";
 import { track } from "@/lib/analytics";
 import { DEFAULT_CHANNEL } from "@bushpop/config";
+import { revalidateFavourites } from "@/app/account/favourites/actions";
 
 interface FavButtonProps {
   listingId: string;
@@ -67,6 +68,10 @@ export function FavButton({
         event: next ? "wishlist.added" : "wishlist.removed",
         props: { channel: DEFAULT_CHANNEL, listing_id: listingId },
       });
+
+      // BF-09 — purge any stale prefetched /account/favourites cache entry so
+      // it reflects this toggle on next visit, without blocking this button's UI.
+      revalidateFavourites().catch(() => {});
     } catch {
       setFavorited(!next);
     } finally {

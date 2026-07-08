@@ -31,3 +31,7 @@ export const savedSearchResponse = z.object({
 export const savedSearchListResponse = z.object({
   items: z.array(savedSearchResponse),
 });
+
+export const updateSavedSearchBody = z.object({
+  name: z.string().max(100).nullable(),
+});

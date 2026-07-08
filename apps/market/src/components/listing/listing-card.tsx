@@ -36,9 +36,11 @@ interface ListingCardProps {
   listing: ListingCardItem;
   /** Mark as LCP-critical (first visible grid row only) — sets next/image `priority`. */
   priority?: boolean;
+  /** Server-known favourited state for the signed-in viewer (batch-checked per page render). */
+  initialFavorited?: boolean;
 }
 
-export function ListingCard({ listing, priority = false }: ListingCardProps) {
+export function ListingCard({ listing, priority = false, initialFavorited = false }: ListingCardProps) {
   return (
     <Link href={`/listing/${listing.handle}`} className="bp-pcard group block">
       <Card className="overflow-hidden transition-shadow hover:shadow-md">
@@ -59,7 +61,7 @@ export function ListingCard({ listing, priority = false }: ListingCardProps) {
               <span className="text-4xl text-brand-300">◻</span>
             </div>
           )}
-          <FavButton listingId={listing.id} />
+          <FavButton listingId={listing.id} initialFavorited={initialFavorited} />
         </div>
 
         <CardContent className="p-3">

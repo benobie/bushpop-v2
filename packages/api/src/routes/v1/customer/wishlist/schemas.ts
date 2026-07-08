@@ -40,3 +40,11 @@ export const wishlistListResponseSchema = z.object({
 export const wishlistStatusResponseSchema = z.object({
   favorited: z.boolean(),
 });
+
+export const wishlistBatchCheckBodySchema = z.object({
+  listingIds: z.array(z.string().length(26)).min(1).max(48),
+});
+
+export const wishlistBatchCheckResponseSchema = z.object({
+  favoritedIds: z.array(z.string()),
+});
