@@ -15,6 +15,18 @@ interface AddToBagButtonProps {
   priceCents?: number;
 }
 
+let anonymousBootstrapPromise: Promise<Awaited<ReturnType<typeof authClient.signIn.anonymous>>> | null = null;
+
+async function ensureAnonymousSession() {
+  if (!anonymousBootstrapPromise) {
+    anonymousBootstrapPromise = authClient.signIn.anonymous().finally(() => {
+      anonymousBootstrapPromise = null;
+    });
+  }
+
+  return anonymousBootstrapPromise;
+}
+
 export function AddToBagButton({ listingId, disabled, priceCents }: AddToBagButtonProps) {
   const [loading, setLoading] = useState(false);
   const [added, setAdded] = useState(false);
@@ -33,7 +45,7 @@ export function AddToBagButton({ listingId, disabled, priceCents }: AddToBagButt
     // here. Bootstrap a real (anonymous) session and retry once, so "Add to
     // bag" never has to send a first-time guest to /sign-in.
     if (response.status === 401) {
-      const { error: anonError } = await authClient.signIn.anonymous();
+      const { error: anonError } = await ensureAnonymousSession();
       if (anonError) {
         setError("Failed to add to bag. Please try again.");
         setLoading(false);
