@@ -58,6 +58,14 @@ const envSchema = z.object({
   // booting — pickup-code-service.ts falls back to a fixed dev-only secret
   // outside production and throws if genuinely missing in production.
   PICKUP_CODE_SECRET: z.string().min(16).optional(),
+
+  // Guest commerce (BF-08, bushpop-v2 PR #106). HMAC key used to derive a
+  // guest buyer's order-access token deterministically from (orderId,
+  // buyerId) — same "no plaintext/stored token" shape as PICKUP_CODE_SECRET.
+  // Optional so existing deployed envs keep booting — guest-order-access.ts
+  // falls back to a fixed dev-only secret outside production and throws if
+  // genuinely missing in production.
+  GUEST_ORDER_TOKEN_SECRET: z.string().min(16).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
