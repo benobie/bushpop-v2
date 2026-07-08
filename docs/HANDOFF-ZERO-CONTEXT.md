@@ -406,3 +406,11 @@ Future Claude Code / AI sessions: **append** an entry here — author-tagged (ac
 - Facts corrected in §§1–8: none (this is itself the §11 record; the `.claude/CLAUDE.md` U1 ship-banner section carries the summary for future sessions reading that file first).
 - PROMOTE → business doc: none — closes a dev/CI finding, not a business decision. The launch-bar item itself (U1 checkout live) may be PROMOTE-worthy for whoever tracks the launch runbook, but that's a Bushpop-repo doc, out of scope here.
 - Queue items added/closed (§10): closes the follow-up flagged at the end of batch 43 session A's entry ("once Ben merges #93, rebase PR #79 and re-run checkout E2E"). Two new follow-ups, both low-risk and non-blocking: (a) `ExpressCheckoutElement` in `checkout-flow.tsx` has no explicit `paymentMethods: {link: "never"}` guard — server-side `payment_method_types` exclusion should already prevent Link appearing there too, and no CI screenshot ever showed it rendering, but it's undefended client-side; cheap, mechanical fix if full belt-and-braces coverage is wanted. (b) the E2E happy-path timing flakiness above — suggested next step is instrumenting `OrderPoller` (or switching the E2E `webServer` to `next build && next start` instead of `pnpm dev`, sidestepping HMR entirely) to confirm/rule out the Fast-Refresh theory.
+
+### 08/07/2026 — ben@bushpop.com.au · Claude Code (Sonnet 5) · docs-only-PR CI deadlock fixed (batch 45, session C)
+
+- What changed: branch protection's 6 required `engine-ci.yml` checks never report on a docs-only PR (that workflow is path-filtered to engine files), so the PR waits forever — proven live by PR #99, which needed Ben's admin merge override. Fixed with a new `.github/workflows/engine-ci-noop.yml` mirroring the same 6 job names, gated on the exact complement `paths-ignore` of `engine-ci.yml`'s `paths` filter. Landed via PR #103, which itself proved the fix — the no-op checks reported SUCCESS instantly and the PR auto-merged with no admin override needed.
+- This paragraph is the trivial docs-only test PR used to prove the fix a second time end-to-end: if you're reading this in a merged PR whose only required-check activity came from the no-op mirror, the fix holds.
+- Facts corrected in §§1–8: none.
+- PROMOTE → business doc: none — CI plumbing only.
+- Queue items added/closed (§10): none.
