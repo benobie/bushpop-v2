@@ -48,7 +48,7 @@ export default async function AdminPayoutsPage({
             {items.map((hold) => (
               <tr key={hold.id} className="hover:bg-bp-surface-2">
                 <td className="p-2">
-                  <Link href={`/admin/orders/${hold.orderId}`} className="font-mono text-bp-ink-2 underline">
+                  <Link href={`/admin/orders/${hold.orderId}`} className="font-mono text-bp-ink-2 underline transition-colors hover:text-bp-green-bright">
                     {hold.orderId.slice(-8)}
                   </Link>
                 </td>

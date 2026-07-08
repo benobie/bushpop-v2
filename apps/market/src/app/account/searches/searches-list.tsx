@@ -168,7 +168,7 @@ export function SearchesList({ items }: { items: SavedSearchItem[] }) {
                   <button
                     type="button"
                     onClick={() => startEditing(search)}
-                    className="shrink-0 text-xs text-bp-ink-3 underline hover:text-bp-ink-2"
+                    className="shrink-0 text-xs text-bp-ink-3 underline transition-colors hover:text-bp-green-bright"
                   >
                     {search.name ? "Rename" : "Add label"}
                   </button>

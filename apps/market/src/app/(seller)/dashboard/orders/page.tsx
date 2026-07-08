@@ -79,10 +79,10 @@ export default async function DashboardOrdersPage({ searchParams }: DashboardOrd
       <h1 className="text-xl font-bold text-bp-ink">Orders</h1>
 
       <div className="mt-2 flex gap-4">
-        <Link href="/dashboard/listings" className="text-sm text-bp-ink-2 hover:underline">
+        <Link href="/dashboard/listings" className="text-sm text-bp-ink-2 transition-colors hover:text-bp-green-bright hover:underline">
           View listings →
         </Link>
-        <Link href="/dashboard/payouts" className="text-sm text-bp-ink-2 hover:underline">
+        <Link href="/dashboard/payouts" className="text-sm text-bp-ink-2 transition-colors hover:text-bp-green-bright hover:underline">
           View payouts →
         </Link>
       </div>

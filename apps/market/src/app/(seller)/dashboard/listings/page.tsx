@@ -72,7 +72,7 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
 
       <Link
         href="/dashboard/orders"
-        className="mt-2 inline-block text-sm text-bp-ink-2 hover:underline"
+        className="mt-2 inline-block text-sm text-bp-ink-2 transition-colors hover:text-bp-green-bright hover:underline"
       >
         View orders →
       </Link>

@@ -23,7 +23,7 @@ export default async function AdminOrderDetailPage({
 
   return (
     <div>
-      <Link href="/admin/orders" className="text-sm text-bp-ink-2 hover:underline">
+      <Link href="/admin/orders" className="text-sm text-bp-ink-2 transition-colors hover:text-bp-green-bright hover:underline">
         ← Orders
       </Link>
       <div className="mt-2 flex items-start justify-between gap-4">

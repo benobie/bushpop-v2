@@ -39,7 +39,7 @@ export default async function AdminEmailJobsPage() {
               <tr key={job.jobId} className="hover:bg-bp-surface-2">
                 <td className="p-2">{job.type}</td>
                 <td className="p-2">
-                  <Link href={`/admin/orders/${job.orderId}`} className="font-mono text-bp-ink-2 underline">
+                  <Link href={`/admin/orders/${job.orderId}`} className="font-mono text-bp-ink-2 underline transition-colors hover:text-bp-green-bright">
                     {job.orderId.slice(-8)}
                   </Link>
                 </td>

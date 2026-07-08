@@ -57,7 +57,7 @@ export default async function DashboardListingDetailPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <Link href="/dashboard/listings" className="text-sm text-bp-ink-2 hover:underline">
+      <Link href="/dashboard/listings" className="text-sm text-bp-ink-2 transition-colors hover:text-bp-green-bright hover:underline">
         ← My listings
       </Link>
 
