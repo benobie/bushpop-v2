@@ -542,6 +542,26 @@ describe("Email worker — anonymous-guest placeholder guard", () => {
     expect(getSentEmails()).toHaveLength(0);
   });
 
+  it("refund_confirmation_buyer — NOT skipped for a real (non-anonymous) account on the guest domain", async () => {
+    // Codex review finding: the guard must require isAnonymous too — a real
+    // account whose address merely ends with the placeholder domain (e.g.
+    // qa@guest.bushpop.com.au) must still receive buyer emails.
+    const { order, buyer } = await createMinimalOrder({ status: "refunded" });
+    await createProcessedRefund(order.id, order.totalCents);
+    const realEmailOnGuestDomain = `${buyer.id.toLowerCase()}@${GUEST_EMAIL_DOMAIN}`;
+    await db
+      .update(user)
+      .set({ email: realEmailOnGuestDomain, isAnonymous: false })
+      .where(eq(user.id, buyer.id));
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "refund_confirmation_buyer", orderId: order.id });
+
+    const sent = getSentEmails();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).toBe(realEmailOnGuestDomain);
+  });
+
   it("order_notification_seller — NOT skipped when only the buyer is a guest", async () => {
     // The guard is buyer-email-scoped; the seller's real address must still
     // receive their new-order notification.

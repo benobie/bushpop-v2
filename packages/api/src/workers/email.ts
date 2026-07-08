@@ -107,6 +107,7 @@ interface OrderWithParties {
   shippingAddressSnapshot: unknown;
   buyerEmail: string;
   buyerName: string;
+  buyerIsAnonymous: boolean | null;
   sellerEmail: string;
   sellerName: string;
   channelName: string;
@@ -137,6 +138,7 @@ async function fetchOrderWithParties(orderId: string): Promise<OrderWithParties 
       shippingAddressSnapshot: orders.shippingAddressSnapshot,
       buyerEmail: buyerAlias.email,
       buyerName: buyerAlias.name,
+      buyerIsAnonymous: buyerAlias.isAnonymous,
       sellerEmail: sellerAlias.email,
       sellerName: sellerAlias.name,
       channelName: channels.name,
@@ -361,15 +363,26 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
     // merges this guard only catches orders that predate email capture. The
     // guest order-access HMAC link belongs in these buyer emails at that
     // point — this is the integration site.
+    // Both conditions required: the placeholder-domain suffix alone must not
+    // suppress a real (non-anonymous) account that happens to use this
+    // domain, and isAnonymous alone must not suppress a guest whose real
+    // email PR #106 has captured onto the user row.
     if (
       (type === "order_confirmation_buyer" ||
         type === "shipping_confirmation_buyer" ||
         type === "refund_confirmation_buyer") &&
+      order.buyerIsAnonymous === true &&
       order.buyerEmail.endsWith(`@${GUEST_EMAIL_DOMAIN}`)
     ) {
       console.warn(
         `[email] Skipping ${type} for order ${orderId} — buyer email is an anonymous-guest placeholder (undeliverable)`,
       );
+      // Buyer-facing order emails never carry a notificationId today, but if
+      // one ever does, leaving the claimed notification in "sending" would
+      // have the sweeper re-claim it forever — record it terminal instead.
+      if (notificationId) {
+        await markNotificationSent(notificationId, undefined);
+      }
       return;
     }
 
