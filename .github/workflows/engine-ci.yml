@@ -293,7 +293,16 @@ jobs:
       # checkout.spec.ts's 2 tests both passed cleanly) on a cause unrelated
       # to checkout. Flagged as a follow-up, not chased in this job.
       - name: Run checkout E2E
-        run: pnpm --filter @bushpop/market exec playwright test e2e/checkout.spec.ts
+        # checkout.spec.ts lands via PR #79 — on any ref that doesn't have it
+        # yet, skip cleanly instead of failing the job with "No tests found."
+        # This guard needs no further edits once #79 merges.
+        run: |
+          if [ -f e2e/checkout.spec.ts ]; then
+            pnpm --filter @bushpop/market exec playwright test e2e/checkout.spec.ts
+          else
+            echo "checkout.spec.ts not on this ref — skipping; arrives with PR #79"
+          fi
+        working-directory: apps/market
         env:
           CI: "true"
 
