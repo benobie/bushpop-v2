@@ -4,12 +4,16 @@
  * "Save this search" control for the PLP filter bar. Captures the current
  * q + filter searchParams, POSTs to the customer saved-searches API.
  * Hidden entirely when there's no active criteria to save.
+ *
+ * BF-10 — saves immediately on a single click with no label; a label is
+ * optional and added afterward from /account/searches (searches-list.tsx),
+ * not gated here as a required second step.
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
-import { Input, Button } from "@bushpop/ui";
+import { Button } from "@bushpop/ui";
 import { track } from "@/lib/analytics";
 import { DEFAULT_CHANNEL } from "@bushpop/config";
 
@@ -21,8 +25,6 @@ interface SaveSearchButtonProps {
 
 export function SaveSearchButton({ q }: SaveSearchButtonProps) {
   const searchParams = useSearchParams();
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "duplicate" | "limit" | "error">("idle");
 
   const filters: Record<string, string> = {};
@@ -32,20 +34,31 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
   }
   const hasCriteria = !!(q && q.trim()) || Object.keys(filters).length > 0;
   const queryValue = q && q.trim() ? q.trim() : "*";
+  const criteriaSignature = `${queryValue}|${FILTER_KEYS.map((key) => `${key}:${searchParams.get(key) ?? ""}`).join("|")}`;
+  const latestCriteriaRef = useRef(criteriaSignature);
+
+  useEffect(() => {
+    latestCriteriaRef.current = criteriaSignature;
+    setStatus("idle");
+  }, [criteriaSignature]);
 
   if (!hasCriteria) return null;
 
   async function handleSave() {
+    const saveCriteria = criteriaSignature;
     setStatus("saving");
     try {
       const api = createBrowserApiClient();
       const { response } = await api.POST("/api/v1/customer/saved-searches", {
-        body: { query: queryValue, filters, name: name.trim() || undefined },
+        body: { query: queryValue, filters },
       });
 
       if (response.status === 401) {
         const returnTo = `${window.location.pathname}${window.location.search}`;
         window.location.href = `/sign-in?next=${encodeURIComponent(returnTo)}`;
+        return;
+      }
+      if (latestCriteriaRef.current !== saveCriteria) {
         return;
       }
       if (response.status === 409) {
@@ -64,6 +77,9 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
       track({ event: "search.saved", props: { channel: DEFAULT_CHANNEL, query: queryValue } });
       setStatus("saved");
     } catch {
+      if (latestCriteriaRef.current !== saveCriteria) {
+        return;
+      }
       setStatus("error");
     }
   }
@@ -73,35 +89,23 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
       <p className="text-xs text-brand-500">
         Search saved —{" "}
         <Link href="/account/searches" className="underline">
-          view your saved searches
+          add a label or view your saved searches
         </Link>
         .
       </p>
     );
   }
 
-  if (!open) {
-    return (
-      <Button variant="ghost" size="sm" onClick={() => setOpen(true)} className="text-brand-500">
-        Save this search
-      </Button>
-    );
-  }
-
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Input
-        placeholder="Name (optional)"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="h-9 w-40 text-sm"
-        maxLength={100}
-      />
-      <Button size="sm" onClick={handleSave} disabled={status === "saving"}>
-        {status === "saving" ? "Saving…" : "Save"}
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-        Cancel
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleSave}
+        disabled={status === "saving"}
+        className="text-brand-500"
+      >
+        {status === "saving" ? "Saving…" : "Save this search"}
       </Button>
       {status === "duplicate" && (
         <span className="text-xs text-red-600">You've already saved this exact search.</span>

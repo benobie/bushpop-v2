@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, lt } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, lt } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
 import {
   channelListings,
@@ -107,6 +107,23 @@ export async function removeFromWishlist(userId: string, channelListingId: strin
   if (deleted.length === 0) {
     throw new NotFoundError("Listing not found in wishlist");
   }
+}
+
+export async function getFavoritedListingIds(
+  userId: string,
+  channelListingIds: string[],
+): Promise<string[]> {
+  const rows = await db
+    .select({ channelListingId: wishlists.channelListingId })
+    .from(wishlists)
+    .where(
+      and(
+        eq(wishlists.userId, userId),
+        inArray(wishlists.channelListingId, channelListingIds),
+      ),
+    );
+
+  return rows.map((row) => row.channelListingId);
 }
 
 export async function listWishlist(

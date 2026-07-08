@@ -251,4 +251,71 @@ describe("Customer Wishlist API", () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ favorited: false });
   });
+
+  describe("POST /api/v1/customer/wishlist/batch-check", () => {
+    it("returns only the favorited subset from the given listing ids", async () => {
+      const favorited = await createWishlistListing({ inventoryTitle: "Favorited" });
+      const notFavorited = await createWishlistListing({ inventoryTitle: "Not favorited" });
+
+      await authedRequest(buyerToken, "POST", "/api/v1/customer/wishlist", {
+        listingId: favorited.id,
+      });
+
+      const res = await authedRequest(buyerToken, "POST", "/api/v1/customer/wishlist/batch-check", {
+        listingIds: [favorited.id, notFavorited.id],
+      });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({ favoritedIds: [favorited.id] });
+    });
+
+    it("never reveals another customer's wishlist rows", async () => {
+      const listing = await createWishlistListing();
+
+      await authedRequest(buyerToken, "POST", "/api/v1/customer/wishlist", {
+        listingId: listing.id,
+      });
+
+      const otherBuyer = await signUpTestUser();
+      const res = await authedRequest(
+        otherBuyer.sessionToken,
+        "POST",
+        "/api/v1/customer/wishlist/batch-check",
+        { listingIds: [listing.id] },
+      );
+
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toEqual({ favoritedIds: [] });
+    });
+
+    it("rejects an empty listingIds array", async () => {
+      const res = await authedRequest(buyerToken, "POST", "/api/v1/customer/wishlist/batch-check", {
+        listingIds: [],
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it("rejects more than 48 listing ids", async () => {
+      const tooMany = Array.from({ length: 49 }, (_, i) => i.toString().padStart(26, "0"));
+
+      const res = await authedRequest(buyerToken, "POST", "/api/v1/customer/wishlist/batch-check", {
+        listingIds: tooMany,
+      });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it("requires authentication", async () => {
+      const listing = await createWishlistListing();
+      const res = await authedRequest(
+        "",
+        "POST",
+        "/api/v1/customer/wishlist/batch-check",
+        { listingIds: [listing.id] },
+      );
+
+      expect(res.statusCode).toBe(401);
+    });
+  });
 });

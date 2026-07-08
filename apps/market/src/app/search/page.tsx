@@ -10,6 +10,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { DEFAULT_CHANNEL } from "@bushpop/config";
 import { searchListings } from "@/lib/data/listings";
+import { getFavoritedIds } from "@/lib/data/wishlist";
 import { ListingCard } from "@/components/listing/listing-card";
 import { FilterBar } from "@/components/listing/filter-bar";
 import { Button, Input } from "@bushpop/ui";
@@ -70,6 +71,7 @@ export default async function SearchPage({
 
   const prevOffset = Math.max(0, offset - PAGE_SIZE);
   const nextOffset = offset + PAGE_SIZE;
+  const favoritedIds = await getFavoritedIds((result?.items ?? []).map((listing) => listing.id));
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
@@ -135,7 +137,11 @@ export default async function SearchPage({
             <>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                 {result.items.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
+                  <ListingCard
+                    key={listing.id}
+                    listing={listing}
+                    initialFavorited={favoritedIds.has(listing.id)}
+                  />
                 ))}
               </div>
 

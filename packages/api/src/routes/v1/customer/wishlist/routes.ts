@@ -8,12 +8,15 @@ import {
   wishlistMutationResponseSchema,
   wishlistListResponseSchema,
   wishlistStatusResponseSchema,
+  wishlistBatchCheckBodySchema,
+  wishlistBatchCheckResponseSchema,
 } from "./schemas.js";
 import {
   addToWishlist,
   removeFromWishlist,
   listWishlist,
   getWishlistEntry,
+  getFavoritedListingIds,
 } from "./service.js";
 
 export async function wishlistRoutes(app: FastifyInstance) {
@@ -66,6 +69,21 @@ export async function wishlistRoutes(app: FastifyInstance) {
     const { listingId } = request.params as { listingId: string };
     const entry = await getWishlistEntry(request.user!.id, listingId);
     return { favorited: !!entry };
+  });
+
+  // POST /api/v1/customer/wishlist/batch-check
+  app.post("/api/v1/customer/wishlist/batch-check", {
+    preHandler: [requireAuth],
+    schema: {
+      tags: ["Customer - Wishlist"],
+      summary: "Check which of the given listings are wishlisted by the caller",
+      body: wishlistBatchCheckBodySchema,
+      response: { 200: wishlistBatchCheckResponseSchema },
+    },
+  }, async (request) => {
+    const { listingIds } = request.body as { listingIds: string[] };
+    const favoritedIds = await getFavoritedListingIds(request.user!.id, listingIds);
+    return { favoritedIds };
   });
 
   // GET /api/v1/customer/wishlist
