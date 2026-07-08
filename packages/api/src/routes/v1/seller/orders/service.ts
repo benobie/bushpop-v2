@@ -17,12 +17,12 @@ function groupItemsByOrder(items: Array<typeof orderItems.$inferSelect>) {
   return map;
 }
 
-function formatSellerOrder(
+async function formatSellerOrder(
   order: typeof orders.$inferSelect,
   items: Array<typeof orderItems.$inferSelect>,
 ) {
   return {
-    ...formatOrder(order, items),
+    ...(await formatOrder(order, items)),
     shippingLabelUrl: order.shippingLabelUrl ?? null,
   };
 }
@@ -65,7 +65,7 @@ export async function listSellerOrders(
   const itemMap = groupItemsByOrder(itemRows);
 
   return {
-    items: data.map((o) => formatSellerOrder(o, itemMap.get(o.id) ?? [])),
+    items: await Promise.all(data.map((o) => formatSellerOrder(o, itemMap.get(o.id) ?? []))),
     nextCursor: hasMore ? data[data.length - 1]!.createdAt.toISOString() : null,
   };
 }
