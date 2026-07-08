@@ -10,11 +10,15 @@
  * 6. Cancel releases inventory
  * 7. Seller-not-ready rejection — no reservations, no rows
  * 8. Stripe 5xx path — markIndeterminate5xx + hasPendingReconciliation
+ * 9. FEE_MODEL_INCOMPLETE guard — posted carts refused (422, zero side
+ *    effects) until Phase 2 wires Buyer Protection (WP-2,
+ *    docs/engine/CHECKOUT-GROUPS-DESIGN.md); pickup-only carts pass.
+ *    NOTE: cart fixtures default to shippingOption="pickup" for this reason.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ulid } from "ulid";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
 import {
   user,
@@ -50,6 +54,7 @@ import { assertCheckoutReady } from "../../../../lib/seller-readiness.js";
 import {
   createQuoteAndPaymentIntent,
   cancelCheckoutGroup,
+  computeSellerTotals,
 } from "./service.js";
 
 // ---------------------------------------------------------------------------
@@ -109,6 +114,14 @@ interface CartFixture {
 async function createCartFixture(opts: {
   sellerCount?: number;
   priceCents?: number;
+  /**
+   * Defaults to "pickup": pickup items owe $0 Buyer Protection, so pickup
+   * carts are the only ones the FEE_MODEL_INCOMPLETE guard lets through
+   * this path until Phase 2 (WP-2, docs/engine/CHECKOUT-GROUPS-DESIGN.md)
+   * wires the real fee. Pass "buyer_pays"/"prepaid" (posted) to exercise
+   * the guard's refusal path.
+   */
+  shippingOption?: "pickup" | "buyer_pays" | "prepaid";
 }): Promise<CartFixture> {
   const channel = await getBushpopChannel();
   const buyer = await createTestUser();
@@ -148,6 +161,12 @@ async function createCartFixture(opts: {
       priceCents,
       channelId: channel.id,
     });
+
+    const shippingOption = opts.shippingOption ?? "pickup";
+    await db
+      .update(inventoryItems)
+      .set({ shippingOption })
+      .where(eq(inventoryItems.id, listing.inventoryItemId));
 
     // Get inventory item id
     const [invRow] = await db
@@ -311,42 +330,106 @@ describe("createQuoteAndPaymentIntent", () => {
 
   // ── Test 4b: destination charge withholds the FULL platform take ─────────
 
-  it("destination charge: application_fee_amount includes prepaid label deduction", async () => {
-    // $200 medium prepaid — the accepted money case (task 9)
-    const fixture = await createCartFixture({ sellerCount: 1, priceCents: 20000 });
-    await db.execute(sql`
-      UPDATE inventory_items
-      SET shipping_option = 'prepaid', parcel_size = 'medium', shipping_class = 'm'
-      WHERE id = ${fixture.sellers[0]!.inventoryItemId}
-    `);
+  it("money lock: computeSellerTotals withholds fee+label but never Buyer Protection ($200 medium prepaid)", () => {
+    // $200 medium prepaid — the accepted money case (task 9). Formerly
+    // asserted through createQuoteAndPaymentIntent's PI call args, but the
+    // FEE_MODEL_INCOMPLETE guard now refuses posted carts at the endpoint,
+    // so the lock asserts against computeSellerTotals directly — the same
+    // function that feeds the PI `amount` and the `application_fee_amount`
+    // derivation (totalCents - sellerProceedsCents) on the destination path.
+    const totals = computeSellerTotals(
+      [
+        {
+          priceCents: 20000,
+          shippingOption: "prepaid",
+          parcelSize: "medium",
+          shippingClass: "m",
+        },
+      ],
+      "AUD",
+    );
+
+    // Buyer pays 20000 (no shipping on prepaid); platform withholds fee 380
+    // + label 1095 = 1475 so the seller's auto-transfer nets exactly 18525.
+    // Fee Model D regression lock: this item is "prepaid" (posted, not
+    // pickup), so it attracts a 4%+50c = 850c Buyer Protection fee under the
+    // shared calculateOrderTotals() — if computeSellerTotals() ever reverts
+    // to using that totalCents as-is instead of recomputing subtotal+shipping
+    // locally, `amount` becomes 20850 and/or `application_fee_amount`
+    // balloons to 2325, over-withholding 850c from the seller's Stripe
+    // Connect transfer. These assertions fail loudly if that regression is
+    // reintroduced.
+    expect(totals.totalCents).toBe(20000);
+    expect(totals.sellerProceedsCents).toBe(18525);
+    expect(totals.totalCents - totals.sellerProceedsCents).toBe(1475);
+    // The BP shared math says SHOULD apply is surfaced (for the guard) but
+    // never folded into totalCents on this path.
+    expect(totals.buyerProtectionFeeCents).toBe(850);
+  });
+
+  // ── FEE_MODEL_INCOMPLETE guard ───────────────────────────────────────────
+
+  it("guard: refuses a posted cart (422 FEE_MODEL_INCOMPLETE) — no reservation, no rows, no Stripe call", async () => {
+    // buyer_pays = posted → shared fee math says BP is owed → this path
+    // cannot charge it → the quote must be refused outright.
+    const fixture = await createCartFixture({
+      sellerCount: 2,
+      shippingOption: "buyer_pays",
+    });
     const { piCreate } = buildStripeMock();
+
+    await expect(
+      createQuoteAndPaymentIntent(fixture.buyerId, fixture.channelId, fixture.addressId),
+    ).rejects.toMatchObject({ statusCode: 422, code: "FEE_MODEL_INCOMPLETE" });
+
+    // Zero side effects: guard runs before reserveItems / the transaction / Stripe
+    expect(piCreate).not.toHaveBeenCalled();
+
+    const groups = await db
+      .select()
+      .from(orderGroups)
+      .where(eq(orderGroups.buyerId, fixture.buyerId));
+    expect(groups).toHaveLength(0);
+
+    const ops = await db.select().from(paymentOperations);
+    expect(ops).toHaveLength(0);
+
+    for (const seller of fixture.sellers) {
+      const [inv] = await db
+        .select({ availabilityStatus: inventoryItems.availabilityStatus })
+        .from(inventoryItems)
+        .where(eq(inventoryItems.id, seller.inventoryItemId));
+      expect(inv!.availabilityStatus).toBe("available");
+    }
+  });
+
+  it("guard: refuses when ANY seller's items are posted (mixed pickup + prepaid cart)", async () => {
+    const fixture = await createCartFixture({ sellerCount: 2 }); // both pickup
+    // Flip one seller's item to prepaid (posted) — that allocation now owes BP.
+    await db
+      .update(inventoryItems)
+      .set({ shippingOption: "prepaid", parcelSize: "medium", shippingClass: "m" })
+      .where(eq(inventoryItems.id, fixture.sellers[1]!.inventoryItemId));
+    const { piCreate } = buildStripeMock();
+
+    await expect(
+      createQuoteAndPaymentIntent(fixture.buyerId, fixture.channelId, fixture.addressId),
+    ).rejects.toMatchObject({ statusCode: 422, code: "FEE_MODEL_INCOMPLETE" });
+    expect(piCreate).not.toHaveBeenCalled();
+  });
+
+  it("guard: pickup-only cart (BP legitimately $0) passes and quotes normally", async () => {
+    const fixture = await createCartFixture({ sellerCount: 2 }); // pickup default
+    buildStripeMock();
 
     const result = await createQuoteAndPaymentIntent(
       fixture.buyerId,
       fixture.channelId,
       fixture.addressId,
     );
-    expect(result.chargeType).toBe("destination");
 
-    const piCallArgs = piCreate.mock.calls[0]![0] as Record<string, unknown>;
-    // Buyer pays 20000 (no shipping on prepaid); platform withholds fee 380
-    // + label 1095 = 1475 so the seller's auto-transfer nets exactly 18525.
-    // Fee Model D regression lock: this item is "prepaid" (posted, not
-    // pickup), so it WOULD attract a 4%+50c = 850c Buyer Protection fee under
-    // the shared calculateOrderTotals() — if computeSellerTotals() ever
-    // reverts to using its totalCents as-is instead of recomputing
-    // subtotal+shipping locally, `amount` becomes 20850 and/or
-    // `application_fee_amount` balloons to 2325, over-withholding 850c from
-    // the seller's Stripe Connect transfer. Both assertions below fail loudly
-    // if that regression is reintroduced.
-    expect(piCallArgs["amount"]).toBe(20000);
-    expect(piCallArgs["application_fee_amount"]).toBe(1475);
-
-    const allocs = await db
-      .select()
-      .from(orderGroupSellerAllocations)
-      .where(eq(orderGroupSellerAllocations.orderGroupId, result.orderGroupId));
-    expect(allocs[0]!.sellerProceedsCents).toBe(18525);
+    expect(result.orderGroupId).toBeTruthy();
+    expect(result.allocations).toHaveLength(2);
   });
 
   // ── Test 5: Happy path SC&T ──────────────────────────────────────────────
