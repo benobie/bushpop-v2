@@ -1,13 +1,19 @@
 /**
  * Bag page — buyer's current cart.
- * Authed + forced dynamic — never cache (createAuthedApiClient forces dynamic,
- * and cart state changes on every mutation).
+ * Forced dynamic — never cache (createAuthedApiClient forces dynamic, and
+ * cart state changes on every mutation).
+ *
+ * Guest commerce (BF-08): a guest with no session yet (never added anything)
+ * has no cart to fetch, so we skip the API call entirely and render the
+ * empty state — there's nothing to bootstrap just from viewing an empty bag.
+ * A guest who already added something has a real (anonymous) session by
+ * then, so the normal authed fetch below just works.
  *
  * Cart items now carry title/coverImage/handle (U1 §2.1 enrichment).
  */
 import Link from "next/link";
 import Image from "next/image";
-import { requireAuth } from "@/lib/require-auth";
+import { getOptionalCustomer } from "@/lib/require-auth";
 import { createAuthedApiClient } from "@bushpop/api-client/server";
 import { RemoveFromBagButton } from "@/components/listing/remove-from-bag-button";
 import { formatMoney } from "@/lib/format-money";
@@ -19,22 +25,33 @@ export const metadata: Metadata = {
 };
 
 export default async function BagPage() {
-  await requireAuth();
+  const customer = await getOptionalCustomer();
 
-  const api = await createAuthedApiClient();
-  const { data: cart, error } = await api.GET("/api/v1/store/cart");
+  let items: Array<{
+    id: string;
+    handle: string | null;
+    title: string | null;
+    coverImage: string | null;
+    priceCents: number;
+    currency: string;
+  }> = [];
 
-  if (error) {
-    return (
-      <main className="mx-auto max-w-2xl px-4 py-12">
-        <p className="text-center text-brand-500">
-          Could not load your bag. Please try again.
-        </p>
-      </main>
-    );
+  if (customer) {
+    const api = await createAuthedApiClient();
+    const { data: cart, error } = await api.GET("/api/v1/store/cart");
+
+    if (error) {
+      return (
+        <main className="mx-auto max-w-2xl px-4 py-12">
+          <p className="text-center text-brand-500">
+            Could not load your bag. Please try again.
+          </p>
+        </main>
+      );
+    }
+
+    items = cart?.items ?? [];
   }
-
-  const items = cart?.items ?? [];
   const subtotalCents = items.reduce((sum, item) => sum + item.priceCents, 0);
   const currency = items[0]?.currency ?? "AUD";
 

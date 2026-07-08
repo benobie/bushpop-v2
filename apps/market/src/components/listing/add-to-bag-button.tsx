@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
+import { authClient } from "@/lib/auth-client";
 import { track } from "@/lib/analytics";
 import { DEFAULT_CHANNEL } from "@bushpop/config";
 
@@ -12,6 +13,18 @@ interface AddToBagButtonProps {
   channel?: string;
   disabled?: boolean;
   priceCents?: number;
+}
+
+let anonymousBootstrapPromise: Promise<Awaited<ReturnType<typeof authClient.signIn.anonymous>>> | null = null;
+
+async function ensureAnonymousSession() {
+  if (!anonymousBootstrapPromise) {
+    anonymousBootstrapPromise = authClient.signIn.anonymous().finally(() => {
+      anonymousBootstrapPromise = null;
+    });
+  }
+
+  return anonymousBootstrapPromise;
 }
 
 export function AddToBagButton({ listingId, disabled, priceCents }: AddToBagButtonProps) {
@@ -24,9 +37,24 @@ export function AddToBagButton({ listingId, disabled, priceCents }: AddToBagButt
     setError(null);
 
     const api = createBrowserApiClient();
-    const { error: addError } = await api.POST("/api/v1/store/cart/items", {
+    let { response, error: addError } = await api.POST("/api/v1/store/cart/items", {
       body: { listingId },
     });
+
+    // Guest commerce (BF-08) — a visitor with no session at all gets a 401
+    // here. Bootstrap a real (anonymous) session and retry once, so "Add to
+    // bag" never has to send a first-time guest to /sign-in.
+    if (response.status === 401) {
+      const { error: anonError } = await ensureAnonymousSession();
+      if (anonError) {
+        setError("Failed to add to bag. Please try again.");
+        setLoading(false);
+        return;
+      }
+      ({ response, error: addError } = await api.POST("/api/v1/store/cart/items", {
+        body: { listingId },
+      }));
+    }
 
     if (addError) {
       setError("Failed to add to bag. Please try again.");

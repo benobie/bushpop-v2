@@ -7,8 +7,13 @@
 
 import { NextResponse, type NextRequest } from "next/server";
 
-/** Routes that require authentication (optimistic check only) */
-const PROTECTED_PREFIXES = ["/account", "/dashboard", "/sell", "/checkout", "/bag", "/orders"];
+/**
+ * Routes that require authentication (optimistic check only).
+ * `/bag` is deliberately NOT here (BF-08, guest commerce) — a guest with no
+ * session at all just sees an empty bag; add-to-bag bootstraps a real
+ * (anonymous) session on first use, so `/bag` works unmodified after that.
+ */
+const PROTECTED_PREFIXES = ["/account", "/dashboard", "/sell", "/checkout", "/orders"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
