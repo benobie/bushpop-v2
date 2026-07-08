@@ -16,6 +16,12 @@ const baseURL =
 
 export const authClient = createAuthClient({
   baseURL,
+  // The /api proxy (proxy.ts, FM-17) rejects any non-GET /api/* request that
+  // lacks this header as CSRF. better-auth's client doesn't set it by default,
+  // so every sign-in/sign-up/sign-out POST 403'd — send it on all auth requests.
+  fetchOptions: {
+    headers: { "x-requested-with": "XMLHttpRequest" },
+  },
 });
 
 export const { signIn, signUp, signOut, useSession } = authClient;
