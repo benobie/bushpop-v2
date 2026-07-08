@@ -1,0 +1,86 @@
+# No-op mirror of engine-ci.yml's 6 required status checks, for docs-only /
+# content-site-only PRs.
+#
+# Branch protection on `main` requires 6 engine-ci.yml checks (Lint, Type
+# Check, Integration Tests, Market Build (webpack), Security, Cache Audit).
+# engine-ci.yml is path-filtered to engine files, so it never triggers on a
+# docs-only PR — the required checks then never report, and the PR waits
+# forever (GitHub has no timeout for a check that never starts). This
+# workflow defines jobs with the SAME check-run names, gated on the exact
+# COMPLEMENT of engine-ci.yml's paths filter, so exactly one of the two
+# workflows reports each required check on any given PR.
+#
+# Keep this file's paths-ignore list byte-identical to engine-ci.yml's
+# paths list (job names included) whenever that file changes.
+name: Engine CI (no-op mirror)
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "packages/**"
+      - "apps/market/**"
+      - "infra/**"
+      - "scripts/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "turbo.json"
+      - "tsconfig.base.json"
+      - "eslint.config.mjs"
+      - ".github/workflows/engine-ci.yml"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "packages/**"
+      - "apps/market/**"
+      - "infra/**"
+      - "scripts/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "turbo.json"
+      - "tsconfig.base.json"
+      - "eslint.config.mjs"
+      - ".github/workflows/engine-ci.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No engine changes in this diff — real Lint runs in engine-ci.yml instead."
+
+  typecheck:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No engine changes in this diff — real Type Check runs in engine-ci.yml instead."
+
+  test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No engine changes in this diff — real Integration Tests run in engine-ci.yml instead."
+
+  market-webpack-build:
+    name: Market Build (webpack)
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No engine changes in this diff — real Market Build (webpack) runs in engine-ci.yml instead."
+
+  cache-audit:
+    name: Cache Audit
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No engine changes in this diff — real Cache Audit runs in engine-ci.yml instead."
+
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No engine changes in this diff — real Security runs in engine-ci.yml instead."

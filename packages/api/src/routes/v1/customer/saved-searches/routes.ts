@@ -6,8 +6,14 @@ import {
   savedSearchListQuery,
   savedSearchResponse,
   savedSearchListResponse,
+  updateSavedSearchBody,
 } from "./schemas.js";
-import { createSavedSearch, listSavedSearches, deleteSavedSearch } from "./service.js";
+import {
+  createSavedSearch,
+  listSavedSearches,
+  deleteSavedSearch,
+  renameSavedSearch,
+} from "./service.js";
 import { z } from "zod";
 
 export async function customerSavedSearchRoutes(app: FastifyInstance) {
@@ -52,6 +58,27 @@ export async function customerSavedSearchRoutes(app: FastifyInstance) {
       const { channelId } = request.query as z.infer<typeof savedSearchListQuery>;
       const items = await listSavedSearches(request.user!.id, channelId ?? request.channel.id);
       return { items };
+    },
+  );
+
+  // PATCH /api/v1/customer/saved-searches/:id
+  app.patch(
+    "/api/v1/customer/saved-searches/:id",
+    {
+      preHandler: [requireAuth],
+      schema: {
+        tags: ["Customer - Saved Searches"],
+        summary: "Rename (or clear the label of) a saved search",
+        params: savedSearchParams,
+        body: updateSavedSearchBody,
+        response: { 200: savedSearchResponse },
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params as z.infer<typeof savedSearchParams>;
+      const { name } = request.body as z.infer<typeof updateSavedSearchBody>;
+      const updated = await renameSavedSearch(request.user!.id, id, name);
+      return reply.status(200).send(updated);
     },
   );
 

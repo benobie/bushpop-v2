@@ -41,6 +41,13 @@ ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=$NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 # Coolify forwards the real value as a build arg (compose web.build.args).
 ARG R2_PUBLIC_URL=""
 ENV R2_PUBLIC_URL=$R2_PUBLIC_URL
+# Chatwoot support-widget — public, safe to bake at build time. Both must be
+# set for the widget to activate (chatwoot-widget.tsx no-ops on either being
+# empty); dormant by default until Ben sets them in Coolify. See docs/support-widget.md.
+ARG NEXT_PUBLIC_CHATWOOT_BASE_URL=""
+ENV NEXT_PUBLIC_CHATWOOT_BASE_URL=$NEXT_PUBLIC_CHATWOOT_BASE_URL
+ARG NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN=""
+ENV NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN=$NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN
 
 RUN pnpm --filter @bushpop/market build
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@bushpop/ui";
+import { Button, Input } from "@bushpop/ui";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
 import { categoryLabel } from "@/lib/category-labels";
 import { conditionLabel } from "@/lib/condition-labels";
@@ -63,6 +63,9 @@ function runAgainHref(search: SavedSearchItem): string {
 export function SearchesList({ items }: { items: SavedSearchItem[] }) {
   const [list, setList] = useState(items);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [labelDraft, setLabelDraft] = useState("");
+  const [savingLabel, setSavingLabel] = useState(false);
 
   async function handleDelete(id: string) {
     setDeletingId(id);
@@ -77,6 +80,36 @@ export function SearchesList({ items }: { items: SavedSearchItem[] }) {
       }
     } finally {
       setDeletingId(null);
+    }
+  }
+
+  function startEditing(search: SavedSearchItem) {
+    setEditingId(search.id);
+    setLabelDraft(search.name ?? "");
+  }
+
+  function cancelEditing() {
+    setEditingId(null);
+    setLabelDraft("");
+  }
+
+  async function handleSaveLabel(id: string) {
+    setSavingLabel(true);
+    try {
+      const api = createBrowserApiClient();
+      const trimmed = labelDraft.trim();
+      const { response, data } = await api.PATCH("/api/v1/customer/saved-searches/{id}", {
+        params: { path: { id } },
+        body: { name: trimmed || null },
+      });
+      if (response.ok && data) {
+        track({ event: "search.renamed", props: { channel: DEFAULT_CHANNEL } });
+        setList((current) => current.map((s) => (s.id === id ? { ...s, name: data.name } : s)));
+        setEditingId(null);
+        setLabelDraft("");
+      }
+    } finally {
+      setSavingLabel(false);
     }
   }
 
@@ -106,9 +139,41 @@ export function SearchesList({ items }: { items: SavedSearchItem[] }) {
             className="flex items-center justify-between gap-4 rounded-xl border border-bp-line px-4 py-4"
           >
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-bp-ink">
-                {search.name || (search.query !== "*" ? search.query : "Filtered browse")}
-              </p>
+              {editingId === search.id ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    autoFocus
+                    value={labelDraft}
+                    onChange={(e) => setLabelDraft(e.target.value)}
+                    placeholder="Label (optional)"
+                    maxLength={100}
+                    className="h-8 w-48 text-sm"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => handleSaveLabel(search.id)}
+                    disabled={savingLabel}
+                  >
+                    {savingLabel ? "Saving…" : "Save"}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={cancelEditing} disabled={savingLabel}>
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p className="truncate text-sm font-medium text-bp-ink">
+                    {search.name || (search.query !== "*" ? search.query : "Filtered browse")}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => startEditing(search)}
+                    className="shrink-0 text-xs text-bp-ink-3 underline hover:text-bp-ink-2"
+                  >
+                    {search.name ? "Rename" : "Add label"}
+                  </button>
+                </div>
+              )}
               {filterEntries.length > 0 && (
                 <div className="mt-1 flex flex-wrap gap-1">
                   {filterEntries.map(([key, value]) => (

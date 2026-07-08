@@ -209,6 +209,77 @@ describe("Customer Saved Searches API", () => {
     });
   });
 
+  describe("PATCH /api/v1/customer/saved-searches/:id", () => {
+    it("adds a label to a saved search created without one", async () => {
+      const createRes = await authedRequest(sessionToken, "POST", "/api/v1/customer/saved-searches", {
+        channelId,
+        query: "trench coats",
+        filters: { category: "outerwear" },
+      });
+      const savedSearch = createRes.json() as { id: string };
+
+      const patchRes = await authedRequest(
+        sessionToken,
+        "PATCH",
+        `/api/v1/customer/saved-searches/${savedSearch.id}`,
+        { name: "Trench coats" },
+      );
+
+      expect(patchRes.statusCode).toBe(200);
+      expect(patchRes.json()).toMatchObject({ id: savedSearch.id, name: "Trench coats" });
+    });
+
+    it("clears a label when name is null", async () => {
+      const createRes = await authedRequest(sessionToken, "POST", "/api/v1/customer/saved-searches", {
+        channelId,
+        query: "denim jackets",
+        filters: { category: "jackets" },
+        name: "Denim",
+      });
+      const savedSearch = createRes.json() as { id: string };
+
+      const patchRes = await authedRequest(
+        sessionToken,
+        "PATCH",
+        `/api/v1/customer/saved-searches/${savedSearch.id}`,
+        { name: null },
+      );
+
+      expect(patchRes.statusCode).toBe(200);
+      expect(patchRes.json()).toMatchObject({ id: savedSearch.id, name: null });
+    });
+
+    it("returns 404 when renaming another user's saved search", async () => {
+      const createRes = await authedRequest(sessionToken, "POST", "/api/v1/customer/saved-searches", {
+        channelId,
+        query: "silk scarves",
+        filters: { category: "accessories" },
+      });
+      const savedSearch = createRes.json() as { id: string };
+
+      const { sessionToken: otherToken } = await signUpTestUser();
+      const patchRes = await authedRequest(
+        otherToken,
+        "PATCH",
+        `/api/v1/customer/saved-searches/${savedSearch.id}`,
+        { name: "Not mine" },
+      );
+
+      expect(patchRes.statusCode).toBe(404);
+    });
+
+    it("returns 404 for a non-existent saved search", async () => {
+      const patchRes = await authedRequest(
+        sessionToken,
+        "PATCH",
+        "/api/v1/customer/saved-searches/01JFAKE0000000000000000000",
+        { name: "Ghost" },
+      );
+
+      expect(patchRes.statusCode).toBe(404);
+    });
+  });
+
   describe("DELETE /api/v1/customer/saved-searches/:id", () => {
     it("deletes the caller's own saved search", async () => {
       const createRes = await authedRequest(

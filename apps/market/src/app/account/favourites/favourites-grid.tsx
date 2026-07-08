@@ -12,6 +12,7 @@ import Link from "next/link";
 import { Pcard } from "@bushpop/ui";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
 import { formatMoney } from "@/lib/format-money";
+import { revalidateFavourites } from "./actions";
 
 export interface FavouriteItem {
   id: string;
@@ -38,7 +39,12 @@ export function FavouritesGrid({ items }: { items: FavouriteItem[] }) {
         params: { path: { listingId } },
       });
 
-      if (!response.ok && removed) {
+      if (response.ok) {
+        revalidateFavourites().catch(() => {});
+        return;
+      }
+
+      if (removed) {
         setList((current) => [...current, removed]);
       }
     } catch {

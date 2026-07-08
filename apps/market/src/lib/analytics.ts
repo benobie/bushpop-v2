@@ -80,6 +80,10 @@ export type BushpopEvent =
       props: { channel: string };
     }
   | {
+      event: "search.renamed";
+      props: { channel: string };
+    }
+  | {
       event: "listing.edited";
       props: { channel: string; listing_id: string };
     }

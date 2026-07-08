@@ -148,6 +148,10 @@ services:
         # this URL's hostname. Default mirrors the api service's R2_PUBLIC_URL
         # default below so web + api can never disagree on the media host.
         R2_PUBLIC_URL: ${R2_PUBLIC_URL:-https://pub-3c7f819593c94086b71e9663605d4c11.r2.dev}
+        # Chatwoot support widget — dormant (empty default) until Ben sets both
+        # in Coolify + redeploys. See docs/support-widget.md for the values.
+        NEXT_PUBLIC_CHATWOOT_BASE_URL: ${NEXT_PUBLIC_CHATWOOT_BASE_URL:-}
+        NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN: ${NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN:-}
     restart: unless-stopped
     depends_on:
       api:

@@ -140,6 +140,20 @@ export async function listSavedSearches(userId: string, channelId?: string) {
   return rows.map(formatSavedSearch);
 }
 
+export async function renameSavedSearch(userId: string, searchId: string, name: string | null) {
+  const [updated] = await db
+    .update(savedSearches)
+    .set({ name })
+    .where(and(eq(savedSearches.id, searchId), eq(savedSearches.userId, userId)))
+    .returning();
+
+  if (!updated) {
+    throw new NotFoundError("Saved search not found");
+  }
+
+  return formatSavedSearch(updated as SavedSearchRow);
+}
+
 export async function deleteSavedSearch(userId: string, searchId: string) {
   const deleted = await db
     .delete(savedSearches)

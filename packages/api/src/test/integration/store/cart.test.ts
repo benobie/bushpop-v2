@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { eq } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
-import { sellerProfiles, addresses } from "@bushpop/db/schema";
-import { signUpTestUser, grantSellerRole } from "../../helpers/auth.js";
+import { sellerProfiles, addresses, user as userTable } from "@bushpop/db/schema";
+import { signUpTestUser, signInAnonymousTestUser, grantSellerRole } from "../../helpers/auth.js";
 import { createActiveTestListing } from "../../helpers/create-listing.js";
 import { authedRequest } from "../../helpers/http.js";
 
@@ -234,6 +234,52 @@ describe("Cart API", () => {
       const res = await authedRequest(buyerToken, "DELETE", "/api/v1/store/cart");
       expect(res.statusCode).toBe(204);
     });
+  });
+});
+
+describe("Guest cart (BF-08)", () => {
+  let sellerId: string;
+  let sellerToken: string;
+
+  beforeEach(async () => {
+    const seller = await signUpTestUser();
+    sellerId = seller.user.id;
+    sellerToken = seller.sessionToken;
+    await grantSellerRole(sellerId);
+  });
+
+  it("lets an anonymous session add to cart and persists it", async () => {
+    const listing = await createActiveTestListing(sellerId, { priceCents: 6000 });
+    const guest = await signInAnonymousTestUser();
+    expect(guest.user.isAnonymous).toBe(true);
+
+    const addRes = await authedRequest(guest.sessionToken, "POST", "/api/v1/store/cart/items", {
+      listingId: listing.id,
+    });
+    expect(addRes.statusCode).toBe(200);
+    expect(addRes.json().buyerId).toBe(guest.user.id);
+
+    const getRes = await authedRequest(guest.sessionToken, "GET", "/api/v1/store/cart");
+    expect(getRes.statusCode).toBe(200);
+    expect(getRes.json().items).toHaveLength(1);
+
+    // The anonymous user is a real row — every buyer-owned FK works unmodified.
+    const [row] = await db.select().from(userTable).where(eq(userTable.id, guest.user.id));
+    expect(row?.isAnonymous).toBe(true);
+  });
+
+  it("still 401s a request with no session at all (no auto-bootstrap server-side)", async () => {
+    const listing = await createActiveTestListing(sellerId);
+    const { getTestApp } = await import("../../helpers/http.js");
+    const app = await getTestApp();
+
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/v1/store/cart",
+      headers: { "x-channel": "bushpop" },
+    });
+
+    expect(res.statusCode).toBe(401);
   });
 });
 
