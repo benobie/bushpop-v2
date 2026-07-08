@@ -215,6 +215,19 @@ async function fillStripeTestCard(page: Page, cardNumber: string): Promise<void>
   await stripeFrame.locator('[name="expiry"]').fill("12/34");
   await stripeFrame.locator('[name="cvc"]').fill("123");
 
+  // Country defaults to United States (Stripe.js has no billing-country
+  // context to infer from in this harness), so a bare AU postcode like
+  // "2000" fails the element's US ZIP format check ("Your ZIP is invalid.")
+  // and silently blocks confirmPayment() client-side before any network
+  // call is made. Select Australia first so the postcode validates against
+  // the right format — confirmed via CI trace screenshots showing this
+  // exact validation error blocking both the happy-path and declined-card
+  // tests identically.
+  const country = stripeFrame.locator('[name="country"]');
+  if (await country.isVisible().catch(() => false)) {
+    await country.selectOption("AU");
+  }
+
   const postal = stripeFrame.locator('[name="postalCode"]');
   if (await postal.isVisible().catch(() => false)) {
     await postal.fill("2000");
