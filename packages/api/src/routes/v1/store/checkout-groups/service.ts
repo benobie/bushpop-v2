@@ -101,7 +101,11 @@ function computeQuoteHash(
  * Buyer Protection yet. Direct-mode checkout (checkout/service.ts) is the
  * only live path and is fully Model D-compliant.
  */
-function computeSellerTotals(
+// Exported for direct unit testing: the FEE_MODEL_INCOMPLETE guard below
+// refuses posted carts at the endpoint, so the destination-charge
+// withholding money-lock (service.test.ts) asserts against this function
+// directly instead of through createQuoteAndPaymentIntent.
+export function computeSellerTotals(
   items: OrderTotalsItem[],
   currency: string,
 ): {
@@ -110,6 +114,12 @@ function computeSellerTotals(
   platformFeeCents: number;
   sellerProceedsCents: number;
   totalCents: number;
+  /**
+   * What shared fee math (Fee Model D) says this seller group's Buyer
+   * Protection fee SHOULD be. Surfaced for the FEE_MODEL_INCOMPLETE guard
+   * below — deliberately NOT included in totalCents (see comment above).
+   */
+  buyerProtectionFeeCents: number;
   currency: string;
 } {
   const totals = calculateOrderTotals(items, currency);
@@ -119,6 +129,7 @@ function computeSellerTotals(
     platformFeeCents: totals.platformFeeCents,
     sellerProceedsCents: totals.sellerProceedsCents,
     totalCents: totals.subtotalCents + totals.shippingCents,
+    buyerProtectionFeeCents: totals.buyerProtectionFeeCents,
     currency: totals.currency,
   };
 }
@@ -342,6 +353,30 @@ export async function createQuoteAndPaymentIntent(
     groupSellerProceeds += t.sellerProceedsCents;
   }
   const groupTotal = groupSubtotal + groupShipping;
+
+  // Fee-model guard (Fee Model D): this path does not charge Buyer Protection
+  // yet — groupTotal above deliberately excludes it (see computeSellerTotals).
+  // Shared fee math says how much BP SHOULD be charged for this cart; refuse
+  // to mint a quote whenever the two disagree, so the $0-BP state flagged by
+  // both cross-model reviewers can never reach Stripe even if
+  // MULTI_VENDOR_CHECKOUT_ENABLED is flipped on. Pickup-only carts legitimately
+  // owe $0 BP and pass. Runs before reserveItems/the DB transaction/Stripe, so
+  // refusal has no cleanup path. Phase 2 (WP-2 in
+  // docs/engine/CHECKOUT-GROUPS-DESIGN.md) wires the real fee and flips
+  // chargedBuyerProtectionCents to the persisted value — the guard then lives
+  // on as a permanent charged-equals-expected conservation invariant.
+  let expectedBuyerProtectionCents = 0;
+  for (const t of sellerTotals.values()) {
+    expectedBuyerProtectionCents += t.buyerProtectionFeeCents;
+  }
+  const chargedBuyerProtectionCents = 0;
+  if (expectedBuyerProtectionCents !== chargedBuyerProtectionCents) {
+    throw new AppError(
+      "Multi-seller checkout does not support the Buyer Protection fee yet and cannot quote this cart.",
+      422,
+      "FEE_MODEL_INCOMPLETE",
+    );
+  }
 
   // 8. Compute quoteHash
   const allocationInputs = sellerIds.map((sellerId) => ({
