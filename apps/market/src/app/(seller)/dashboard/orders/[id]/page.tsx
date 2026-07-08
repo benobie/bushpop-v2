@@ -55,7 +55,7 @@ export default async function DashboardOrderDetailPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
-      <Link href="/dashboard/orders" className="text-sm text-bp-ink-2 hover:underline">
+      <Link href="/dashboard/orders" className="text-sm text-bp-ink-2 transition-colors hover:text-bp-green-bright hover:underline">
         ← Orders
       </Link>
 
@@ -125,7 +125,7 @@ export default async function DashboardOrderDetailPage({
               href={order.shippingLabelUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-block text-sm font-medium text-bp-ink-2 hover:underline"
+              className="mt-3 inline-block text-sm font-medium text-bp-ink-2 transition-colors hover:text-bp-green-bright hover:underline"
             >
               Download shipping label →
             </a>

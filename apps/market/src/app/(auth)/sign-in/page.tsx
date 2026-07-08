@@ -98,7 +98,7 @@ function SignInForm() {
           </Button>
           <p className="text-sm text-bp-ink-2">
             Don&apos;t have an account?{" "}
-            <Link href="/sign-up" className="text-bp-ink-2 hover:underline">
+            <Link href="/sign-up" className="text-bp-ink-2 transition-colors hover:text-bp-green-bright hover:underline">
               Sign up
             </Link>
           </p>

@@ -88,7 +88,7 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
     return (
       <p className="text-xs text-bp-ink-2">
         Search saved —{" "}
-        <Link href="/account/searches" className="underline">
+        <Link href="/account/searches" className="underline transition-colors hover:text-bp-green-bright">
           add a label or view your saved searches
         </Link>
         .

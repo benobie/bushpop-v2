@@ -97,7 +97,7 @@ export default async function SearchPage({
           <p className="text-lg text-bp-ink-2">What are you looking for?</p>
           <p className="text-sm text-bp-ink-3">
             Enter a search term above, or{" "}
-            <Link href="/browse" className="underline hover:text-bp-ink-2">
+            <Link href="/browse" className="underline transition-colors hover:text-bp-green-bright">
               browse all listings
             </Link>
             .

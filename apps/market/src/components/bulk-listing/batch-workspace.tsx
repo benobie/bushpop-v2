@@ -363,12 +363,15 @@ export function BatchWorkspace({
                   <button
                     type="button"
                     onClick={() => applyAiSuggestion(item)}
-                    className="text-xs text-bp-ink-2 underline"
+                    className="text-xs text-bp-ink-2 underline transition-colors hover:text-bp-green-bright"
                   >
                     Use AI: "{item.aiTitle}"
                   </button>
                 )}
-                <a href={`/sell?draft=${item.id}`} className="text-xs text-bp-ink-2 underline">
+                <a
+                  href={`/sell?draft=${item.id}`}
+                  className="text-xs text-bp-ink-2 underline transition-colors hover:text-bp-green-bright"
+                >
                   Edit in full wizard →
                 </a>
               </div>

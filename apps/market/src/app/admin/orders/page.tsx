@@ -65,7 +65,7 @@ export default async function AdminOrdersPage({
             {items.map((order) => (
               <tr key={order.id} className="hover:bg-bp-surface-2">
                 <td className="p-2">
-                  <Link href={`/admin/orders/${order.id}`} className="font-mono text-bp-ink-2 underline">
+                  <Link href={`/admin/orders/${order.id}`} className="font-mono text-bp-ink-2 underline transition-colors hover:text-bp-green-bright">
                     {order.id.slice(-8)}
                   </Link>
                 </td>
