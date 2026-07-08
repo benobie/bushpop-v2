@@ -40,7 +40,7 @@ export default async function OrderDetailPage({
         <Button asChild variant="ghost" size="sm">
           <Link href="/orders">← Orders</Link>
         </Button>
-        <h1 className="font-display text-xl font-bold text-brand-900">
+        <h1 className="font-display text-xl font-bold text-bp-ink">
           Order Details
         </h1>
       </div>
@@ -58,9 +58,9 @@ export default async function OrderDetailPage({
       />
 
       {order.trackingNumber && (
-        <div className="mt-6 rounded-xl border border-brand-200 px-4 py-4">
-          <p className="text-sm font-semibold text-brand-800">Tracking</p>
-          <p className="mt-1 text-sm text-brand-600">
+        <div className="mt-6 rounded-xl border border-bp-line px-4 py-4">
+          <p className="text-sm font-semibold text-bp-ink">Tracking</p>
+          <p className="mt-1 text-sm text-bp-ink-2">
             {order.trackingCarrier && `${order.trackingCarrier}: `}
             {order.trackingNumber}
           </p>

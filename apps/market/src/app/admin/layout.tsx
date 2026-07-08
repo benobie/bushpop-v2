@@ -26,19 +26,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <div className="flex items-center justify-between">
-        <Link href="/admin/orders" className="text-lg font-bold text-brand-900">
+        <Link href="/admin/orders" className="text-lg font-bold text-bp-ink">
           Bushpop admin
         </Link>
-        <span className="rounded bg-brand-100 px-2 py-0.5 text-xs font-medium text-brand-700">
+        <span className="rounded bg-bp-surface-2 px-2 py-0.5 text-xs font-medium text-bp-ink-2">
           internal — v1 read-first
         </span>
       </div>
-      <nav className="mt-4 flex flex-wrap gap-1 border-b border-brand-100 pb-2 text-sm">
+      <nav className="mt-4 flex flex-wrap gap-1 border-b border-bp-line pb-2 text-sm">
         {nav.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className="rounded px-3 py-1.5 text-brand-600 hover:bg-brand-50 hover:text-brand-900"
+            className="rounded px-3 py-1.5 text-bp-ink-2 hover:bg-bp-surface-2 hover:text-bp-ink"
           >
             {item.label}
           </Link>

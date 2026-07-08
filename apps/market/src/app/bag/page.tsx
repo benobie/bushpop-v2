@@ -27,7 +27,7 @@ export default async function BagPage() {
   if (error) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-12">
-        <p className="text-center text-brand-500">
+        <p className="text-center text-bp-ink-2">
           Could not load your bag. Please try again.
         </p>
       </main>
@@ -40,14 +40,14 @@ export default async function BagPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="mb-6 font-display text-2xl font-bold text-brand-900">
+      <h1 className="mb-6 font-display text-2xl font-bold text-bp-ink">
         Your Bag
       </h1>
 
       {items.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-20 text-center">
-          <p className="text-lg text-brand-500">Your bag is empty</p>
-          <p className="text-sm text-brand-400">
+          <p className="text-lg text-bp-ink-2">Your bag is empty</p>
+          <p className="text-sm text-bp-ink-3">
             Browse listings and tap &ldquo;Add to bag&rdquo; to get started.
           </p>
           <Button asChild variant="primary">
@@ -58,7 +58,7 @@ export default async function BagPage() {
         <div className="space-y-4">
           {/* Item list */}
           <Card>
-            <CardContent className="divide-y divide-brand-100 p-0">
+            <CardContent className="divide-y divide-bp-line p-0">
               {items.map((item) => (
                 <div
                   key={item.id}
@@ -66,7 +66,7 @@ export default async function BagPage() {
                 >
                   <Link
                     href={item.handle ? `/listing/${item.handle}` : "#"}
-                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-brand-100"
+                    className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-bp-surface-2"
                     aria-label={item.title ?? "View listing"}
                   >
                     {item.coverImage ? (
@@ -82,11 +82,11 @@ export default async function BagPage() {
                   <div className="flex-1 space-y-0.5">
                     <Link
                       href={item.handle ? `/listing/${item.handle}` : "#"}
-                      className="text-sm font-medium text-brand-800 hover:underline"
+                      className="text-sm font-medium text-bp-ink hover:underline"
                     >
                       {item.title ?? "Listing no longer available"}
                     </Link>
-                    <p className="text-sm font-semibold text-brand-900">
+                    <p className="text-sm font-semibold text-bp-ink">
                       {formatMoney(item.priceCents, item.currency)}
                     </p>
                   </div>
@@ -94,16 +94,16 @@ export default async function BagPage() {
                 </div>
               ))}
             </CardContent>
-            <CardFooter className="flex justify-between border-t border-brand-100 px-4 py-4">
-              <p className="text-sm font-medium text-brand-700">Subtotal</p>
-              <p className="text-base font-bold text-brand-900">
+            <CardFooter className="flex justify-between border-t border-bp-line px-4 py-4">
+              <p className="text-sm font-medium text-bp-ink-2">Subtotal</p>
+              <p className="text-base font-bold text-bp-ink">
                 {formatMoney(subtotalCents, currency)}
               </p>
             </CardFooter>
           </Card>
 
           {/* Buyer Protection + shipping note — computed at checkout, render-only */}
-          <p className="px-1 text-xs text-brand-400">
+          <p className="px-1 text-xs text-bp-ink-3">
             Buyer Protection on every order. Shipping and any Buyer Protection fee are calculated at checkout.
           </p>
 

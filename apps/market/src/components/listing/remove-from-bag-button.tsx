@@ -35,7 +35,7 @@ export function RemoveFromBagButton({ itemId }: RemoveFromBagButtonProps) {
       size="sm"
       onClick={handleRemove}
       disabled={loading}
-      className="text-brand-400 hover:text-red-500"
+      className="text-bp-ink-3 hover:text-red-500"
       aria-label="Remove item from bag"
     >
       {loading ? "…" : "Remove"}

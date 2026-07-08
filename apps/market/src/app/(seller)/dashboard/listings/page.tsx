@@ -21,7 +21,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 function StatusBadge({ status }: { status: string }) {
   const colours: Record<string, string> = {
-    draft: "bg-brand-100 text-brand-600",
+    draft: "bg-bp-surface-2 text-bp-ink-2",
     active: "bg-green-100 text-green-700",
     paused: "bg-amber-100 text-amber-700",
     sold: "bg-blue-100 text-blue-700",
@@ -31,7 +31,7 @@ function StatusBadge({ status }: { status: string }) {
     <span
       className={[
         "rounded-full px-2 py-0.5 text-xs font-medium",
-        colours[status] ?? "bg-brand-100 text-brand-600",
+        colours[status] ?? "bg-bp-surface-2 text-bp-ink-2",
       ].join(" ")}
     >
       {STATUS_LABELS[status] ?? status}
@@ -61,10 +61,10 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-brand-900">My listings</h1>
+        <h1 className="text-xl font-bold text-bp-ink">My listings</h1>
         <Link
           href="/sell"
-          className="rounded-lg bg-brand-800 px-4 py-2 text-sm font-semibold text-white"
+          className="rounded-lg bg-bp-obsidian px-4 py-2 text-sm font-semibold text-white"
         >
           + New listing
         </Link>
@@ -72,7 +72,7 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
 
       <Link
         href="/dashboard/orders"
-        className="mt-2 inline-block text-sm text-brand-500 hover:underline"
+        className="mt-2 inline-block text-sm text-bp-ink-2 hover:underline"
       >
         View orders →
       </Link>
@@ -86,8 +86,8 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
             className={[
               "rounded-full border px-4 py-1 text-sm font-medium transition-colors",
               statusFilter === s
-                ? "border-brand-700 bg-brand-700 text-white"
-                : "border-brand-200 text-brand-600 hover:border-brand-400",
+                ? "border-bp-obsidian bg-bp-obsidian text-white"
+                : "border-bp-line text-bp-ink-2 hover:border-bp-line-2",
             ].join(" ")}
           >
             {STATUS_LABELS[s]}
@@ -103,13 +103,13 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
 
       {listings.length === 0 && !error && (
         <div className="mt-12 flex flex-col items-center gap-4 text-center">
-          <p className="text-brand-500">
+          <p className="text-bp-ink-2">
             {statusFilter === "all" ? "You don't have any listings yet." : `No ${statusFilter} listings.`}
           </p>
           {statusFilter === "all" && (
             <Link
               href="/sell"
-              className="rounded-lg bg-brand-800 px-6 py-2.5 text-sm font-semibold text-white"
+              className="rounded-lg bg-bp-obsidian px-6 py-2.5 text-sm font-semibold text-white"
             >
               List your first item
             </Link>
@@ -122,7 +122,7 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
           {listings.map((listing) => {
             const cardContent = (
               <>
-                <div className="relative aspect-square bg-brand-100">
+                <div className="relative aspect-square bg-bp-surface-2">
                   {(listing as { primaryImageUrl?: string | null }).primaryImageUrl ? (
                     <Image
                       src={(listing as { primaryImageUrl?: string | null }).primaryImageUrl!}
@@ -132,7 +132,7 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
                       sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center text-brand-300">
+                    <div className="flex h-full items-center justify-center text-bp-ink-3">
                       <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                       </svg>
@@ -140,9 +140,9 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
                   )}
                 </div>
                 <div className="p-3 space-y-1">
-                  <p className="truncate text-sm font-medium text-brand-900">{listing.title}</p>
+                  <p className="truncate text-sm font-medium text-bp-ink">{listing.title}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-brand-800">{centsToDollars(listing.priceCents)}</span>
+                    <span className="text-sm font-semibold text-bp-ink">{centsToDollars(listing.priceCents)}</span>
                     <StatusBadge status={listing.status} />
                   </div>
                 </div>
@@ -159,7 +159,7 @@ export default async function DashboardListingsPage({ searchParams }: DashboardL
               <Link
                 key={listing.id}
                 href={href}
-                className="group overflow-hidden rounded-xl border border-brand-100 bg-white shadow-sm transition-shadow hover:shadow-md"
+                className="group overflow-hidden rounded-xl border border-bp-line bg-white shadow-sm transition-shadow hover:shadow-md"
               >
                 {cardContent}
               </Link>

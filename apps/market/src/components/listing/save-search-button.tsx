@@ -70,7 +70,7 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
 
   if (status === "saved") {
     return (
-      <p className="text-xs text-brand-500">
+      <p className="text-xs text-bp-ink-2">
         Search saved —{" "}
         <Link href="/account/searches" className="underline">
           view your saved searches
@@ -82,7 +82,7 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
 
   if (!open) {
     return (
-      <Button variant="ghost" size="sm" onClick={() => setOpen(true)} className="text-brand-500">
+      <Button variant="ghost" size="sm" onClick={() => setOpen(true)} className="text-bp-ink-2">
         Save this search
       </Button>
     );

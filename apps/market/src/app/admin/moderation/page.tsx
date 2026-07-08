@@ -35,8 +35,8 @@ export default async function AdminModerationPage({
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-brand-900">Moderation queue</h1>
-      <p className="mt-1 text-sm text-brand-500">
+      <h1 className="text-xl font-bold text-bp-ink">Moderation queue</h1>
+      <p className="mt-1 text-sm text-bp-ink-2">
         {data?.total ?? 0} total. Takedown hides the listing immediately (
         <code>channel_listings.hidden_at</code>); every transition is audit-logged via{" "}
         <code>dispatchEvent</code>. Implements docs/takedown-process.md.
@@ -49,7 +49,7 @@ export default async function AdminModerationPage({
       <div className="mt-4 flex flex-wrap gap-2 text-sm">
         <Link
           href="/admin/moderation"
-          className={`rounded px-2 py-1 ${!status ? "bg-brand-900 text-white" : "bg-brand-50 text-brand-600"}`}
+          className={`rounded px-2 py-1 ${!status ? "bg-bp-obsidian text-white" : "bg-bp-surface-2 text-bp-ink-2"}`}
         >
           all
         </Link>
@@ -57,16 +57,16 @@ export default async function AdminModerationPage({
           <Link
             key={s}
             href={`/admin/moderation?status=${s}`}
-            className={`rounded px-2 py-1 ${status === s ? "bg-brand-900 text-white" : "bg-brand-50 text-brand-600"}`}
+            className={`rounded px-2 py-1 ${status === s ? "bg-bp-obsidian text-white" : "bg-bp-surface-2 text-bp-ink-2"}`}
           >
             {s}
           </Link>
         ))}
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-brand-100">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-bp-line">
         <table className="w-full text-sm">
-          <thead className="bg-brand-50 text-left text-brand-600">
+          <thead className="bg-bp-surface-2 text-left text-bp-ink-2">
             <tr>
               <th className="p-2">Listing</th>
               <th className="p-2">Reason</th>
@@ -76,19 +76,19 @@ export default async function AdminModerationPage({
               <th className="p-2">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-brand-100">
+          <tbody className="divide-y divide-bp-line">
             {items.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-4 text-brand-500">
+                <td colSpan={6} className="p-4 text-bp-ink-2">
                   No reports found.
                 </td>
               </tr>
             )}
             {items.map((report) => (
-              <tr key={report.id} className="hover:bg-brand-50">
+              <tr key={report.id} className="hover:bg-bp-surface-2">
                 <td className="p-2">
-                  <div className="font-medium text-brand-900">{report.listingTitle ?? "—"}</div>
-                  <div className="text-xs text-brand-500">
+                  <div className="font-medium text-bp-ink">{report.listingTitle ?? "—"}</div>
+                  <div className="text-xs text-bp-ink-2">
                     {report.priceCents != null
                       ? formatMoney(report.priceCents, report.currency ?? "AUD")
                       : "—"}{" "}
@@ -99,12 +99,12 @@ export default async function AdminModerationPage({
                 <td className="p-2">
                   <div>{report.reason}</div>
                   {report.description && (
-                    <div className="text-xs text-brand-500">{report.description}</div>
+                    <div className="text-xs text-bp-ink-2">{report.description}</div>
                   )}
                 </td>
-                <td className="p-2 text-xs text-brand-600">{report.reporterEmail ?? report.reporterId}</td>
+                <td className="p-2 text-xs text-bp-ink-2">{report.reporterEmail ?? report.reporterId}</td>
                 <td className="p-2">{report.status}</td>
-                <td className="p-2 text-brand-500">
+                <td className="p-2 text-bp-ink-2">
                   {new Date(report.createdAt).toLocaleString("en-AU")}
                 </td>
                 <td className="p-2">

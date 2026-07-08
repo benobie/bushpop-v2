@@ -53,7 +53,7 @@ export function AddToBagButton({ listingId, disabled, priceCents }: AddToBagButt
         </div>
         <Link
           href="/bag"
-          className="block w-full rounded-lg border border-brand-200 py-2 text-center text-sm font-medium text-brand-700 hover:bg-brand-50"
+          className="block w-full rounded-lg border border-bp-line py-2 text-center text-sm font-medium text-bp-ink-2 hover:bg-bp-surface-2"
         >
           View bag →
         </Link>
@@ -67,7 +67,7 @@ export function AddToBagButton({ listingId, disabled, priceCents }: AddToBagButt
         type="button"
         disabled={disabled || loading}
         onClick={handleAddToBag}
-        className="w-full rounded-lg bg-brand-800 py-3 text-sm font-semibold text-white disabled:opacity-40"
+        className="w-full rounded-lg bg-bp-obsidian py-3 text-sm font-semibold text-white disabled:opacity-40"
       >
         {loading ? "Adding…" : "Add to bag"}
       </button>

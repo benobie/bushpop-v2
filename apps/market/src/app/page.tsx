@@ -14,10 +14,10 @@ export default async function HomePage() {
     <main className="mx-auto max-w-6xl px-4 py-10">
       {/* Hero — static, prerendered at build (no API needed) */}
       <div className="mb-10 text-center">
-        <h1 className="font-display text-4xl font-bold text-brand-800">
+        <h1 className="font-display text-4xl font-bold text-bp-ink">
           {config.name}
         </h1>
-        <p className="mt-2 text-lg text-brand-500">{config.shortTagline}</p>
+        <p className="mt-2 text-lg text-bp-ink-2">{config.shortTagline}</p>
         <div className="mt-6 flex justify-center gap-3">
           <Button asChild variant="primary" size="lg">
             <Link href="/browse">Browse all</Link>
@@ -73,7 +73,7 @@ async function LatestListings() {
 
   return (
     <>
-      <h2 className="mb-4 font-display text-xl font-semibold text-brand-800">
+      <h2 className="mb-4 font-display text-xl font-semibold text-bp-ink">
         Latest listings
       </h2>
       {/* Rail is FLEX, never grid — grid+overflow-x silently enables vertical
@@ -134,13 +134,13 @@ async function CategoryDuo() {
 
   return (
     <div className="mb-12">
-      <h2 className="mb-4 font-display text-xl font-semibold text-brand-800">Shop by category</h2>
+      <h2 className="mb-4 font-display text-xl font-semibold text-bp-ink">Shop by category</h2>
       <div className="grid grid-cols-2 gap-4">
         {tiles.map((tile) => (
           <Link
             key={tile.slug}
             href={`/browse?categorySlug=${encodeURIComponent(tile.slug)}`}
-            className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-brand-100 sm:aspect-[16/9]"
+            className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-bp-surface-2 sm:aspect-[16/9]"
           >
             {tile.imageUrl && (
               // eslint-disable-next-line @next/next/no-img-element -- plain <img>, matches Pcard's approach (no next/image domain config here)
@@ -169,13 +169,13 @@ async function CategoryDuo() {
 function LatestListingsSkeleton() {
   return (
     <>
-      <div className="mb-4 h-6 w-36 animate-pulse rounded bg-brand-100" />
+      <div className="mb-4 h-6 w-36 animate-pulse rounded bg-bp-surface-2" />
       <div className="flex gap-4 overflow-hidden">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="w-[42%] flex-shrink-0 space-y-2 sm:w-[28%] md:w-[22%]">
-            <div className="aspect-[3/4] animate-pulse rounded-xl bg-brand-100" />
-            <div className="h-4 w-3/4 animate-pulse rounded bg-brand-100" />
-            <div className="h-4 w-1/3 animate-pulse rounded bg-brand-100" />
+            <div className="aspect-[3/4] animate-pulse rounded-xl bg-bp-surface-2" />
+            <div className="h-4 w-3/4 animate-pulse rounded bg-bp-surface-2" />
+            <div className="h-4 w-1/3 animate-pulse rounded bg-bp-surface-2" />
           </div>
         ))}
       </div>

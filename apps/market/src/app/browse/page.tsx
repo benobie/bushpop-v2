@@ -69,8 +69,8 @@ export default async function BrowsePage({
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold text-brand-900">Browse</h1>
-        <p className="text-sm text-brand-500">
+        <h1 className="font-display text-2xl font-bold text-bp-ink">Browse</h1>
+        <p className="text-sm text-bp-ink-2">
           {result.total} {result.total === 1 ? "listing" : "listings"}
         </p>
       </div>
@@ -85,8 +85,8 @@ export default async function BrowsePage({
       {/* Listing grid */}
       {result.items.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-24 text-center">
-          <p className="text-lg text-brand-500">No listings found</p>
-          <p className="text-sm text-brand-400">
+          <p className="text-lg text-bp-ink-2">No listings found</p>
+          <p className="text-sm text-bp-ink-3">
             Try adjusting your filters or check back later.
           </p>
           {offset > 0 && (
@@ -116,7 +116,7 @@ export default async function BrowsePage({
                 </Button>
               )}
             </div>
-            <p className="text-sm text-brand-500">
+            <p className="text-sm text-bp-ink-2">
               {offset + 1}–{Math.min(offset + result.items.length, result.total)} of {result.total}
             </p>
             <div>

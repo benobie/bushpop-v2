@@ -89,20 +89,20 @@ export default async function PDPPage({ params }: PDPProps) {
         <div className="space-y-6">
           <div className="space-y-2">
             {listing.seller && (
-              <p className="text-sm text-brand-500">
+              <p className="text-sm text-bp-ink-2">
                 by{" "}
-                <span className="font-medium text-brand-700">
+                <span className="font-medium text-bp-ink-2">
                   {listing.seller.storeName || listing.seller.handle}
                 </span>
               </p>
             )}
-            <h1 className="text-2xl font-bold text-brand-900">{listing.title}</h1>
+            <h1 className="text-2xl font-bold text-bp-ink">{listing.title}</h1>
             {facts.length > 0 && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {facts.map((fact) => (
                   <span
                     key={fact}
-                    className="rounded-full border border-brand-200 px-3 py-1 text-xs font-medium text-bp-ink-2"
+                    className="rounded-full border border-bp-line px-3 py-1 text-xs font-medium text-bp-ink-2"
                   >
                     {fact}
                   </span>
@@ -113,16 +113,16 @@ export default async function PDPPage({ params }: PDPProps) {
 
           {/* Price block — CSS aspect-ratio pattern for price container (FM-R3-4) */}
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-brand-900">
+            <span className="text-3xl font-bold text-bp-ink">
               {formatMoney(listing.priceCents, listing.currency)}
             </span>
           </div>
 
           {/* Buyer Protection reassurance — approved whitelist phrase (trust-claims-ledger.md §W3);
               no fee amount rendered here (BP fee depends on shipping choice, computed at checkout). */}
-          <div className="rounded-xl border border-brand-200 bg-bp-obsidian/[0.03] px-4 py-3">
-            <p className="text-sm font-medium text-brand-800">Buyer Protection on every order</p>
-            <p className="mt-0.5 text-xs text-brand-500">
+          <div className="rounded-xl border border-bp-line bg-bp-obsidian/[0.03] px-4 py-3">
+            <p className="text-sm font-medium text-bp-ink">Buyer Protection on every order</p>
+            <p className="mt-0.5 text-xs text-bp-ink-2">
               Shipping and any Buyer Protection fee are calculated at checkout.
             </p>
           </div>
@@ -143,12 +143,12 @@ export default async function PDPPage({ params }: PDPProps) {
           {/* Measurements */}
           {measurementEntries.length > 0 && (
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold text-brand-800">Measurements</h2>
+              <h2 className="text-sm font-semibold text-bp-ink">Measurements</h2>
               <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
                 {measurementEntries.map(([key, value]) => (
-                  <div key={key} className="flex justify-between border-b border-brand-200 py-1">
-                    <dt className="text-brand-500">{measurementLabel(key)}</dt>
-                    <dd className="font-medium text-brand-800">{value} cm</dd>
+                  <div key={key} className="flex justify-between border-b border-bp-line py-1">
+                    <dt className="text-bp-ink-2">{measurementLabel(key)}</dt>
+                    <dd className="font-medium text-bp-ink">{value} cm</dd>
                   </div>
                 ))}
               </dl>
@@ -158,8 +158,8 @@ export default async function PDPPage({ params }: PDPProps) {
           {/* Description */}
           {listing.description && (
             <div className="space-y-2">
-              <h2 className="text-sm font-semibold text-brand-800">Description</h2>
-              <p className="whitespace-pre-wrap text-sm text-brand-600">{listing.description}</p>
+              <h2 className="text-sm font-semibold text-bp-ink">Description</h2>
+              <p className="whitespace-pre-wrap text-sm text-bp-ink-2">{listing.description}</p>
             </div>
           )}
         </div>

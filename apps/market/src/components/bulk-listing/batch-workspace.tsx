@@ -8,9 +8,8 @@ import { COLOURS } from "@bushpop/config";
 import { compressImageForUpload } from "@/components/sell/photos-step";
 
 /**
- * Internal bulk-listing tool (B2). Deliberately plain — the design-token
- * restyle (B9/U0) is a parallel, separate track; this reuses @bushpop/ui
- * primitives + existing Tailwind brand-* utilities as-is, no new tokens.
+ * Internal bulk-listing tool (B2). Deliberately plain — reuses @bushpop/ui
+ * primitives and the shared bp-* palette tokens (BF-01), no bespoke styling.
  *
  * Every write here goes through the SAME drafts façade / publish gate as
  * /sell (per-draft PATCHes, publishDraft via the batch publish route) — no
@@ -237,21 +236,21 @@ export function BatchWorkspace({
     <div>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-brand-900">{batch.label ?? "Untitled batch"}</h1>
-          <p className="text-sm text-brand-500">
+          <h1 className="text-xl font-bold text-bp-ink">{batch.label ?? "Untitled batch"}</h1>
+          <p className="text-sm text-bp-ink-2">
             {batch.publishedCount}/{batch.itemCount} published
           </p>
         </div>
         <a
           href={`/api/v1/seller/bulk/batches/${batch.id}/export.csv`}
           download
-          className="rounded-lg border border-brand-300 px-4 py-2 text-sm font-medium text-brand-800 hover:bg-brand-50"
+          className="rounded-lg border border-bp-line-2 px-4 py-2 text-sm font-medium text-bp-ink hover:bg-bp-surface-2"
         >
           Export CSV
         </a>
       </div>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-brand-100 bg-brand-50 p-4">
+      <div className="mt-6 flex flex-wrap items-center gap-3 rounded-lg border border-bp-line bg-bp-surface-2 p-4">
         <input
           ref={fileInputRef}
           type="file"
@@ -261,7 +260,7 @@ export function BatchWorkspace({
           disabled={uploading}
           className="text-sm"
         />
-        {uploading && <span className="text-sm text-brand-600">Uploading…</span>}
+        {uploading && <span className="text-sm text-bp-ink-2">Uploading…</span>}
         <Button variant="outline" onClick={generateAiDrafts} disabled={aiRunning || items.length === 0}>
           {aiRunning ? "Generating AI drafts…" : "Generate AI drafts"}
         </Button>
@@ -271,8 +270,8 @@ export function BatchWorkspace({
         {items.map((item) => {
           const primaryImage = item.images.find((img) => img.isPrimary) ?? item.images[0];
           return (
-            <div key={item.id} className="flex gap-4 rounded-lg border border-brand-100 p-4">
-              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-brand-100">
+            <div key={item.id} className="flex gap-4 rounded-lg border border-bp-line p-4">
+              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-md bg-bp-surface-2">
                 {primaryImage?.status === "ready" && (
                   <Image src={primaryImage.thumbUrl || primaryImage.url} alt="" fill className="object-cover" sizes="96px" />
                 )}
@@ -364,12 +363,12 @@ export function BatchWorkspace({
                   <button
                     type="button"
                     onClick={() => applyAiSuggestion(item)}
-                    className="text-xs text-brand-600 underline"
+                    className="text-xs text-bp-ink-2 underline"
                   >
                     Use AI: "{item.aiTitle}"
                   </button>
                 )}
-                <a href={`/sell?draft=${item.id}`} className="text-xs text-brand-500 underline">
+                <a href={`/sell?draft=${item.id}`} className="text-xs text-bp-ink-2 underline">
                   Edit in full wizard →
                 </a>
               </div>
@@ -377,12 +376,12 @@ export function BatchWorkspace({
           );
         })}
         {items.length === 0 && (
-          <p className="text-sm text-brand-500">Select photos above to start intake — one photo becomes one draft.</p>
+          <p className="text-sm text-bp-ink-2">Select photos above to start intake — one photo becomes one draft.</p>
         )}
       </div>
 
-      <div className="mt-6 flex items-center gap-3 rounded-lg border border-brand-100 bg-brand-50 p-4">
-        <label className="flex items-center gap-2 text-sm text-brand-800">
+      <div className="mt-6 flex items-center gap-3 rounded-lg border border-bp-line bg-bp-surface-2 p-4">
+        <label className="flex items-center gap-2 text-sm text-bp-ink">
           <input type="checkbox" checked={legalAgree} onChange={(e) => setLegalAgree(e.target.checked)} />
           I've reviewed these {readyToPublish} item(s) and confirm they're accurate and legal to sell.
         </label>

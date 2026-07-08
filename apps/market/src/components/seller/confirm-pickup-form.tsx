@@ -61,9 +61,9 @@ export function ConfirmPickupForm({ orderId, status }: { orderId: string; status
   }
 
   return (
-    <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm">
+    <div className="rounded-lg border border-bp-line bg-bp-surface-2 p-4 text-sm">
       <div className="space-y-3">
-        <p className="text-brand-700">
+        <p className="text-bp-ink-2">
           Ask the buyer for their 6-digit collection code after they&apos;ve inspected the item.
           Entering it confirms handover and releases your payout immediately.
         </p>

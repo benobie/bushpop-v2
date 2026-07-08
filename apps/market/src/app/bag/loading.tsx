@@ -6,13 +6,13 @@
 export default function BagLoading() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-12">
-      <div className="mb-6 h-8 w-32 animate-pulse rounded bg-brand-100" />
+      <div className="mb-6 h-8 w-32 animate-pulse rounded bg-bp-surface-2" />
       <div className="space-y-4">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-20 animate-pulse rounded-xl bg-brand-100" />
+          <div key={i} className="h-20 animate-pulse rounded-xl bg-bp-surface-2" />
         ))}
       </div>
-      <div className="mt-8 h-14 animate-pulse rounded-xl bg-brand-100" />
+      <div className="mt-8 h-14 animate-pulse rounded-xl bg-bp-surface-2" />
     </main>
   );
 }

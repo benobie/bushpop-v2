@@ -55,7 +55,7 @@ export function ModerationActions({ reportId, status }: { reportId: string; stat
   }
 
   if (actions.length === 0) {
-    return <span className="text-xs text-brand-400">—</span>;
+    return <span className="text-xs text-bp-ink-3">—</span>;
   }
 
   return (

@@ -43,7 +43,7 @@ export function ListingCard({ listing, priority = false }: ListingCardProps) {
     <Link href={`/listing/${listing.handle}`} className="bp-pcard group block">
       <Card className="overflow-hidden transition-shadow hover:shadow-md">
         {/* Image area */}
-        <div className="relative aspect-[3/4] w-full overflow-hidden bg-brand-100">
+        <div className="relative aspect-[3/4] w-full overflow-hidden bg-bp-surface-2">
           {listing.primaryImageUrl ? (
             <Image
               src={listing.primaryImageUrl}
@@ -56,7 +56,7 @@ export function ListingCard({ listing, priority = false }: ListingCardProps) {
             />
           ) : (
             <div className="flex h-full items-center justify-center">
-              <span className="text-4xl text-brand-300">◻</span>
+              <span className="text-4xl text-bp-ink-3">◻</span>
             </div>
           )}
           <FavButton listingId={listing.id} />
@@ -64,15 +64,15 @@ export function ListingCard({ listing, priority = false }: ListingCardProps) {
 
         <CardContent className="p-3">
           {/* Price */}
-          <p className="text-base font-bold text-brand-900">
+          <p className="text-base font-bold text-bp-ink">
             {formatMoney(listing.priceCents, listing.currency)}
           </p>
 
           {/* Title */}
-          <p className="mt-0.5 truncate text-sm text-brand-700">{listing.title}</p>
+          <p className="mt-0.5 truncate text-sm text-bp-ink-2">{listing.title}</p>
 
           {/* Seller */}
-          <p className="mt-0.5 truncate text-xs text-brand-400">
+          <p className="mt-0.5 truncate text-xs text-bp-ink-3">
             {listing.seller.storeName || listing.seller.handle}
           </p>
 
