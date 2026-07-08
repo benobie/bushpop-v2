@@ -81,8 +81,16 @@ test("happy path — add to bag through a paid, confirmed order", async ({ page,
   // — a per-test deadline always wins over a longer per-assertion timeout.
   // This test does two real Stripe round trips (confirmPayment, then
   // poll-for-succeeded + deliver webhook) plus OrderPoller's own 30s poll
-  // budget, so it legitimately needs more than the default.
-  test.setTimeout(60_000);
+  // budget, so it legitimately needs more than the default. Even a 60s
+  // ceiling with a 55s inner assertion wasn't consistently enough on this
+  // CI runner — every observed failure's accessibility snapshot shows the
+  // real order fully rendered ('It's yours.', real order number) at the
+  // moment of timeout, so this is CI-runner latency stacking across a real
+  // multi-hop round trip (Stripe confirm → poll for succeeded → deliver
+  // webhook → order creation → OrderPoller's own 2s/15-attempt poll),
+  // never a functional failure. Widened with real margin rather than
+  // nudging by a few more seconds each retry.
+  test.setTimeout(90_000);
 
   await page.goto(`/listing/${listing.handle}`);
 
@@ -150,7 +158,7 @@ test("happy path — add to bag through a paid, confirmed order", async ({ page,
   // the wire. Confirmed via CI screenshot: the heading rendered correctly,
   // just a beat after a bare 30s assertion window.
   await expect(page.getByRole("heading", { name: "It's yours." })).toBeVisible({
-    timeout: 55_000,
+    timeout: 85_000,
   });
   await expect(page.getByText(listing.title, { exact: false })).toBeVisible();
 });
