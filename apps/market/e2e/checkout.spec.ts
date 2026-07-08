@@ -42,20 +42,28 @@ const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET!;
 type BuyerStorageState = Awaited<ReturnType<typeof createAuthenticatedBuyer>>["storageState"];
 
 const test = base.extend<
-  { storageState: BuyerStorageState },
-  { buyerStorageState: BuyerStorageState; listing: SeededListing }
+  { storageState: BuyerStorageState; listing: SeededListing },
+  { buyerStorageState: BuyerStorageState }
 >({
-  // Worker-scoped: the auth endpoint is real-rate-limited (10/min) — see
-  // sell-wizard.spec.ts's identical note.
-  listing: [
+  // Test-scoped (NOT worker-scoped): the happy-path test performs a real
+  // purchase, which correctly flips the listing to `sold` (verified in
+  // store/checkout-flow.test.ts's own assertions) — sharing one listing
+  // across both tests in this file meant whichever test ran second was
+  // racing that transition and could get "Cannot add listing to cart:
+  // listing status is 'sold'" depending on how much time had elapsed
+  // since the first test's webhook delivery. Each test gets its own
+  // seller + listing instead; only the buyer identity below stays
+  // worker-scoped (auth sign-up is real-rate-limited at 10/min, and a
+  // shared buyer isn't a resource either test consumes).
+  listing: async (
     // eslint-disable-next-line no-empty-pattern
-    async ({}, use) => {
-      const { userId } = await createAuthenticatedSeller(BASE_URL);
-      const seeded = await createActiveListing(userId);
-      await use(seeded);
-    },
-    { scope: "worker" },
-  ],
+    {},
+    use,
+  ) => {
+    const { userId } = await createAuthenticatedSeller(BASE_URL);
+    const seeded = await createActiveListing(userId);
+    await use(seeded);
+  },
   buyerStorageState: [
     // eslint-disable-next-line no-empty-pattern
     async ({}, use) => {
