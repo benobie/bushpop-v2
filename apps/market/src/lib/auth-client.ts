@@ -8,6 +8,7 @@
  */
 
 import { createAuthClient } from "better-auth/react";
+import { anonymousClient } from "better-auth/client/plugins";
 
 const baseURL =
   typeof window === "undefined"
@@ -22,6 +23,9 @@ export const authClient = createAuthClient({
   fetchOptions: {
     headers: { "x-requested-with": "XMLHttpRequest" },
   },
+  // Guest commerce (BF-08) — signIn.anonymous() bootstraps a real session on
+  // a guest's first cart mutation; see add-to-bag-button.tsx.
+  plugins: [anonymousClient()],
 });
 
 export const { signIn, signUp, signOut, useSession } = authClient;

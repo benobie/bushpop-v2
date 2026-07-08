@@ -7,6 +7,12 @@ export const user = pgTable("user", {
   email: varchar("email", { length: 255 }).notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  // Guest commerce (BF-08) — better-auth's `anonymous` plugin field. An
+  // anonymous sign-in creates a real row here with a placeholder email, so
+  // every buyer-owned FK (carts, checkout_sessions, orders, addresses) works
+  // unmodified for guests. Overwritten with the buyer's real email at guest
+  // checkout (see setGuestCheckoutEmail in checkout/service.ts).
+  isAnonymous: boolean("is_anonymous").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdateFn(() => new Date()),
 });

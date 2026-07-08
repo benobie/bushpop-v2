@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { anonymous } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@bushpop/db/client";
 import * as schema from "@bushpop/db/schema";
@@ -6,6 +7,7 @@ import { ulid } from "ulid";
 import { DEFAULT_CHANNEL, getChannelConfig } from "@bushpop/config";
 import { getEmailSender } from "./email/index.js";
 import { accountVerificationEmailTemplate, passwordResetEmailTemplate } from "./email/templates.js";
+import { mergeAnonymousIdentity } from "./guest-identity.js";
 
 function getAuthChannelName(): string {
   return getChannelConfig(process.env.CHANNEL_SLUG ?? DEFAULT_CHANNEL).name;
@@ -51,4 +53,20 @@ export const auth = betterAuth({
       maxAge: 5 * 60,
     },
   },
+  // Guest commerce (BF-08) — lets a guest add to bag / check out without an
+  // account. An anonymous sign-in creates a real `user` row (isAnonymous:
+  // true, placeholder email), so cart/checkout/orders need zero schema or
+  // auth-gate changes: they already key off a real session user id.
+  plugins: [
+    anonymous({
+      emailDomainName: "guest.bushpop.com.au",
+      onLinkAccount: async ({ anonymousUser, newUser }) => {
+        try {
+          await mergeAnonymousIdentity(anonymousUser.user.id, newUser.user.id);
+        } catch (err) {
+          console.error("[auth] Failed to merge anonymous identity into linked account:", err);
+        }
+      },
+    }),
+  ],
 });
