@@ -118,4 +118,37 @@ describe("Guest order-access token (BF-08)", () => {
 
     expect(res.statusCode).toBe(400);
   });
+
+  it("404s on an expired token (M2 — bounded lifetime)", async () => {
+    const guest = await signInAnonymousTestUser();
+    const order = await insertPaidOrder({ buyerId: guest.user.id, sellerId, channelId });
+    const expiredToken = deriveGuestOrderToken(order.id, guest.user.id, Date.now() - 1000);
+
+    const res = await publicRequest(
+      "GET",
+      `/api/v1/store/orders/${order.id}/guest?token=${expiredToken}`,
+    );
+
+    expect(res.statusCode).toBe(404);
+  });
+
+  it("404s a token with a tampered expiry segment — can't be re-signed without the secret", async () => {
+    const guest = await signInAnonymousTestUser();
+    const order = await insertPaidOrder({ buyerId: guest.user.id, sellerId, channelId });
+    const validToken = deriveGuestOrderToken(order.id, guest.user.id);
+    const separatorIndex = validToken.lastIndexOf(".");
+    const signature = validToken.slice(separatorIndex + 1);
+    // Bump the expiry far into the future while keeping the original
+    // signature — the signature was computed over the original exp, so it
+    // must not verify against this doctored one.
+    const farFutureExp = Math.floor((Date.now() + 365 * 24 * 60 * 60 * 1000) / 1000);
+    const tamperedToken = `${farFutureExp.toString(36)}.${signature}`;
+
+    const res = await publicRequest(
+      "GET",
+      `/api/v1/store/orders/${order.id}/guest?token=${tamperedToken}`,
+    );
+
+    expect(res.statusCode).toBe(404);
+  });
 });
