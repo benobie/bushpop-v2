@@ -24,7 +24,7 @@ import { DEFAULT_CHANNEL } from "@bushpop/config";
 import { SaveSearchButton } from "./save-search-button";
 
 interface FilterBarProps {
-  basePath: "/browse" | "/search";
+  basePath: "/shop" | "/search";
   /** Current query string (for search page — preserves `q` param) */
   q?: string;
   /** Result counts per filter value from Meili facetDistribution (U1 §2.1). */
@@ -209,7 +209,7 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
             className="h-9 w-20 text-sm"
             min={0}
           />
-          <span className="text-brand-400">–</span>
+          <span className="text-bp-ink-3">–</span>
           <Input
             type="number"
             placeholder="Max $"
@@ -225,7 +225,7 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
           variant="ghost"
           size="sm"
           onClick={handleClear}
-          className="text-brand-500"
+          className="text-bp-ink-2"
         >
           Clear
         </Button>
@@ -239,7 +239,7 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
               key={key}
               type="button"
               onClick={() => pushFilter(key, "")}
-              className="flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs text-brand-700"
+              className="flex items-center gap-1 rounded-full border border-bp-line bg-bp-surface-2 px-3 py-1 text-xs text-bp-ink-2"
             >
               {FILTER_LABELS[key] ?? key}:{" "}
               {key === "condition"

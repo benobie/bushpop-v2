@@ -25,10 +25,10 @@ const CATEGORIES: NavCategory[] = [
     label: "Women",
     drawerTitle: "Women's categories",
     seeAllLabel: "See all womenswear",
-    seeAllHref: "/browse?cat=women",
-    newHref: "/browse?cat=women&sort=new",
-    trendingHref: "/browse?cat=women&sort=trending",
-    saleHref: "/browse?cat=women&sale=1",
+    seeAllHref: "/shop?cat=women",
+    newHref: "/shop?cat=women&sort=new",
+    trendingHref: "/shop?cat=women&sort=trending",
+    saleHref: "/shop?cat=women&sale=1",
     subs: [
       { label: "Tops", href: "/search?q=womens tops" },
       { label: "Dresses", href: "/search?q=womens dresses" },
@@ -44,10 +44,10 @@ const CATEGORIES: NavCategory[] = [
     label: "Men",
     drawerTitle: "Men's categories",
     seeAllLabel: "See all menswear",
-    seeAllHref: "/browse?cat=men",
-    newHref: "/browse?cat=men&sort=new",
-    trendingHref: "/browse?cat=men&sort=trending",
-    saleHref: "/browse?cat=men&sale=1",
+    seeAllHref: "/shop?cat=men",
+    newHref: "/shop?cat=men&sort=new",
+    trendingHref: "/shop?cat=men&sort=trending",
+    saleHref: "/shop?cat=men&sale=1",
     subs: [
       { label: "Tops", href: "/search?q=mens tops" },
       { label: "Shoes", href: "/search?q=mens shoes" },
@@ -178,7 +178,7 @@ export default function DesignPreviewPage() {
         channelName="Bushpop"
         copyrightYear={2026}
         columns={[
-          { heading: "Shop", links: [{ label: "Browse", href: "/browse" }, { label: "Sell", href: "/sell" }] },
+          { heading: "Shop", links: [{ label: "Browse", href: "/shop" }, { label: "Sell", href: "/sell" }] },
           { heading: "Account", links: [{ label: "Sign in", href: "/sign-in" }, { label: "Orders", href: "/orders" }] },
           { heading: "Support", links: [{ label: "Help", href: "/help" }] },
         ]}

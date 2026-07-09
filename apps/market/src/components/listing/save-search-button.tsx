@@ -86,9 +86,9 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
 
   if (status === "saved") {
     return (
-      <p className="text-xs text-brand-500">
+      <p className="text-xs text-bp-ink-2">
         Search saved —{" "}
-        <Link href="/account/searches" className="underline">
+        <Link href="/account/searches" className="underline transition-colors hover:text-bp-green-bright">
           add a label or view your saved searches
         </Link>
         .
@@ -103,7 +103,7 @@ export function SaveSearchButton({ q }: SaveSearchButtonProps) {
         size="sm"
         onClick={handleSave}
         disabled={status === "saving"}
-        className="text-brand-500"
+        className="text-bp-ink-2"
       >
         {status === "saving" ? "Saving…" : "Save this search"}
       </Button>

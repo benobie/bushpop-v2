@@ -471,6 +471,140 @@ describe("Starshipit webhook — Dispatched", () => {
     expect(updatedOrder!.status).toBe("shipped");
     expect(updatedOrder!.lastTrackingStatus).toBe("Dispatched");
   });
+
+  it("Dispatched event on a paid order dispatches exactly one order.shipped event with tracking metadata", async () => {
+    // The webhook can be the paid → shipped transition point (label created
+    // out-of-band, or the label worker crashed before its DB write) — the
+    // buyer's shipping_confirmation_buyer email hangs off this event, so a
+    // missing dispatch means the buyer silently never hears their order
+    // shipped.
+    const order = await createMinimalOrder({ status: "paid" });
+    const trackingNumber = `TRACK-EVT-${order.id.slice(-6)}`;
+    await db.update(orders).set({ trackingNumber }).where(eq(orders.id, order.id));
+
+    await handleTrackingEventForTest({
+      tracking_number: trackingNumber,
+      order_number: order.id,
+      status: "Dispatched",
+      status_description: "Shipment dispatched",
+      last_updated_date: new Date().toISOString(),
+    });
+
+    const events = await db
+      .select()
+      .from(marketplaceEvents)
+      .where(
+        and(
+          eq(marketplaceEvents.eventName, "order.shipped"),
+          eq(marketplaceEvents.entityId, order.id),
+        ),
+      );
+    expect(events).toHaveLength(1);
+    const metadata = events[0]!.metadata as Record<string, unknown>;
+    expect(metadata.trackingNumber).toBe(trackingNumber);
+    // The webhook payload carries no carrier and the order never had one —
+    // null, never an invented value.
+    expect(metadata.carrier).toBeNull();
+  });
+
+  it("Dispatched event persists the payload tracking number when the order has none", async () => {
+    // Order resolved via order_number with no trackingNumber on file (label
+    // created out-of-band): the email worker requires a tracking number, so
+    // the webhook must persist the payload's before dispatching.
+    const order = await createMinimalOrder({ status: "paid" });
+    const payloadTracking = `TRACK-OOB-${order.id.slice(-6)}`;
+
+    await handleTrackingEventForTest({
+      tracking_number: payloadTracking,
+      order_number: order.id,
+      status: "Dispatched",
+      status_description: "Shipment dispatched",
+      last_updated_date: new Date().toISOString(),
+    });
+
+    const [updatedOrder] = await db.select().from(orders).where(eq(orders.id, order.id));
+    expect(updatedOrder!.status).toBe("shipped");
+    expect(updatedOrder!.trackingNumber).toBe(payloadTracking);
+
+    const events = await db
+      .select()
+      .from(marketplaceEvents)
+      .where(
+        and(
+          eq(marketplaceEvents.eventName, "order.shipped"),
+          eq(marketplaceEvents.entityId, order.id),
+        ),
+      );
+    expect(events).toHaveLength(1);
+    expect((events[0]!.metadata as Record<string, unknown>).trackingNumber).toBe(payloadTracking);
+  });
+
+  it("Dispatched webhook redelivery: second event does not dispatch a second order.shipped (idempotent)", async () => {
+    // Use a DIFFERENT timestamp on the redelivery so the status+timestamp
+    // dedup layer does NOT catch it — proving the CAS on orders.status is
+    // what makes the dispatch (and therefore the buyer email) at-most-once.
+    const order = await createMinimalOrder({ status: "paid" });
+    const trackingNumber = `TRACK-REDELIVER-${order.id.slice(-6)}`;
+    await db.update(orders).set({ trackingNumber }).where(eq(orders.id, order.id));
+
+    await handleTrackingEventForTest({
+      tracking_number: trackingNumber,
+      order_number: order.id,
+      status: "Dispatched",
+      status_description: "Shipment dispatched",
+      last_updated_date: "2026-01-15T10:00:00.000Z",
+    });
+    await handleTrackingEventForTest({
+      tracking_number: trackingNumber,
+      order_number: order.id,
+      status: "Dispatched",
+      status_description: "Shipment dispatched",
+      last_updated_date: "2026-01-15T10:05:00.000Z",
+    });
+
+    const events = await db
+      .select()
+      .from(marketplaceEvents)
+      .where(
+        and(
+          eq(marketplaceEvents.eventName, "order.shipped"),
+          eq(marketplaceEvents.entityId, order.id),
+        ),
+      );
+    expect(events).toHaveLength(1);
+  });
+
+  it("Dispatched event on an already-shipped order updates tracking only — no order.shipped dispatch", async () => {
+    // The label worker / seller manual path already transitioned and
+    // dispatched; the webhook losing the CAS must not double-trigger the
+    // buyer email.
+    const order = await createMinimalOrder({ status: "shipped" });
+    const trackingNumber = `TRACK-LOST-${order.id.slice(-6)}`;
+    await db.update(orders).set({ trackingNumber }).where(eq(orders.id, order.id));
+
+    await handleTrackingEventForTest({
+      tracking_number: trackingNumber,
+      order_number: order.id,
+      status: "Dispatched",
+      status_description: "Shipment dispatched",
+      last_updated_date: new Date().toISOString(),
+    });
+
+    const [updatedOrder] = await db.select().from(orders).where(eq(orders.id, order.id));
+    expect(updatedOrder!.status).toBe("shipped");
+    expect(updatedOrder!.lastTrackingStatus).toBe("Dispatched");
+
+    const events = await db
+      .select()
+      .from(marketplaceEvents)
+      .where(
+        and(
+          eq(marketplaceEvents.eventName, "order.shipped"),
+          eq(marketplaceEvents.entityId, order.id),
+        ),
+      );
+    expect(events).toHaveLength(0);
+  });
 });
 
 // ── 6. Webhook: Exception — tracking updated, event dispatched ────────────────

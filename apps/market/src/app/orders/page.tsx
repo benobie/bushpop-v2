@@ -62,7 +62,7 @@ export default async function OrdersPage() {
   if (error) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-12">
-        <p className="text-center text-brand-500">
+        <p className="text-center text-bp-ink-2">
           Could not load your orders. Please try again.
         </p>
       </main>
@@ -73,18 +73,18 @@ export default async function OrdersPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10">
-      <h1 className="mb-6 font-display text-2xl font-bold text-brand-900">
+      <h1 className="mb-6 font-display text-2xl font-bold text-bp-ink">
         My Orders
       </h1>
 
       {orders.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-20 text-center">
-          <p className="text-lg text-brand-500">No orders yet</p>
-          <p className="text-sm text-brand-400">
+          <p className="text-lg text-bp-ink-2">No orders yet</p>
+          <p className="text-sm text-bp-ink-3">
             Browse listings and complete a purchase to see your orders here.
           </p>
           <Button asChild variant="primary">
-            <Link href="/browse">Browse listings</Link>
+            <Link href="/shop">Browse listings</Link>
           </Button>
         </div>
       ) : (
@@ -93,21 +93,21 @@ export default async function OrdersPage() {
             <Link
               key={order.id}
               href={`/orders/${order.id}`}
-              className="block rounded-xl border border-brand-200 px-4 py-4 transition-colors hover:border-brand-300 hover:bg-brand-50"
+              className="block rounded-xl border border-bp-line px-4 py-4 transition-colors hover:border-bp-line-2 hover:bg-bp-surface-2"
             >
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-xs text-brand-400">
+                  <p className="text-xs text-bp-ink-3">
                     {new Date(order.createdAt).toLocaleDateString("en-AU", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
                     })}
                   </p>
-                  <p className="text-sm font-medium text-brand-700">
+                  <p className="text-sm font-medium text-bp-ink-2">
                     {order.items.length} {order.items.length === 1 ? "item" : "items"}
                   </p>
-                  <p className="text-base font-bold text-brand-900">
+                  <p className="text-base font-bold text-bp-ink">
                     {formatMoney(order.totalCents, order.currency)}
                   </p>
                 </div>
@@ -115,7 +115,7 @@ export default async function OrdersPage() {
                   <Badge variant={getStatusVariant(order.status)}>
                     {STATUS_LABELS[order.status] ?? order.status}
                   </Badge>
-                  <span className="text-xs text-brand-400">View →</span>
+                  <span className="text-xs text-bp-ink-3">View →</span>
                 </div>
               </div>
             </Link>

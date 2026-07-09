@@ -17,12 +17,12 @@ export default async function AdminUsersPage({
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-brand-900">Users</h1>
-      <p className="mt-1 text-sm text-brand-500">{data?.total ?? 0} total. Read-only.</p>
+      <h1 className="text-xl font-bold text-bp-ink">Users</h1>
+      <p className="mt-1 text-sm text-bp-ink-2">{data?.total ?? 0} total. Read-only.</p>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-brand-100">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-bp-line">
         <table className="w-full text-sm">
-          <thead className="bg-brand-50 text-left text-brand-600">
+          <thead className="bg-bp-surface-2 text-left text-bp-ink-2">
             <tr>
               <th className="p-2">Name</th>
               <th className="p-2">Email</th>
@@ -30,20 +30,20 @@ export default async function AdminUsersPage({
               <th className="p-2">Joined</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-brand-100">
+          <tbody className="divide-y divide-bp-line">
             {items.length === 0 && (
               <tr>
-                <td colSpan={4} className="p-4 text-brand-500">
+                <td colSpan={4} className="p-4 text-bp-ink-2">
                   No users found.
                 </td>
               </tr>
             )}
             {items.map((u) => (
-              <tr key={u.id} className="hover:bg-brand-50">
+              <tr key={u.id} className="hover:bg-bp-surface-2">
                 <td className="p-2">{u.name}</td>
                 <td className="p-2">{u.email}</td>
                 <td className="p-2">{u.emailVerified ? "yes" : "no"}</td>
-                <td className="p-2 text-brand-500">{new Date(u.createdAt).toLocaleString("en-AU")}</td>
+                <td className="p-2 text-bp-ink-2">{new Date(u.createdAt).toLocaleString("en-AU")}</td>
               </tr>
             ))}
           </tbody>

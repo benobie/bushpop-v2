@@ -197,6 +197,14 @@ describe("processRefund — pre-transfer path (held)", () => {
 
     // Buyer refund confirmation email enqueued
     expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
+
+    // WP-0: the refund amount is pinned to the order total, not left to Stripe's
+    // full-remaining-charge default (which double-refunds under a shared group PI).
+    const stripe = vi.mocked(getStripe)();
+    expect(stripe.refunds.create).toHaveBeenCalledWith(
+      expect.objectContaining({ amount: order!.totalCents }),
+      expect.anything(),
+    );
   });
 
   it("still completes the refund (order refunded, hold refunded) even when enqueueEmail rejects", async () => {

@@ -1,8 +1,15 @@
-// Flat-lay garment measurement diagrams for the how-to-measure guide.
-// Pure RSC, zero client JS — inline SVG keeps the content pages image-free and
-// fast (no raster requests, crisp at any zoom). The guide teaches measuring a
-// garment laid flat, so these are flat-lay garment outlines (a top and a pair
-// of bottoms) with labelled double-arrow measurement lines, NOT a body figure.
+// Flat-lay garment/shoe measurement diagrams for the how-to-measure guide and
+// the brand size-chart template. Pure RSC, zero client JS — inline SVG keeps
+// the content pages image-free and fast (no raster requests, crisp at any
+// zoom). The guide teaches measuring an item laid flat, so these are flat-lay
+// outlines (a top, a pair of bottoms, a dress and a shoe sole) with labelled
+// double-arrow measurement lines, NOT body figures.
+//
+// Measurement vocabulary mirrors the engine's own canonical templates
+// (packages/config/src/measurement-templates.ts, used by the sell wizard) so
+// the content site and the product describe measurements the same way:
+// top = chest/shoulder/length/sleeve, bottoms = waist/hip/rise/inseam,
+// dress = chest/waist/hip/length, shoes = insole (heel-to-toe).
 //
 // Accessibility + crawlability: each <svg> is role="img" with aria-labelledby
 // pointing at a <title> (short name) and <desc> (the measurements shown), so
@@ -73,7 +80,7 @@ function Label({
   );
 }
 
-function TopDiagram() {
+export function TopDiagram() {
   const id = "measure-top";
   return (
     <figure className="m-0">
@@ -186,7 +193,7 @@ function TopDiagram() {
   );
 }
 
-function BottomsDiagram() {
+export function BottomsDiagram() {
   const id = "measure-bottoms";
   return (
     <figure className="m-0">
@@ -199,9 +206,10 @@ function BottomsDiagram() {
         <title id={`${id}-title`}>How to measure bottoms, laid flat</title>
         <desc id={`${id}-desc`}>
           A flat-lay outline of a pair of trousers showing where to measure the
-          waist (across the waistband), hips (across the widest point), length
-          (top of the waistband down the outside leg to the hem) and inseam
-          (crotch seam straight down to the bottom of the leg).
+          waist (across the waistband), hips (across the widest point), rise
+          (waistband down to the crotch seam), length (top of the waistband
+          down the outside leg to the hem) and inseam (crotch seam straight
+          down to the bottom of the leg).
         </desc>
         <ArrowDefs id={id} />
 
@@ -260,6 +268,21 @@ function BottomsDiagram() {
           Length
         </Label>
 
+        {/* Rise — waistband straight down to the crotch point */}
+        <line
+          x1="200"
+          y1="70"
+          x2="200"
+          y2="180"
+          stroke={MEASURE.stroke}
+          strokeWidth={MEASURE.strokeWidth}
+          markerStart={`url(#${id}-arrow)`}
+          markerEnd={`url(#${id}-arrow)`}
+        />
+        <Label x={214} y={96} rotate={-90}>
+          Rise
+        </Label>
+
         {/* Inseam — crotch seam straight down to the leg bottom */}
         <line
           x1="200"
@@ -284,15 +307,171 @@ function BottomsDiagram() {
   );
 }
 
-// Both flat-lay diagrams, side by side on wider screens and stacked on mobile.
+export function DressDiagram() {
+  const id = "measure-dress";
+  return (
+    <figure className="m-0">
+      <svg
+        viewBox="0 0 380 460"
+        className="w-full"
+        role="img"
+        aria-labelledby={`${id}-title ${id}-desc`}
+      >
+        <title id={`${id}-title`}>How to measure a dress, laid flat with straps up</title>
+        <desc id={`${id}-desc`}>
+          A flat-lay outline of a dress showing where to measure the chest
+          (underarm seam to underarm seam), waist (across the narrowest
+          point), hip (across the widest point) and length (top of the strap
+          or shoulder straight down to the hem).
+        </desc>
+        <ArrowDefs id={id} />
+
+        {/* Straps, laid up */}
+        <line x1="152" y1="80" x2="158" y2="42" stroke={GARMENT.stroke} strokeWidth={GARMENT.strokeWidth} strokeLinecap="round" />
+        <line x1="248" y1="80" x2="242" y2="42" stroke={GARMENT.stroke} strokeWidth={GARMENT.strokeWidth} strokeLinecap="round" />
+
+        {/* Garment outline — bodice tapering to waist, flaring to hip and hem */}
+        <path
+          d="M150,80 L250,80 L268,140 L246,230 L300,290 L320,420 L60,420 L80,290 L134,230 L112,140 Z"
+          fill={GARMENT.fill}
+          stroke={GARMENT.stroke}
+          strokeWidth={GARMENT.strokeWidth}
+          strokeLinejoin="round"
+        />
+
+        {/* Chest — across at the underarm seams */}
+        <line
+          x1="112"
+          y1="140"
+          x2="268"
+          y2="140"
+          stroke={MEASURE.stroke}
+          strokeWidth={MEASURE.strokeWidth}
+          strokeDasharray="5 4"
+          markerStart={`url(#${id}-arrow)`}
+          markerEnd={`url(#${id}-arrow)`}
+        />
+        <Label x={190} y={135}>
+          Chest
+        </Label>
+
+        {/* Waist — across the narrowest point */}
+        <line
+          x1="134"
+          y1="230"
+          x2="246"
+          y2="230"
+          stroke={MEASURE.stroke}
+          strokeWidth={MEASURE.strokeWidth}
+          strokeDasharray="5 4"
+          markerStart={`url(#${id}-arrow)`}
+          markerEnd={`url(#${id}-arrow)`}
+        />
+        <Label x={190} y={225}>
+          Waist
+        </Label>
+
+        {/* Hip — across the widest point */}
+        <line
+          x1="80"
+          y1="290"
+          x2="300"
+          y2="290"
+          stroke={MEASURE.stroke}
+          strokeWidth={MEASURE.strokeWidth}
+          strokeDasharray="5 4"
+          markerStart={`url(#${id}-arrow)`}
+          markerEnd={`url(#${id}-arrow)`}
+        />
+        <Label x={190} y={285}>
+          Hip
+        </Label>
+
+        {/* Length — top of the strap straight down to the hem */}
+        <line
+          x1="36"
+          y1="80"
+          x2="36"
+          y2="420"
+          stroke={MEASURE.stroke}
+          strokeWidth={MEASURE.strokeWidth}
+          markerStart={`url(#${id}-arrow)`}
+          markerEnd={`url(#${id}-arrow)`}
+        />
+        <Label x={28} y={250} rotate={-90}>
+          Length
+        </Label>
+      </svg>
+      <figcaption className="mt-2 text-center text-sm text-gray-600">
+        Dresses — lay flat with straps up, then double the chest, waist and
+        hip figures for the full circumference.
+      </figcaption>
+    </figure>
+  );
+}
+
+export function ShoesDiagram() {
+  const id = "measure-shoes";
+  return (
+    <figure className="m-0">
+      <svg
+        viewBox="0 0 300 400"
+        className="w-full"
+        role="img"
+        aria-labelledby={`${id}-title ${id}-desc`}
+      >
+        <title id={`${id}-title`}>How to measure shoes, by insole length</title>
+        <desc id={`${id}-desc`}>
+          An outline of a shoe sole showing the insole length measurement,
+          taken as a straight line from the back of the heel to the tip of
+          the longest toe.
+        </desc>
+        <ArrowDefs id={id} />
+
+        {/* Sole outline, traced from above */}
+        <path
+          d="M150,40 C190,40 215,90 215,150 C215,220 205,260 195,300 C190,330 180,350 150,360 C120,350 110,330 105,300 C95,260 85,220 85,150 C85,90 110,40 150,40 Z"
+          fill={GARMENT.fill}
+          stroke={GARMENT.stroke}
+          strokeWidth={GARMENT.strokeWidth}
+          strokeLinejoin="round"
+        />
+
+        {/* Insole length — heel to toe, straight down the centre */}
+        <line
+          x1="150"
+          y1="40"
+          x2="150"
+          y2="360"
+          stroke={MEASURE.stroke}
+          strokeWidth={MEASURE.strokeWidth}
+          markerStart={`url(#${id}-arrow)`}
+          markerEnd={`url(#${id}-arrow)`}
+        />
+        <Label x={166} y={200} rotate={-90}>
+          Insole length
+        </Label>
+      </svg>
+      <figcaption className="mt-2 text-center text-sm text-gray-600">
+        Shoes — place the shoe on a flat surface or a sheet of paper, trace
+        around the sole, then measure heel to toe in a straight line.
+      </figcaption>
+    </figure>
+  );
+}
+
+// All four flat-lay diagrams, two per row on wider screens and stacked on
+// mobile.
 export function MeasurementDiagrams() {
   return (
     <div
       className="my-8 grid grid-cols-1 gap-8 sm:grid-cols-2"
-      aria-label="Garment measurement diagrams"
+      aria-label="Garment and shoe measurement diagrams"
     >
       <TopDiagram />
       <BottomsDiagram />
+      <DressDiagram />
+      <ShoesDiagram />
     </div>
   );
 }

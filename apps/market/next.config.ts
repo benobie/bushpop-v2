@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
     // both the `'use cache'` read sites (apps/market/src/lib/data/*.ts) and the
     // `revalidateTag(tag, 'profile')` invalidation sites (Sprint 1a+ Server
     // Actions). See `scripts/cache-audit.sh` for drift detection.
-    browse: { stale: 60, revalidate: 3600 },
+    shop: { stale: 60, revalidate: 3600 },
     "listing-detail": { stale: 300, revalidate: 3600 },
     search: { stale: 0, revalidate: 60 },
   },

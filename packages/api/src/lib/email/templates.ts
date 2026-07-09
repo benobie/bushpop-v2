@@ -27,7 +27,12 @@ export interface ShippingConfirmationBuyerParams {
   orderId: string;
   buyerName: string;
   trackingNumber: string;
-  trackingCarrier: string;
+  /**
+   * Optional: the Starshipit webhook can be the paid → shipped transition
+   * point (label created out-of-band) and its payload carries no carrier —
+   * the Carrier line is simply omitted rather than inventing one.
+   */
+  trackingCarrier?: string;
   channelName: string;
 }
 
@@ -111,7 +116,7 @@ export function shippingConfirmationBuyerTemplate(params: ShippingConfirmationBu
       `Great news — your ${params.channelName} order is on its way!`,
       "",
       `Order ID: ${params.orderId}`,
-      `Carrier: ${params.trackingCarrier}`,
+      ...(params.trackingCarrier ? [`Carrier: ${params.trackingCarrier}`] : []),
       `Tracking number: ${params.trackingNumber}`,
       "",
       "Use your carrier's website to track your parcel.",

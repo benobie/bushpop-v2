@@ -15,6 +15,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type Stripe from "stripe";
 import { ulid } from "ulid";
 import { eq, and } from "drizzle-orm";
 import { db, pgClient } from "@bushpop/db/client";
@@ -27,6 +28,7 @@ import {
   orderItems,
   payoutHolds,
   paymentOperations,
+  refunds,
   sellerProfiles,
   inventoryItems,
   channelListings,
@@ -42,6 +44,10 @@ const stripeMock = {
   transfers: {
     create: vi.fn(),
     list: vi.fn().mockResolvedValue({ data: [] }),
+    createReversal: vi.fn().mockResolvedValue({ id: "trr_default" }),
+  },
+  refunds: {
+    create: vi.fn().mockResolvedValue({ id: "re_default", object: "refund", status: "succeeded" }),
   },
   balance: {
     retrieve: vi.fn().mockResolvedValue({
@@ -73,8 +79,13 @@ vi.mock("../../../workers/shipping-label.js", () => ({
 
 // ── Imports after mocks ──────────────────────────────────────────────────────
 
-import { handlePaymentIntentSucceededForTest } from "../../../routes/v1/webhooks/stripe.js";
+import {
+  handlePaymentIntentSucceededForTest,
+  handleChargeDisputeCreatedForTest,
+  handleChargeDisputeClosedForTest,
+} from "../../../routes/v1/webhooks/stripe.js";
 import { releasePayoutHold, freezePayoutHold } from "../../../lib/payout-hold-service.js";
+import { processRefund } from "../../../lib/refund-service.js";
 import * as paymentOps from "../../../lib/payment-operations.js";
 import { runOrderJobsSweep } from "../../../workers/order-jobs-sweeper.js";
 import { runPayoutReleaseSweep } from "../../../workers/payout-release.js";
@@ -238,6 +249,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   stripeMock.transfers.create.mockReset();
   stripeMock.transfers.list.mockReset().mockResolvedValue({ data: [] });
+  stripeMock.transfers.createReversal.mockReset().mockResolvedValue({ id: "trr_default" });
+  stripeMock.refunds.create.mockReset().mockResolvedValue({ id: "re_default", object: "refund", status: "succeeded" });
   stripeMock.balance.retrieve.mockReset().mockResolvedValue({
     available: [{ currency: "aud", amount: 100_000_00 }],
     pending: [],
@@ -930,6 +943,110 @@ describe("Codex H2 — freeze mid-flight (after entry CAS) blocks the transfer",
   });
 });
 
+// ── H1 — refund × payout-release double-pay race ─────────────────────────────
+//
+// processRefund now freezes the payout hold BEFORE its Stripe refund call, so a
+// concurrent releasePayoutHold cannot transfer seller proceeds in the window
+// between the buyer refund and the hold transition. These tests prove the two
+// orderings of the race are both money-safe: exactly one of {buyer refund,
+// seller transfer} lands, or (release-first) the transfer is reversed — never a
+// buyer refund AND an un-reversed transfer.
+
+describe("H1 — refund × payout-release double-pay race", () => {
+  it("refund freezes the hold before its Stripe call → a concurrent release cannot transfer", async () => {
+    const f = await makeRecoveryFixture();
+    const { orderId, holdId } = await makeOrderWithHeldHold(f);
+
+    // Park the refund INSIDE stripe.refunds.create. At this point processRefund
+    // has already frozen the hold but not yet transitioned it — exactly the H1
+    // race window. A release firing now MUST NOT transfer.
+    let refundEntered!: () => void;
+    const refundInFlight = new Promise<void>((r) => {
+      refundEntered = r;
+    });
+    let openRefundGate!: () => void;
+    const refundGate = new Promise<void>((r) => {
+      openRefundGate = r;
+    });
+
+    stripeMock.refunds.create.mockImplementation(async () => {
+      refundEntered();
+      await refundGate;
+      return { id: "re_h1", object: "refund", status: "succeeded" };
+    });
+    // Any transfer here would be the double-pay bug — make it loud.
+    stripeMock.transfers.create.mockResolvedValue({ id: "tr_DOUBLE_PAY_BUG" });
+
+    const refundPromise = processRefund(orderId, f.sellerId, "buyer wants refund");
+
+    await refundInFlight; // refund parked inside refunds.create; hold is frozen
+
+    // Fire the release concurrently. It must skip because the hold is frozen.
+    const outcome = await releasePayoutHold(holdId, "system");
+    expect(outcome.result).toBe("skipped");
+    expect(stripeMock.transfers.create).not.toHaveBeenCalled();
+
+    openRefundGate(); // let the refund finish its pre-transfer path
+    await refundPromise;
+
+    const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+    expect(hold!.status).toBe("refunded");
+    expect(hold!.transferId).toBeNull(); // seller was NEVER transferred
+
+    const [refund] = await db.select().from(refunds).where(eq(refunds.orderId, orderId));
+    expect(refund!.status).toBe("processed"); // buyer refunded exactly once
+  });
+
+  it("a release that completes before a refund → the refund reverses the transfer (never left un-reversed)", async () => {
+    const f = await makeRecoveryFixture();
+    const { orderId, holdId } = await makeOrderWithHeldHold(f);
+
+    // Release first — seller transferred, hold released, orders.stripeTransferId set.
+    stripeMock.transfers.create.mockResolvedValue({ id: "tr_released" });
+    const rel = await releasePayoutHold(holdId, "system");
+    expect(rel.result).toBe("released");
+
+    // A refund now arrives. The post-freeze re-read sees `released`, so it takes
+    // the reversal path rather than a bare buyer refund.
+    stripeMock.refunds.create.mockResolvedValue({ id: "re_after", object: "refund", status: "succeeded" });
+    stripeMock.transfers.createReversal.mockResolvedValue({ id: "trr_after" });
+
+    await processRefund(orderId, f.sellerId, "refund after release");
+
+    // The seller transfer was reversed — not left standing alongside the refund.
+    expect(stripeMock.transfers.createReversal).toHaveBeenCalledTimes(1);
+    const [refund] = await db.select().from(refunds).where(eq(refunds.orderId, orderId));
+    expect(refund!.status).toBe("processed");
+    const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+    expect(order!.status).toBe("refunded");
+  });
+
+  it("a true concurrent refund + release never leaves a buyer refund AND an un-reversed transfer", async () => {
+    const f = await makeRecoveryFixture();
+    const { orderId, holdId } = await makeOrderWithHeldHold(f);
+    stripeMock.transfers.create.mockResolvedValue({ id: "tr_race" });
+    stripeMock.refunds.create.mockResolvedValue({ id: "re_race", object: "refund", status: "succeeded" });
+    stripeMock.transfers.createReversal.mockResolvedValue({ id: "trr_race" });
+
+    // Both settle regardless of who wins the race; we assert the invariant, not
+    // a specific winner (the freeze serialises the two safely either way).
+    await Promise.allSettled([
+      processRefund(orderId, f.sellerId, "race refund"),
+      releasePayoutHold(holdId, "system"),
+    ]);
+
+    const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+    const [refund] = await db.select().from(refunds).where(eq(refunds.orderId, orderId));
+
+    const transferLanded = hold!.transferId !== null;
+    const transferReversed = stripeMock.transfers.createReversal.mock.calls.length > 0;
+    const buyerRefunded = refund?.status === "processed";
+
+    // The H1 invariant: never (buyer refunded) AND (seller transferred) AND (not reversed).
+    expect(buyerRefunded && transferLanded && !transferReversed).toBe(false);
+  });
+});
+
 // ── Codex review #3 — single-connection finalise (pool self-deadlock fix) ─────
 
 describe("Codex review #3 — successful release finalises on the reserved connection (one pool connection)", () => {
@@ -1008,6 +1125,83 @@ describe("admin-alerts", () => {
 
     await expect(
       enqueueAdminAlert({ type: "resurrected_auto_failed_op", opId: "o1" }),
+    ).resolves.toBeUndefined();
+  });
+});
+
+// ── M1 — dispute (chargeback) webhook handlers ───────────────────────────────
+
+function makeDispute(
+  overrides: { payment_intent: string | null; status: string } & Partial<Stripe.Dispute>,
+): Stripe.Dispute {
+  return {
+    id: `dp_${ulid().toLowerCase()}`,
+    object: "dispute",
+    amount: 6000,
+    currency: "aud",
+    reason: "fraudulent",
+    charge: "ch_test",
+    ...overrides,
+  } as unknown as Stripe.Dispute;
+}
+
+describe("M1 — dispute webhook handlers", () => {
+  it("charge.dispute.created freezes the payout hold and alerts an operator", async () => {
+    // Force the mock email-sender path so the admin alert is observable.
+    process.env.ADMIN_EMAIL = "ops@bushpop.com.au";
+    delete process.env.RESEND_API_KEY;
+    _resetEmailSender();
+    getEmailSender();
+    clearMockEmails();
+
+    const f = await makeRecoveryFixture();
+    const { holdId } = await makeOrderWithHeldHold(f);
+
+    await handleChargeDisputeCreatedForTest(
+      makeDispute({ payment_intent: `pi_${f.sessionId.toLowerCase()}`, status: "needs_response" }),
+    );
+
+    const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+    expect(hold!.frozenAt).not.toBeNull();
+
+    // A frozen hold is never released — the disputed proceeds stay put.
+    const outcome = await releasePayoutHold(holdId, "system");
+    expect(outcome.result).toBe("skipped");
+    expect(stripeMock.transfers.create).not.toHaveBeenCalled();
+
+    // Operator alert fired.
+    expect(getSentEmails().some((e) => e.subject.includes("dispute_created"))).toBe(true);
+  });
+
+  it("charge.dispute.closed with status 'won' unfreezes a still-held frozen hold", async () => {
+    const f = await makeRecoveryFixture();
+    const { holdId } = await makeOrderWithHeldHold(f, { frozenAt: new Date() });
+
+    await handleChargeDisputeClosedForTest(
+      makeDispute({ payment_intent: `pi_${f.sessionId.toLowerCase()}`, status: "won" }),
+    );
+
+    const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+    expect(hold!.frozenAt).toBeNull(); // unfrozen → release pipeline can resume
+  });
+
+  it("charge.dispute.closed with status 'lost' leaves the hold frozen", async () => {
+    const f = await makeRecoveryFixture();
+    const { holdId } = await makeOrderWithHeldHold(f, { frozenAt: new Date() });
+
+    await handleChargeDisputeClosedForTest(
+      makeDispute({ payment_intent: `pi_${f.sessionId.toLowerCase()}`, status: "lost" }),
+    );
+
+    const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+    expect(hold!.frozenAt).not.toBeNull(); // funds already clawed back — never pay the seller too
+  });
+
+  it("a dispute for a non-Bushpop PaymentIntent is ignored (no throw)", async () => {
+    await expect(
+      handleChargeDisputeCreatedForTest(
+        makeDispute({ payment_intent: "pi_not_ours", status: "needs_response" }),
+      ),
     ).resolves.toBeUndefined();
   });
 });

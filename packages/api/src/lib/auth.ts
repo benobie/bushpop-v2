@@ -7,7 +7,7 @@ import { ulid } from "ulid";
 import { DEFAULT_CHANNEL, getChannelConfig } from "@bushpop/config";
 import { getEmailSender } from "./email/index.js";
 import { accountVerificationEmailTemplate, passwordResetEmailTemplate } from "./email/templates.js";
-import { mergeAnonymousIdentity } from "./guest-identity.js";
+import { GUEST_EMAIL_DOMAIN, mergeAnonymousIdentity } from "./guest-identity.js";
 
 function getAuthChannelName(): string {
   return getChannelConfig(process.env.CHANNEL_SLUG ?? DEFAULT_CHANNEL).name;
@@ -59,7 +59,7 @@ export const auth = betterAuth({
   // auth-gate changes: they already key off a real session user id.
   plugins: [
     anonymous({
-      emailDomainName: "guest.bushpop.com.au",
+      emailDomainName: GUEST_EMAIL_DOMAIN,
       onLinkAccount: async ({ anonymousUser, newUser }) => {
         try {
           await mergeAnonymousIdentity(anonymousUser.user.id, newUser.user.id);

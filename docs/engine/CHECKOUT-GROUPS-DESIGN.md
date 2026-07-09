@@ -261,6 +261,8 @@ Sized for Sonnet/Codex sessions; each independently PR-able in order. Every WP t
 `refund-service.ts:291,399,593`: add `amount: order.totalCents` to all three `stripe.refunds.create` calls.
 ✅ All existing refund tests green unchanged; new unit test asserts the `amount` param is passed; a two-orders-one-PI fixture proves refunding order A leaves order B's balance refundable.
 
+> **Status 09/07/2026 — landed early, 3/4 sites, one residual gap found.** Shipped via bushpop-v2 PR #120 (merged `c55f2f8`, ahead of this WP sequence — bundled with the H1 payout-freeze fix). A batch-48 adversarial review confirmed the three named `refund-service.ts` sites are correctly pinned, but found a **4th, unaudited** `stripe.refunds.create` call site: `checkout/service.ts:623-632` (the late-payment-recovery auto-refund) still omits `amount`. Not reachable today (that path only operates on solo-order `checkoutSessions` rows — a group PI has none), but it's the exact same bug class and would reactivate if that recovery mechanism is ever reused for the group-PI path this WP sequence builds. Close it alongside WP-6 (refund/dispute group-awareness) or earlier. Fix spec: `~/.claude/handoffs/2026-07-09-batch-48-followup-pr120.md`.
+
 **WP-1 — Schema migration bundle** *(S-M)*
 Migration (next free number ≥ 0028): `orders.checkout_session_id` DROP NOT NULL; `orders.allocation_id` text NULL UNIQUE REFERENCES `order_group_seller_allocations(id)`; CHECK exactly-one-of(`checkout_session_id`, `allocation_id`); `buyer_protection_fee_cents` int NOT NULL DEFAULT 0 on `order_group_seller_allocations` + `order_groups`. Drizzle schema + types updated.
 ✅ Migration applies on a copy of staging; existing suite green; XOR check proven by two failing-insert tests.

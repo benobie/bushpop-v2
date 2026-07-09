@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BRANDS, getBrand, type Brand } from "@/lib/brands";
+import { MeasurementDiagrams } from "@/components/measurement-diagram";
 
 const SITE = "https://bushpop.com.au";
 
@@ -192,6 +193,27 @@ export default async function BrandSizeChartPage({
           </div>
         ))}
       </div>
+
+      <details className="mb-8 rounded-[18px] border border-line">
+        <summary className="cursor-pointer px-6 py-4 font-head text-lg font-bold">
+          How to measure {brand.name} against your own wardrobe
+        </summary>
+        <div className="px-6 pb-6">
+          <p className="text-sm text-ink-2 mb-4">
+            The most reliable way to check fit is to compare {brand.name}&apos;s
+            chart above to an item you already own. Lay it flat and measure in
+            centimetres — see the full{" "}
+            <Link
+              href="/guides/size-charts/#how-to-measure-a-garment"
+              className="text-green-bright font-medium underline"
+            >
+              how-to-measure guide
+            </Link>{" "}
+            for step-by-step instructions.
+          </p>
+          <MeasurementDiagrams />
+        </div>
+      </details>
 
       <div className="rounded-[18px] bg-surface p-6 mb-8">
         <p className="text-lg font-medium mb-2">

@@ -221,7 +221,7 @@ export function OrderPoller({ sessionId }: OrderPollerProps) {
             <Link href="/orders">Track my order</Link>
           </Button>
           <Button asChild variant="ghost" size="lg" className="flex-1" data-testid="view-all-orders-button">
-            <Link href="/browse">Keep shopping</Link>
+            <Link href="/shop">Keep shopping</Link>
           </Button>
         </div>
       </div>

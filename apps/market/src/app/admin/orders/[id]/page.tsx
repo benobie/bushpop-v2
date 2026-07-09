@@ -23,14 +23,14 @@ export default async function AdminOrderDetailPage({
 
   return (
     <div>
-      <Link href="/admin/orders" className="text-sm text-brand-500 hover:underline">
+      <Link href="/admin/orders" className="text-sm text-bp-ink-2 transition-colors hover:text-bp-green-bright hover:underline">
         ← Orders
       </Link>
       <div className="mt-2 flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-mono text-xl font-bold text-brand-900">{order.id}</h1>
-          <p className="mt-1 text-sm text-brand-500">
-            Status <span className="font-medium text-brand-900">{order.status}</span> · created{" "}
+          <h1 className="font-mono text-xl font-bold text-bp-ink">{order.id}</h1>
+          <p className="mt-1 text-sm text-bp-ink-2">
+            Status <span className="font-medium text-bp-ink">{order.status}</span> · created{" "}
             {new Date(order.createdAt).toLocaleString("en-AU")}
           </p>
         </div>
@@ -38,17 +38,17 @@ export default async function AdminOrderDetailPage({
       </div>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2">
-        <section className="rounded-lg border border-brand-100 p-4">
-          <h2 className="text-sm font-semibold text-brand-900">Parties</h2>
+        <section className="rounded-lg border border-bp-line p-4">
+          <h2 className="text-sm font-semibold text-bp-ink">Parties</h2>
           <dl className="mt-2 space-y-1 text-sm">
             <div>
-              <dt className="inline text-brand-500">Buyer: </dt>
+              <dt className="inline text-bp-ink-2">Buyer: </dt>
               <dd className="inline">
                 {order.buyer ? `${order.buyer.name} (${order.buyer.email})` : order.buyerId}
               </dd>
             </div>
             <div>
-              <dt className="inline text-brand-500">Seller: </dt>
+              <dt className="inline text-bp-ink-2">Seller: </dt>
               <dd className="inline">
                 {order.seller ? `${order.seller.name} (${order.seller.email})` : order.sellerId}
               </dd>
@@ -56,8 +56,8 @@ export default async function AdminOrderDetailPage({
           </dl>
         </section>
 
-        <section className="rounded-lg border border-brand-100 p-4">
-          <h2 className="text-sm font-semibold text-brand-900">Payment</h2>
+        <section className="rounded-lg border border-bp-line p-4">
+          <h2 className="text-sm font-semibold text-bp-ink">Payment</h2>
           <dl className="mt-2 space-y-1 text-sm">
             <Row label="Subtotal" value={formatMoney(order.subtotalCents, order.currency)} />
             <Row label="Shipping" value={formatMoney(order.shippingCents, order.currency)} />
@@ -73,8 +73,8 @@ export default async function AdminOrderDetailPage({
           </dl>
         </section>
 
-        <section className="rounded-lg border border-brand-100 p-4">
-          <h2 className="text-sm font-semibold text-brand-900">Shipping</h2>
+        <section className="rounded-lg border border-bp-line p-4">
+          <h2 className="text-sm font-semibold text-bp-ink">Shipping</h2>
           <dl className="mt-2 space-y-1 text-sm">
             <Row label="Tracking number" value={order.trackingNumber ?? "—"} />
             <Row label="Carrier" value={order.trackingCarrier ?? "—"} />
@@ -90,8 +90,8 @@ export default async function AdminOrderDetailPage({
           </dl>
         </section>
 
-        <section className="rounded-lg border border-brand-100 p-4">
-          <h2 className="text-sm font-semibold text-brand-900">Payout hold</h2>
+        <section className="rounded-lg border border-bp-line p-4">
+          <h2 className="text-sm font-semibold text-bp-ink">Payout hold</h2>
           {order.payoutHold ? (
             <dl className="mt-2 space-y-1 text-sm">
               <Row label="Status" value={order.payoutHold.status} />
@@ -103,14 +103,14 @@ export default async function AdminOrderDetailPage({
               )}
             </dl>
           ) : (
-            <p className="mt-2 text-sm text-brand-500">No payout hold on this order.</p>
+            <p className="mt-2 text-sm text-bp-ink-2">No payout hold on this order.</p>
           )}
         </section>
       </div>
 
-      <section className="mt-6 rounded-lg border border-brand-100 p-4">
-        <h2 className="text-sm font-semibold text-brand-900">Items</h2>
-        <ul className="mt-2 divide-y divide-brand-100 text-sm">
+      <section className="mt-6 rounded-lg border border-bp-line p-4">
+        <h2 className="text-sm font-semibold text-bp-ink">Items</h2>
+        <ul className="mt-2 divide-y divide-bp-line text-sm">
           {order.items.map((item) => (
             <li key={item.id} className="flex justify-between py-2">
               <span>{item.title ?? item.channelListingId}</span>
@@ -121,16 +121,16 @@ export default async function AdminOrderDetailPage({
       </section>
 
       {order.refunds.length > 0 && (
-        <section className="mt-6 rounded-lg border border-brand-100 p-4">
-          <h2 className="text-sm font-semibold text-brand-900">Refunds</h2>
-          <ul className="mt-2 divide-y divide-brand-100 text-sm">
+        <section className="mt-6 rounded-lg border border-bp-line p-4">
+          <h2 className="text-sm font-semibold text-bp-ink">Refunds</h2>
+          <ul className="mt-2 divide-y divide-bp-line text-sm">
             {order.refunds.map((r) => (
               <li key={r.id} className="py-2">
                 <div className="flex justify-between">
                   <span>{r.status}</span>
                   <span>{formatMoney(r.amountCents, order.currency)}</span>
                 </div>
-                <p className="text-xs text-brand-500">
+                <p className="text-xs text-bp-ink-2">
                   {r.reason ?? "no reason given"} · {new Date(r.createdAt).toLocaleString("en-AU")}
                   {r.stripeRefundId ? ` · ${r.stripeRefundId}` : ""}
                 </p>
@@ -140,25 +140,25 @@ export default async function AdminOrderDetailPage({
         </section>
       )}
 
-      <section className="mt-6 rounded-lg border border-brand-100 p-4">
-        <h2 className="text-sm font-semibold text-brand-900">Event timeline (audit trail)</h2>
-        <p className="mt-1 text-xs text-brand-500">
+      <section className="mt-6 rounded-lg border border-bp-line p-4">
+        <h2 className="text-sm font-semibold text-bp-ink">Event timeline (audit trail)</h2>
+        <p className="mt-1 text-xs text-bp-ink-2">
           From <code>marketplace_events</code> — every admin action on this order is appended here.
         </p>
-        <ul className="mt-2 divide-y divide-brand-100 text-sm">
+        <ul className="mt-2 divide-y divide-bp-line text-sm">
           {order.events.length === 0 && (
-            <li className="py-2 text-brand-500">No events recorded for this order.</li>
+            <li className="py-2 text-bp-ink-2">No events recorded for this order.</li>
           )}
           {order.events.map((event) => (
             <li key={event.id} className="py-2">
               <div className="flex justify-between">
                 <span className="font-medium">{event.eventName}</span>
-                <span className="text-xs text-brand-500">
+                <span className="text-xs text-bp-ink-2">
                   {new Date(event.createdAt).toLocaleString("en-AU")}
                 </span>
               </div>
               {event.metadata ? (
-                <pre className="mt-1 overflow-x-auto rounded bg-brand-50 p-2 text-xs">
+                <pre className="mt-1 overflow-x-auto rounded bg-bp-surface-2 p-2 text-xs">
                   {JSON.stringify(event.metadata, null, 2)}
                 </pre>
               ) : null}
@@ -173,7 +173,7 @@ export default async function AdminOrderDetailPage({
 function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-brand-500">{label}</dt>
+      <dt className="text-bp-ink-2">{label}</dt>
       <dd className={mono ? "font-mono text-xs" : ""}>{value}</dd>
     </div>
   );

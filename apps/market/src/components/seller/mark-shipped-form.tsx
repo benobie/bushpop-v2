@@ -63,7 +63,7 @@ export function MarkShippedForm({ orderId, status }: { orderId: string; status: 
   }
 
   return (
-    <div className="rounded-lg border border-brand-200 bg-brand-50 p-4 text-sm">
+    <div className="rounded-lg border border-bp-line bg-bp-surface-2 p-4 text-sm">
       <div className="space-y-3">
         <div>
           <Label htmlFor="carrier">Carrier</Label>

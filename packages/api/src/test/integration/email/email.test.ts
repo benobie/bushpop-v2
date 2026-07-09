@@ -13,7 +13,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { eq } from "drizzle-orm";
 import { ulid } from "ulid";
 import { db } from "@bushpop/db/client";
-import { orders, checkoutSessions, carts, channelListings, refunds } from "@bushpop/db/schema";
+import { orders, checkoutSessions, carts, channelListings, refunds, user } from "@bushpop/db/schema";
 import {
   orderConfirmationBuyerTemplate,
   orderNotificationSellerTemplate,
@@ -21,6 +21,7 @@ import {
   shippingConfirmationBuyerTemplate,
 } from "../../../lib/email/templates.js";
 import { getSentEmails, clearMockEmails, _resetEmailSender } from "../../../lib/email/index.js";
+import { GUEST_EMAIL_DOMAIN } from "../../../lib/guest-identity.js";
 import { createTestUser } from "../../helpers/create-user.js";
 import { getBushpopChannel } from "../../helpers/get-channel.js";
 
@@ -262,6 +263,22 @@ describe("Email templates", () => {
     expect(text).toContain("The Bushpop Team");
   });
 
+  it("shippingConfirmationBuyer — omits the Carrier line when no carrier is known", () => {
+    // The Starshipit webhook can be the paid → shipped transition point and
+    // its payload has no carrier field — the email must still go out with
+    // the tracking number, without inventing a carrier.
+    const { subject, text } = shippingConfirmationBuyerTemplate({
+      orderId: "01JTEST0000000000000000003",
+      buyerName: "Jane Buyer",
+      trackingNumber: "AUSPOST-123456",
+      channelName: "Bushpop",
+    });
+
+    expect(subject).toBe("Your Bushpop order #00000003 has shipped");
+    expect(text).toContain("Tracking number: AUSPOST-123456");
+    expect(text).not.toContain("Carrier:");
+  });
+
   it("refundConfirmationBuyer — contains order ID, buyer name, refund amount", () => {
     const { subject, text } = refundConfirmationBuyerTemplate({
       orderId: "01JTEST0000000000000000004",
@@ -351,6 +368,55 @@ describe("Email worker — processEmailJob", () => {
     expect(sent[0]!.text).toContain("Australia Post");
   });
 
+  it("shipping_confirmation_buyer — sends when the carrier is unknown (webhook-transitioned order)", async () => {
+    const { order, buyer } = await createMinimalOrder({
+      status: "shipped",
+      trackingNumber: "MOCK-NOCARRIER",
+      trackingCarrier: null,
+    });
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "shipping_confirmation_buyer", orderId: order.id });
+
+    const sent = getSentEmails();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).toBe(buyer.email);
+    expect(sent[0]!.text).toContain("MOCK-NOCARRIER");
+    expect(sent[0]!.text).not.toContain("Carrier:");
+  });
+
+  it("shipping_confirmation_buyer — still throws when the order has no tracking number", async () => {
+    const { order } = await createMinimalOrder({ status: "shipped", trackingNumber: null });
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await expect(
+      processEmailJobForTest({ type: "shipping_confirmation_buyer", orderId: order.id }),
+    ).rejects.toThrow(/no tracking info/);
+
+    expect(getSentEmails()).toHaveLength(0);
+  });
+
+  it("shipping_confirmation_buyer — re-processing the same job yields byte-identical Idempotency-Keys", async () => {
+    // BullMQ's jobId dedup evaporates once a job completes
+    // (removeOnComplete: true), so a second order.shipped producer or a
+    // worker retry CAN re-run the send — Resend's Idempotency-Key is the
+    // real double-send backstop and must be deterministic across runs.
+    const { order } = await createMinimalOrder({
+      status: "shipped",
+      trackingNumber: "MOCK-TRACK123",
+      trackingCarrier: "Australia Post",
+    });
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "shipping_confirmation_buyer", orderId: order.id });
+    await processEmailJobForTest({ type: "shipping_confirmation_buyer", orderId: order.id });
+
+    const sent = getSentEmails();
+    expect(sent).toHaveLength(2);
+    expect(sent[0]!.headers).toEqual({ "Idempotency-Key": `shipping_confirmation_buyer-${order.id}` });
+    expect(sent[1]!.headers).toEqual(sent[0]!.headers);
+  });
+
   it("refund_confirmation_buyer — sends email with the processed refund amount", async () => {
     const { order, buyer } = await createMinimalOrder({ status: "refunded" });
     await createProcessedRefund(order.id, order.totalCents);
@@ -407,6 +473,107 @@ describe("Email worker — processEmailJob", () => {
 
     const sent = getSentEmails();
     expect(sent[0]!.headers).toEqual({ "Idempotency-Key": `refund_confirmation_buyer-${order.id}` });
+  });
+
+  it("refund_confirmation_buyer — re-processing the same job yields byte-identical Idempotency-Keys", async () => {
+    // Webhook-reconciliation legs (reconcileRefundOpFromStripe /
+    // reconcileReversalOpFromStripe) can re-enqueue after processRefund
+    // already sent — the deterministic key is what collapses those to one
+    // delivered email at Resend.
+    const { order } = await createMinimalOrder({ status: "refunded" });
+    await createProcessedRefund(order.id, order.totalCents);
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "refund_confirmation_buyer", orderId: order.id });
+    await processEmailJobForTest({ type: "refund_confirmation_buyer", orderId: order.id });
+
+    const sent = getSentEmails();
+    expect(sent).toHaveLength(2);
+    expect(sent[0]!.headers).toEqual({ "Idempotency-Key": `refund_confirmation_buyer-${order.id}` });
+    expect(sent[1]!.headers).toEqual(sent[0]!.headers);
+  });
+});
+
+// ── Guest-placeholder buyer emails are skipped, not bounced ───────────────────
+
+describe("Email worker — anonymous-guest placeholder guard", () => {
+  beforeEach(() => {
+    clearMockEmails();
+    delete process.env.RESEND_API_KEY;
+    _resetEmailSender();
+  });
+
+  afterEach(() => {
+    clearMockEmails();
+    _resetEmailSender();
+  });
+
+  async function makeBuyerAnonymousGuest(buyerId: string): Promise<void> {
+    // Mirrors what better-auth's `anonymous` plugin stores for a guest —
+    // a real user row with an undeliverable placeholder email.
+    await db
+      .update(user)
+      .set({ email: `${buyerId.toLowerCase()}@${GUEST_EMAIL_DOMAIN}`, isAnonymous: true })
+      .where(eq(user.id, buyerId));
+  }
+
+  it("refund_confirmation_buyer — skips (no send, no throw) for a guest placeholder email", async () => {
+    const { order, buyer } = await createMinimalOrder({ status: "refunded" });
+    await createProcessedRefund(order.id, order.totalCents);
+    await makeBuyerAnonymousGuest(buyer.id);
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "refund_confirmation_buyer", orderId: order.id });
+
+    expect(getSentEmails()).toHaveLength(0);
+  });
+
+  it("shipping_confirmation_buyer — skips (no send, no throw) for a guest placeholder email", async () => {
+    const { order, buyer } = await createMinimalOrder({
+      status: "shipped",
+      trackingNumber: "MOCK-TRACK123",
+      trackingCarrier: "Australia Post",
+    });
+    await makeBuyerAnonymousGuest(buyer.id);
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "shipping_confirmation_buyer", orderId: order.id });
+
+    expect(getSentEmails()).toHaveLength(0);
+  });
+
+  it("refund_confirmation_buyer — NOT skipped for a real (non-anonymous) account on the guest domain", async () => {
+    // Codex review finding: the guard must require isAnonymous too — a real
+    // account whose address merely ends with the placeholder domain (e.g.
+    // qa@guest.bushpop.com.au) must still receive buyer emails.
+    const { order, buyer } = await createMinimalOrder({ status: "refunded" });
+    await createProcessedRefund(order.id, order.totalCents);
+    const realEmailOnGuestDomain = `${buyer.id.toLowerCase()}@${GUEST_EMAIL_DOMAIN}`;
+    await db
+      .update(user)
+      .set({ email: realEmailOnGuestDomain, isAnonymous: false })
+      .where(eq(user.id, buyer.id));
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "refund_confirmation_buyer", orderId: order.id });
+
+    const sent = getSentEmails();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).toBe(realEmailOnGuestDomain);
+  });
+
+  it("order_notification_seller — NOT skipped when only the buyer is a guest", async () => {
+    // The guard is buyer-email-scoped; the seller's real address must still
+    // receive their new-order notification.
+    const { order, buyer, seller } = await createMinimalOrder({ status: "paid" });
+    await makeBuyerAnonymousGuest(buyer.id);
+
+    const { processEmailJobForTest } = await import("../../../workers/email.js");
+    await processEmailJobForTest({ type: "order_notification_seller", orderId: order.id });
+
+    const sent = getSentEmails();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).toBe(seller.email);
   });
 });
 

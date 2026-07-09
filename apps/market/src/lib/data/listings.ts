@@ -13,7 +13,7 @@
  * a Sprint 1a+ Server Action.
  *
  * Profile names match those defined in `apps/market/next.config.ts` → `cacheLife`:
- *   - browseListings   → 'browse'
+ *   - browseListings   → 'shop'
  *   - getListing       → 'listing-detail'
  *   - searchListings   → 'search'
  *
@@ -51,12 +51,12 @@ export interface SearchFilters extends BrowseFilters {
 
 /**
  * Browse the listings grid for a channel with optional filter/sort.
- * Cache profile: `'browse'` — 60s stale, 1h revalidate (FM-R2-1).
+ * Cache profile: `'shop'` — 60s stale, 1h revalidate (FM-R2-1).
  * Invalidated by Sprint 1a Server Actions on listing publish/pause/archive.
  */
 export async function browseListings(filters: BrowseFilters) {
   "use cache";
-  cacheLife("browse");
+  cacheLife("shop");
   const tag = channelListingsTag(filters.channel);
   cacheTag(tag);
 

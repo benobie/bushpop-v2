@@ -50,23 +50,23 @@ export function BatchList({ initialBatches }: { initialBatches: BatchSummary[] }
         </Button>
       </div>
 
-      <ul className="mt-6 divide-y divide-brand-100 rounded-lg border border-brand-100">
+      <ul className="mt-6 divide-y divide-bp-line rounded-lg border border-bp-line">
         {batches.length === 0 && (
-          <li className="p-4 text-sm text-brand-500">No batches yet — start one above.</li>
+          <li className="p-4 text-sm text-bp-ink-2">No batches yet — start one above.</li>
         )}
         {batches.map((batch) => (
           <li key={batch.id}>
             <Link
               href={`/bulk-listing/${batch.id}`}
-              className="flex items-center justify-between p-4 hover:bg-brand-50"
+              className="flex items-center justify-between p-4 hover:bg-bp-surface-2"
             >
               <div>
-                <p className="font-medium text-brand-900">{batch.label ?? "Untitled batch"}</p>
-                <p className="text-xs text-brand-500">
+                <p className="font-medium text-bp-ink">{batch.label ?? "Untitled batch"}</p>
+                <p className="text-xs text-bp-ink-2">
                   {new Date(batch.createdAt).toLocaleString()}
                 </p>
               </div>
-              <span className="text-sm text-brand-600">
+              <span className="text-sm text-bp-ink-2">
                 {batch.publishedCount}/{batch.itemCount} published
               </span>
             </Link>

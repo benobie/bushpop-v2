@@ -94,10 +94,10 @@ export default async function SearchPage({
 
       {!hasQuery && (
         <div className="flex flex-col items-center gap-4 py-24 text-center">
-          <p className="text-lg text-brand-500">What are you looking for?</p>
-          <p className="text-sm text-brand-400">
+          <p className="text-lg text-bp-ink-2">What are you looking for?</p>
+          <p className="text-sm text-bp-ink-3">
             Enter a search term above, or{" "}
-            <Link href="/browse" className="underline hover:text-brand-700">
+            <Link href="/shop" className="underline transition-colors hover:text-bp-green-bright">
               browse all listings
             </Link>
             .
@@ -108,10 +108,10 @@ export default async function SearchPage({
       {hasQuery && result && (
         <>
           <div className="mb-6 flex items-center justify-between">
-            <h1 className="font-display text-xl font-semibold text-brand-900">
+            <h1 className="font-display text-xl font-semibold text-bp-ink">
               &ldquo;{q}&rdquo;
             </h1>
-            <p className="text-sm text-brand-500">
+            <p className="text-sm text-bp-ink-2">
               {result.total} {result.total === 1 ? "result" : "results"}
             </p>
           </div>
@@ -125,12 +125,12 @@ export default async function SearchPage({
 
           {result.items.length === 0 ? (
             <div className="flex flex-col items-center gap-4 py-24 text-center">
-              <p className="text-lg text-brand-500">No results for &ldquo;{q}&rdquo;</p>
-              <p className="text-sm text-brand-400">
+              <p className="text-lg text-bp-ink-2">No results for &ldquo;{q}&rdquo;</p>
+              <p className="text-sm text-bp-ink-3">
                 Try different keywords or adjust your filters.
               </p>
               <Button asChild variant="outline">
-                <Link href="/browse">Browse all</Link>
+                <Link href="/shop">Browse all</Link>
               </Button>
             </div>
           ) : (
@@ -158,7 +158,7 @@ export default async function SearchPage({
                     </Button>
                   )}
                 </div>
-                <p className="text-sm text-brand-500">
+                <p className="text-sm text-bp-ink-2">
                   {offset + 1}–{Math.min(offset + result.items.length, result.total)} of{" "}
                   {result.total}
                 </p>

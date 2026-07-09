@@ -1,4 +1,4 @@
-import { eq, and, gt, lt, count, max, isNull, sql, type SQL } from "drizzle-orm";
+import { eq, and, gt, lt, count, max, isNull, inArray, sql, type SQL } from "drizzle-orm";
 import type { PgUpdateSetSource } from "drizzle-orm/pg-core";
 import type Stripe from "stripe";
 import {
@@ -181,6 +181,53 @@ export async function freezePayoutHold(orderId: string): Promise<void> {
       .update(payoutHolds)
       .set({ frozenAt: new Date() })
       .where(and(eq(payoutHolds.id, existing.id), isNull(payoutHolds.frozenAt)));
+  });
+}
+
+/**
+ * Unfreeze a payout hold for an order, clearing `frozen_at` so the release
+ * pipeline can resume. Conservative by design: only a still-frozen hold in a
+ * releasable state (`held` / `release_failed_retryable`) is unfrozen — a
+ * `blocked` (seller-account issue), `released`, or `refunded` hold is left
+ * untouched. Used by the `charge.dispute.closed` handler when a dispute is
+ * resolved in our favour (`won`); a lost dispute leaves the hold frozen.
+ *
+ * Idempotent — returns `false` if there was nothing to unfreeze. Takes the same
+ * per-hold advisory lock as `freezePayoutHold` / the release path, so it can
+ * never interleave with a release's under-lock frozen_at re-check.
+ *
+ * @returns `true` if a hold row was unfrozen, `false` otherwise.
+ */
+export async function unfreezePayoutHold(orderId: string): Promise<boolean> {
+  const [existing] = await db
+    .select({ id: payoutHolds.id, frozenAt: payoutHolds.frozenAt })
+    .from(payoutHolds)
+    .where(eq(payoutHolds.orderId, orderId))
+    .limit(1);
+
+  if (!existing) {
+    throw new NotFoundError(`Payout hold for order ${orderId} not found.`);
+  }
+
+  // Idempotent: not frozen → nothing to do.
+  if (existing.frozenAt === null) {
+    return false;
+  }
+
+  return await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(${holdAdvisoryKey(existing.id)}::bigint)`);
+    const cleared = await tx
+      .update(payoutHolds)
+      .set({ frozenAt: null })
+      .where(
+        and(
+          eq(payoutHolds.id, existing.id),
+          sql`${payoutHolds.frozenAt} IS NOT NULL`,
+          inArray(payoutHolds.status, ["held", "release_failed_retryable"]),
+        ),
+      )
+      .returning({ id: payoutHolds.id });
+    return cleared.length > 0;
   });
 }
 

@@ -19,15 +19,15 @@ export default async function AdminPayoutsPage({
 
   return (
     <div>
-      <h1 className="text-xl font-bold text-brand-900">Payouts</h1>
-      <p className="mt-1 text-sm text-brand-500">
+      <h1 className="text-xl font-bold text-bp-ink">Payouts</h1>
+      <p className="mt-1 text-sm text-bp-ink-2">
         {data?.total ?? 0} total. Read-only — release stays a separate, already-existing action
         (<code>POST /api/v1/admin/payouts/:holdId/release</code>) outside this v1 UI.
       </p>
 
-      <div className="mt-4 overflow-x-auto rounded-lg border border-brand-100">
+      <div className="mt-4 overflow-x-auto rounded-lg border border-bp-line">
         <table className="w-full text-sm">
-          <thead className="bg-brand-50 text-left text-brand-600">
+          <thead className="bg-bp-surface-2 text-left text-bp-ink-2">
             <tr>
               <th className="p-2">Order</th>
               <th className="p-2">Status</th>
@@ -37,18 +37,18 @@ export default async function AdminPayoutsPage({
               <th className="p-2">Created</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-brand-100">
+          <tbody className="divide-y divide-bp-line">
             {items.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-4 text-brand-500">
+                <td colSpan={6} className="p-4 text-bp-ink-2">
                   No payout holds found.
                 </td>
               </tr>
             )}
             {items.map((hold) => (
-              <tr key={hold.id} className="hover:bg-brand-50">
+              <tr key={hold.id} className="hover:bg-bp-surface-2">
                 <td className="p-2">
-                  <Link href={`/admin/orders/${hold.orderId}`} className="font-mono text-brand-700 underline">
+                  <Link href={`/admin/orders/${hold.orderId}`} className="font-mono text-bp-ink-2 underline transition-colors hover:text-bp-green-bright">
                     {hold.orderId.slice(-8)}
                   </Link>
                 </td>
@@ -56,7 +56,7 @@ export default async function AdminPayoutsPage({
                 <td className="p-2">{formatMoney(hold.amountCents, hold.currency)}</td>
                 <td className="p-2 font-mono text-xs">{hold.transferId ?? "—"}</td>
                 <td className="p-2">{hold.releaseAttempts}</td>
-                <td className="p-2 text-brand-500">
+                <td className="p-2 text-bp-ink-2">
                   {new Date(hold.createdAt).toLocaleString("en-AU")}
                 </td>
               </tr>

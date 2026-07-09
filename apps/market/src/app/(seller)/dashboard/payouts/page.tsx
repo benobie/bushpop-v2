@@ -43,23 +43,23 @@ export default async function DashboardPayoutsPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-xl font-bold text-brand-900">Payouts</h1>
+      <h1 className="text-xl font-bold text-bp-ink">Payouts</h1>
 
       <Link
         href="/dashboard/orders"
-        className="mt-2 inline-block text-sm text-brand-500 hover:underline"
+        className="mt-2 inline-block text-sm text-bp-ink-2 transition-colors hover:text-bp-green-bright hover:underline"
       >
         View orders →
       </Link>
 
       <div className="mt-6 grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-brand-100 bg-white p-4">
-          <p className="text-xs text-brand-500">Held</p>
-          <p className="mt-1 text-lg font-bold text-brand-900">{formatMoney(heldTotal)}</p>
+        <div className="rounded-xl border border-bp-line bg-white p-4">
+          <p className="text-xs text-bp-ink-2">Held</p>
+          <p className="mt-1 text-lg font-bold text-bp-ink">{formatMoney(heldTotal)}</p>
         </div>
-        <div className="rounded-xl border border-brand-100 bg-white p-4">
-          <p className="text-xs text-brand-500">Paid out</p>
-          <p className="mt-1 text-lg font-bold text-brand-900">{formatMoney(releasedTotal)}</p>
+        <div className="rounded-xl border border-bp-line bg-white p-4">
+          <p className="text-xs text-bp-ink-2">Paid out</p>
+          <p className="mt-1 text-lg font-bold text-bp-ink">{formatMoney(releasedTotal)}</p>
         </div>
       </div>
 
@@ -70,7 +70,7 @@ export default async function DashboardPayoutsPage() {
       )}
 
       {items.length === 0 && !error && (
-        <div className="mt-12 text-center text-brand-500">No payouts yet.</div>
+        <div className="mt-12 text-center text-bp-ink-2">No payouts yet.</div>
       )}
 
       {items.length > 0 && (
@@ -79,19 +79,19 @@ export default async function DashboardPayoutsPage() {
             <Link
               key={payout.id}
               href={`/dashboard/orders/${payout.orderId}`}
-              className="block rounded-xl border border-brand-100 bg-white px-4 py-4 shadow-sm transition-shadow hover:shadow-md"
+              className="block rounded-xl border border-bp-line bg-white px-4 py-4 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-xs text-brand-400">
+                  <p className="text-xs text-bp-ink-3">
                     {new Date(payout.createdAt).toLocaleDateString("en-AU", {
                       day: "numeric",
                       month: "long",
                       year: "numeric",
                     })}
                   </p>
-                  <p className="font-mono text-xs text-brand-600">{payout.orderId}</p>
-                  <p className="text-base font-bold text-brand-900">
+                  <p className="font-mono text-xs text-bp-ink-2">{payout.orderId}</p>
+                  <p className="text-base font-bold text-bp-ink">
                     {formatMoney(payout.amountCents, payout.currency)}
                   </p>
                 </div>

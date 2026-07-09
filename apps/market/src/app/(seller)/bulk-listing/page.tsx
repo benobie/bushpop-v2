@@ -11,8 +11,8 @@ export default async function BulkListingHomePage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="text-xl font-bold text-brand-900">Bulk listing</h1>
-      <p className="mt-1 text-sm text-brand-500">
+      <h1 className="text-xl font-bold text-bp-ink">Bulk listing</h1>
+      <p className="mt-1 text-sm text-bp-ink-2">
         Internal tool — intake a rack of items at once: photos → AI draft → review → publish.
       </p>
       <BatchList initialBatches={data?.batches ?? []} />
