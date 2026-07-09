@@ -279,7 +279,7 @@ export function BottomsDiagram() {
           markerStart={`url(#${id}-arrow)`}
           markerEnd={`url(#${id}-arrow)`}
         />
-        <Label x={214} y={128} rotate={-90}>
+        <Label x={214} y={96} rotate={-90}>
           Rise
         </Label>
 
