@@ -1,12 +1,16 @@
 /**
  * Checkout page — server shell.
- * Authed + forced dynamic.
+ * Forced dynamic.
  *
  * Fetches addresses server-side and passes them to the CheckoutFlow client island.
  * Guards empty cart → redirect /bag.
+ *
+ * Guest commerce (BF-08): a visitor with no session at all has no cart, so
+ * they hit the same "empty cart → /bag" redirect below as a logged-in buyer
+ * with nothing in their bag — no separate guest-specific guard needed.
  */
 import { redirect } from "next/navigation";
-import { requireAuth } from "@/lib/require-auth";
+import { getOptionalCustomer } from "@/lib/require-auth";
 import { createAuthedApiClient } from "@bushpop/api-client/server";
 import { CheckoutFlow } from "@/components/checkout/checkout-flow";
 import type { Metadata } from "next";
@@ -16,7 +20,10 @@ export const metadata: Metadata = {
 };
 
 export default async function CheckoutPage() {
-  await requireAuth();
+  const customer = await getOptionalCustomer();
+  if (!customer) {
+    redirect("/bag");
+  }
 
   const api = await createAuthedApiClient();
 
@@ -42,7 +49,11 @@ export default async function CheckoutPage() {
       <p className="mb-6 mt-1 text-sm text-[var(--color-bp-ink-2)]">
         You&rsquo;re almost there &mdash; just a couple of details and it&rsquo;s yours.
       </p>
-      <CheckoutFlow addresses={addresses} cartItems={cart.items} />
+      <CheckoutFlow
+        addresses={addresses}
+        cartItems={cart.items}
+        requiresGuestEmail={customer.user.isAnonymous}
+      />
     </main>
   );
 }

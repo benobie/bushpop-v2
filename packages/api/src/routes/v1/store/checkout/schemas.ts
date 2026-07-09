@@ -4,6 +4,10 @@ import { z } from "zod";
 
 export const initiateCheckoutBody = z.object({
   shippingAddressId: z.string().min(1, "shippingAddressId is required"),
+  // BF-08 guest commerce — required only when the session is anonymous
+  // (enforced in the route handler, since that depends on auth state, not
+  // just the body shape). Becomes the guest's real user.email.
+  buyerEmail: z.string().email("Enter a valid email address").optional(),
 });
 
 export const checkoutIdParam = z.object({

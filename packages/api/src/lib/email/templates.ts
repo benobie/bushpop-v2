@@ -7,6 +7,8 @@ export interface OrderConfirmationBuyerParams {
   currency: string;
   items: Array<{ title: string; priceCents: number }>;
   channelName: string;
+  /** BF-08 guest commerce — set only for a guest (anonymous) buyer. */
+  orderUrl?: string;
 }
 
 export interface OrderNotificationSellerParams {
@@ -63,6 +65,9 @@ export function orderConfirmationBuyerTemplate(params: OrderConfirmationBuyerPar
       "",
       "The seller will prepare your order and ship it soon.",
       "You'll receive another email when it's on its way.",
+      ...(params.orderUrl
+        ? ["", `Track this order any time: ${params.orderUrl}`]
+        : []),
       "",
       "Thanks,",
       `The ${params.channelName} Team`,

@@ -16,6 +16,7 @@
  */
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Elements,
   ExpressCheckoutElement,
@@ -68,6 +69,10 @@ interface CheckoutSession {
 interface CheckoutFlowProps {
   addresses: Address[];
   cartItems: CartItem[];
+  /** BF-08 guest commerce — true when the current session is anonymous (no
+   * real email on file yet). Shows a contact-email field and sends it as
+   * buyerEmail on checkout initiation. */
+  requiresGuestEmail?: boolean;
 }
 
 type Step = "address" | "initiating" | "payment";
@@ -91,7 +96,7 @@ function Section({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function CheckoutFlow({ addresses, cartItems }: CheckoutFlowProps) {
+export function CheckoutFlow({ addresses, cartItems, requiresGuestEmail }: CheckoutFlowProps) {
   const defaultAddress = addresses.find((a) => a.isDefault) ?? addresses[0];
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
     defaultAddress?.id ?? null,
@@ -101,6 +106,10 @@ export function CheckoutFlow({ addresses, cartItems }: CheckoutFlowProps) {
   const [step, setStep] = useState<Step>("address");
   const [session, setSession] = useState<CheckoutSession | null>(null);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [buyerEmail, setBuyerEmail] = useState("");
+  const [emailAlreadyRegistered, setEmailAlreadyRegistered] = useState(false);
+
+  const emailValid = !requiresGuestEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyerEmail);
 
   // "initiating" is a transient loading substate, not its own funnel step.
   useEffect(() => {
@@ -114,22 +123,30 @@ export function CheckoutFlow({ addresses, cartItems }: CheckoutFlowProps) {
 
   async function handleContinueToPayment() {
     if (!selectedAddressId) return;
+    if (requiresGuestEmail && !emailValid) return;
 
     setStep("initiating");
     setCheckoutError(null);
+    setEmailAlreadyRegistered(false);
 
     const api = createBrowserApiClient();
     const { data, error } = await api.POST("/api/v1/store/checkout", {
-      body: { shippingAddressId: selectedAddressId },
+      body: {
+        shippingAddressId: selectedAddressId,
+        ...(requiresGuestEmail ? { buyerEmail } : {}),
+      },
     });
 
     if (error) {
-      // Type the error to check for MULTI_SELLER code
-      const apiError = error as { statusCode?: number; code?: string; message?: string };
-      if (apiError?.code === "MULTI_SELLER_CHECKOUT_UNSUPPORTED") {
+      // Fastify's error handler serialises AppError as { error: <code>, message }
+      const apiError = error as { statusCode?: number; error?: string; message?: string };
+      if (apiError?.error === "MULTI_SELLER_CHECKOUT_UNSUPPORTED") {
         setCheckoutError(
           "Your bag contains items from multiple sellers. Please remove items until all items are from one seller, then try again.",
         );
+      } else if (apiError?.error === "GUEST_EMAIL_ALREADY_REGISTERED") {
+        setEmailAlreadyRegistered(true);
+        setCheckoutError("An account already exists with this email.");
       } else {
         setCheckoutError("Could not initiate checkout. Please try again.");
       }
@@ -251,8 +268,40 @@ export function CheckoutFlow({ addresses, cartItems }: CheckoutFlowProps) {
     return (
       <div className="grid gap-7 lg:grid-cols-[1fr_400px] lg:items-start">
         <div>
+          {requiresGuestEmail && (
+            <Section>
+              <SectionHeading n={1} title="Your email" />
+              <p className="mb-3 text-xs text-[var(--color-bp-ink-2)]">
+                We&rsquo;ll send your order confirmation and tracking here. You can create an
+                account after checkout to save your order history.
+              </p>
+              <input
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={buyerEmail}
+                onChange={(e) => {
+                  setBuyerEmail(e.target.value);
+                  setEmailAlreadyRegistered(false);
+                }}
+                data-testid="guest-email-input"
+                className="w-full rounded-[var(--radius-bp-rect)] border border-[var(--color-bp-line-2)] px-3.5 py-2.5 text-sm text-[var(--color-bp-ink)] outline-none focus:border-[var(--color-bp-green-ink)]"
+              />
+              {emailAlreadyRegistered && (
+                <p className="mt-2 text-xs text-[var(--color-bp-red)]">
+                  An account already exists with this email.{" "}
+                  <Link href="/sign-in?next=%2Fcheckout" className="underline">
+                    Sign in instead
+                  </Link>
+                  .
+                </p>
+              )}
+            </Section>
+          )}
+
           <Section>
-            <SectionHeading n={1} title="Delivery address" />
+            <SectionHeading n={requiresGuestEmail ? 2 : 1} title="Delivery address" />
             <div className="space-y-4">
               {!showAddressForm && addressList.length > 0 && (
                 <div className="space-y-2">
@@ -330,7 +379,7 @@ export function CheckoutFlow({ addresses, cartItems }: CheckoutFlowProps) {
             variant="primary"
             size="lg"
             className="w-full"
-            disabled={!selectedAddressId || step === "initiating" || showAddressForm}
+            disabled={!selectedAddressId || step === "initiating" || showAddressForm || !emailValid}
             onClick={handleContinueToPayment}
             data-testid="checkout-continue-button"
           >
@@ -349,7 +398,7 @@ export function CheckoutFlow({ addresses, cartItems }: CheckoutFlowProps) {
       <div className="grid gap-7 lg:grid-cols-[1fr_400px] lg:items-start">
         <div>
           <Section>
-            <SectionHeading n={2} title="Payment" />
+            <SectionHeading n={requiresGuestEmail ? 3 : 2} title="Payment" />
             <Elements
               stripe={stripePromise}
               options={{ clientSecret: session.clientSecret }}

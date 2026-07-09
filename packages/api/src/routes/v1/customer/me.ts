@@ -21,6 +21,7 @@ export async function meRoutes(app: FastifyInstance) {
               name: z.string(),
               image: z.string().nullable(),
               emailVerified: z.boolean(),
+              isAnonymous: z.boolean(),
             }),
             roles: z.array(z.string()),
             channel: z.object({

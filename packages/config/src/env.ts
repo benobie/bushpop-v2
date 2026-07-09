@@ -58,6 +58,26 @@ const envSchema = z.object({
   // booting — pickup-code-service.ts falls back to a fixed dev-only secret
   // outside production and throws if genuinely missing in production.
   PICKUP_CODE_SECRET: z.string().min(16).optional(),
+
+  // Guest commerce (BF-08, bushpop-v2 PR #106). HMAC key used to derive a
+  // guest buyer's order-access token deterministically from (orderId,
+  // buyerId) — same "no plaintext/stored token" shape as PICKUP_CODE_SECRET.
+  // Optional so existing deployed envs keep booting — guest-order-access.ts
+  // falls back to a fixed dev-only secret outside production and throws if
+  // genuinely missing in production.
+  GUEST_ORDER_TOKEN_SECRET: z.string().min(16).optional(),
+}).superRefine((data, ctx) => {
+  // Fail fast at boot rather than lazily at the first guest-order email send
+  // (money-path audit L2, 08/07/2026). Scoped to GUEST_ORDER_TOKEN_SECRET
+  // only — PICKUP_CODE_SECRET has the same lazy-check shape today but is a
+  // separate, out-of-scope finding.
+  if (data.NODE_ENV === "production" && !data.GUEST_ORDER_TOKEN_SECRET) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["GUEST_ORDER_TOKEN_SECRET"],
+      message: "GUEST_ORDER_TOKEN_SECRET is required in production (min 16 chars).",
+    });
+  }
 });
 
 export type Env = z.infer<typeof envSchema>;
