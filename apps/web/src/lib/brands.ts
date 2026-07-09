@@ -1242,9 +1242,9 @@ export const BRANDS: Brand[] = [
     name: "Kmart",
     category: "Australian department stores · women's",
     unitNote:
-      "Kmart uses AU numeric sizing (6–26) with no letter labels. Its chart is published in centimetres and inches; the table below shows the core 6–22 range.",
+      "Kmart uses AU numeric sizing (6–26) with no letter labels, published in centimetres and inches. Heads-up: at sizes 24 and 26 Kmart's own published waist (116cm, then 121cm) steps out of its otherwise even 5cm grading and looks like an error in Kmart's chart, so measure the garment's waist to be sure.",
     answer:
-      "Kmart is Australia's biggest discount department store, and its clothing all hangs off one published body chart covering tops, bottoms, dresses and jackets, including underwear and shapewear but not bras. Sizing is AU numeric only, from 6 to 26, with no letter labels anywhere on the chart. A size 12 fits a 95cm bust, 76cm waist and 101cm hip, and sizes step evenly by 5cm through the core range. The table below shows sizes 6 to 22; Kmart's own guide continues to 26 and adds separate plus-size (18 to 26) and maternity (8 to 18) charts with their own measurements, so check the right chart for those labels. Kmart publishes the chart in both centimetres and inches. Because Kmart pieces are everywhere secondhand, the numeric tag plus the chart above is usually all you need to size a piece confidently.",
+      "Kmart is Australia's biggest discount department store, and its clothing all hangs off one published body chart covering tops, bottoms, dresses and jackets, including underwear and shapewear but not bras. Sizing is AU numeric only, from 6 to 26, with no letter labels anywhere on the chart. A size 12 fits a 95cm bust, 76cm waist and 101cm hip, and sizes step evenly by 5cm through the core range. The table below shows the full 6 to 26 range as Kmart publishes it, though note the waist column jumps unusually at sizes 24 and 26 (116cm then 121cm, breaking the even 5cm grading); this appears to be an error in Kmart's own chart, so measure the waist rather than trust the number. Kmart also adds separate plus-size (18 to 26) and maternity (8 to 18) charts with their own measurements, so check the right chart for those labels. Kmart publishes the chart in both centimetres and inches. Because Kmart pieces are everywhere secondhand, the numeric tag plus the chart above is usually all you need to size a piece confidently.",
     sizeRows: [
       { size: "6", bust: "80", waist: "61", hip: "86" },
       { size: "8", bust: "85", waist: "66", hip: "91" },
@@ -1255,6 +1255,8 @@ export const BRANDS: Brand[] = [
       { size: "18", bust: "110", waist: "91", hip: "116" },
       { size: "20", bust: "115", waist: "96", hip: "121" },
       { size: "22", bust: "120", waist: "101", hip: "126" },
+      { size: "24", bust: "125", waist: "116", hip: "131" },
+      { size: "26", bust: "130", waist: "121", hip: "136" },
     ],
     hasLetters: false,
     fitNote:
@@ -1270,7 +1272,7 @@ export const BRANDS: Brand[] = [
       },
       {
         q: "What sizes does the Kmart women's chart cover?",
-        a: "Kmart's main chart runs from a size 6 to 26 with the same bust, waist and hip columns throughout; the table above lists 6 to 22. Kmart also publishes separate plus-size (18 to 26) and maternity (8 to 18) charts with their own measurements, so check Kmart's own guide when a garment is tagged plus or maternity.",
+        a: "Kmart's main chart runs from a size 6 to 26 with the same bust, waist and hip columns throughout, all shown in the table above. One quirk: the waist reads 116cm at size 24 and 121cm at size 26, which breaks Kmart's even 5cm grading and looks like an error in their own chart, so measure the waist to be sure. Kmart also publishes separate plus-size (18 to 26) and maternity (8 to 18) charts with their own measurements, so check Kmart's own guide when a garment is tagged plus or maternity.",
       },
     ],
     verified: "high",
