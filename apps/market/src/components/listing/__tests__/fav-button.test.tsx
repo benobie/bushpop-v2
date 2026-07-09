@@ -19,7 +19,7 @@ const {
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock }),
-  usePathname: () => "/browse",
+  usePathname: () => "/shop",
 }));
 
 vi.mock("@bushpop/api-client/browser", () => ({

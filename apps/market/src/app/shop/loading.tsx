@@ -1,9 +1,9 @@
 /**
- * Browse loading shell — provides the Suspense boundary that lets the dynamic
- * `/browse` page (reads searchParams) prerender under Cache Components.
+ * Shop loading shell — provides the Suspense boundary that lets the dynamic
+ * `/shop` page (reads searchParams) prerender under Cache Components.
  * Mirrors the card-grid layout of the loaded page.
  */
-export default function BrowseLoading() {
+export default function ShopLoading() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-6 h-8 w-40 animate-pulse rounded bg-bp-surface-2" />

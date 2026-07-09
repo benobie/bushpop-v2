@@ -58,7 +58,7 @@ export function FavouritesGrid({ items }: { items: FavouriteItem[] }) {
         <p className="text-lg text-bp-ink-2">No favourites yet</p>
         <p className="text-sm text-bp-ink-3">Tap the heart on any listing to save it here.</p>
         <Link
-          href="/browse"
+          href="/shop"
           className="rounded-lg bg-bp-obsidian px-4 py-2 text-sm font-semibold text-white"
         >
           Browse listings
