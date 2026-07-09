@@ -41,7 +41,6 @@ const READY_PATHS: { path: string; priority: number }[] = [
   { path: "/selling/how-to-sell-on-bushpop-the-complete-guide/", priority: 0.6 },
   { path: "/whats-on/the-best-vintage-markets-to-visit-on-the-gold-coast/", priority: 0.5 },
   { path: "/contact/", priority: 0.4 },
-  { path: "/terms/buyer-protection/", priority: 0.5 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
