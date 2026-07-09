@@ -117,10 +117,11 @@ Fee Model D (task `8ecbbbcf`) merged via PR #58, closing the conflict this secti
   - Content site / CF Pages: `N8N_WAITLIST_WEBHOOK` (Pages secret), `NEXT_PUBLIC_WAITLIST_ENDPOINT`; CI: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
   - `services/support-order-context`: `ORDER_CONTEXT_TOKEN`, `PORT`, `WC_BASE_URL`, `WC_CONSUMER_KEY`, `WC_CONSUMER_SECRET`.
 
-## 6. Open PRs + gates (as at 04/07/2026, evening)
+## 6. Open PRs + gates (as at 09/07/2026 — this section drifts fast, cross-check `gh pr list` before trusting it)
 
-- **No open PRs.** PR #48 (`feat(market): Phase 2 sell wizard`) merged `71a5532`. Its two post-merge human gates (real-device mobile-Safari pass, staging AI live-smoke test) — **status not confirmed in this doc; ask Ben, don't assume done.**
-- **PR #58 (Fee Model D) merged by Ben** `2026-07-04T15:07:27Z` (`c6e66f5`) — see §9's row and §11's session E entry for full detail. **Staging redeploy triggered immediately after (this session) since Coolify deploys are API-triggered, not push-triggered** — container start times showed the running build was still from 14:32 UTC (pre-merge) right up until this redeploy; see §11 for the outcome. **Still open from that PR:** `/checkout-groups` charges $0 Buyer Protection fee for any cart (Codex: high-severity bypass; Opus: revenue gap) — needs Ben's decision, tied to §10 item 3's ratification.
+- **Open, Ben-gated:** **PR #106** (guest checkout, BF-08 — money-adjacent: email capture, HMAC guest-order-access token; fix-pass done 09/07, CI green, MERGEABLE/CLEAN, awaiting only his review); **PR #115** (SEO brand size-charts 19→32 + Wollongong/Geelong op-shops, awaiting his data spot-check, not a code review); **PR #112** (DRAFT legal/policy pages — privacy/terms/returns/buyer-protection — awaiting Ben + a lawyer, a claim-window source conflict is the top ratify decision).
+- **Landed since this section was last true (04/07):** PR #48 (Phase 2 sell wizard) merged `71a5532`, its two post-merge human gates (real-device mobile-Safari, staging AI live-smoke test) still unconfirmed — ask Ben. PR #58 (Fee Model D) merged `c6e66f5`. PR #79 (U1 checkout/confirmation restyle — THE launch bar) merged 08/07. PR #102 (guest bag) merged. PR #110 closes the `/checkout-groups` $0-Buyer-Protection bypass with a 422 `FEE_MODEL_INCOMPLETE` guard — **the "still open" gap this section used to flag is now closed.** PR #116 (BF-01 coral→obsidian palette sweep) merged. **PR #120 (money-path hardening — H1 refund/payout race, WP-0 refund-amount pin, M1 dispute webhooks) merged 09/07** — this was the launch blocker for turning payouts on. PR #119 (BF-15 `/browse`→`/shop` rename, part 1) merged 09/07.
+- Full narrative for all of the above: §11 session log below (append-only, correctly dated — trust it over this summary for anything it covers).
 
 ## 7. Known debt / de-hardcode register (branding)
 
@@ -208,6 +209,12 @@ Future Claude Code / AI sessions: **append** an entry here — author-tagged (ac
 - Facts corrected in §§1–8: §4's API-suite sentence rewritten from "recorded at the PR #27 merge... re-derive if you need it authoritative" to the live-run figures + command + SHA (this entry).
 - PROMOTE → business doc: none.
 - Queue items added/closed (§10): item 6 closed (test-count reconciliation done).
+
+### 09/07/2026 — ben@bushpop.com.au · Claude Code (Sonnet 5) · docs truth sweep (batch 47, wave 2)
+- What changed: cross-checked every open-PR/stale-figure claim across this doc, the repo-root `.claude/CLAUDE.md`, the Bushpop project `.claude/CLAUDE.md`, and `~/projects/Bushpop/design/HANDOFF-ZERO-CONTEXT.md` against live `gh pr view`/`gh pr list` and the 09/07 networked-reverify audit. Rewrote §6 (was 5 days stale, claimed "no open PRs" through a window where 70+ PRs landed).
+- Facts corrected in §§1–8: §6 replaced wholesale (see above) — real current state is 3 open Ben-gated PRs (#106, #115, #112) and the $0-BP gap closed by PR #110.
+- PROMOTE → business doc: none new — all facts here were already correct in the business doc or already flagged.
+- Queue items added/closed (§10): none.
 
 ### 04/07/2026 — ben@bushpop.com.au · Claude Code (Sonnet 5) · bushpop-q10 session C — direct-mode decision memo (§10 item 3)
 - What changed: authored the direct-mode decision memo (full text in this PR's body). Recommends no runtime `PAYMENTS_MODE` flag, and recommends env-gating `/checkout-groups` OFF by default (follow-up code PR, filed as a handoff, merge held for Ben) rather than leaving it as-is or deleting it. Added the §9 PROPOSED row above.
