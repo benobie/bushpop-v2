@@ -124,6 +124,10 @@ describe("AI draft endpoints + worker", () => {
     expect(body.status).toBe("completed");
     expect(body.suggestions.brand).toBe("adidas");
     expect(body.suggestions.categoryLeaf).toBe("sneakers");
+    // Guards the Fastify response-schema gotcha: `gender` lives in resolvedOutput
+    // but gets silently stripped from the HTTP response if routes.ts's zod
+    // schema for this endpoint doesn't also declare it.
+    expect(body.suggestions.gender).toBe("unisex");
     expect(body.confidence).toBe(0.9);
 
     const [item] = await db.select().from(inventoryItems).where(eq(inventoryItems.id, itemId));
