@@ -623,6 +623,11 @@ export async function handlePaymentAfterExpiry(
   await stripe.refunds.create({
     payment_intent: paymentIntentId,
     reason: "requested_by_customer",
+    // WP-0: pin the refund amount. This path runs before any order row exists,
+    // so there's no order.totalCents to reuse — the checkout session's own
+    // locked-at-creation total is the equivalent value (see refund-service.ts
+    // for the shared-group-PI rationale this guards against).
+    amount: session.totalCents,
     metadata: {
       piklo_reason: "late_success_recovery",
       checkout_session_id: sessionId,

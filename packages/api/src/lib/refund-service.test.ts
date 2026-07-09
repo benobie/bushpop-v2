@@ -226,6 +226,146 @@ describe("processRefund — pre-transfer path (held)", () => {
 });
 
 // ---------------------------------------------------------------------------
+// PR #120 follow-up — release_failed_retryable / release_failed_manual
+// ---------------------------------------------------------------------------
+//
+// PR #120 wired freezePayoutHold into processRefund unconditionally, but the
+// post-freeze branch only handled held/blocked/released — a hold in
+// release_failed_retryable/release_failed_manual (an ordinary transient
+// release-sweep failure, not an attack) fell into the else-branch
+// ConflictError with the hold already frozen and no path back to a terminal
+// state. These cover the two states PAYOUT_HOLD_MACHINE already legalises a
+// refunded exit from.
+//
+// Cross-model (Codex) re-review of the first pass at this fix found a real
+// gap: release_failed_retryable/release_failed_manual do NOT by themselves
+// prove no transfer landed — an indeterminate_5xx on stripe.transfers.create
+// routes to these SAME hold statuses (payout-hold-service.ts
+// handleTransferError/markRetryable/markManual), and Stripe's side effect in
+// that case is genuinely unknown. Refunding blind would recreate the exact
+// buyer-refunded + seller-paid race PR #120 closed. The tests below cover
+// both the safe case (a resolved/deterministic transfer failure, or no
+// transfer op at all) and the unsafe case (an unresolved transfer op) that
+// must block instead of silently refunding.
+
+describe("processRefund — release_failed_retryable / release_failed_manual (PR #120 follow-up)", () => {
+  it("refunds buyer and transitions a release_failed_retryable hold to refunded when no transfer op is ambiguous (state-machine path)", async () => {
+    const { orderId, sellerId, holdId } = await createOrderFixture({
+      holdStatus: "release_failed_retryable",
+    });
+
+    await processRefund(orderId, sellerId, "buyer request");
+
+    const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+    expect(order!.status).toBe("refunded");
+
+    const [refund] = await db.select().from(refunds).where(eq(refunds.orderId, orderId));
+    expect(refund!.status).toBe("processed");
+
+    const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+    expect(hold!.status).toBe("refunded");
+
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
+  });
+
+  it("refunds buyer and transitions a release_failed_manual hold to refunded when the recorded transfer op is a resolved (deterministic) failure", async () => {
+    const { orderId, sellerId, holdId } = await createOrderFixture({
+      holdStatus: "release_failed_manual",
+    });
+
+    // A deterministic 4xx (e.g. account_restricted) at the retry cap — Stripe
+    // never created a transfer for this attempt, so the op resolves straight
+    // to `failed`, never indeterminate_5xx. Safe to refund.
+    await db.insert(paymentOperations).values({
+      id: ulid(),
+      orderId,
+      type: "transfer",
+      idempotencyKey: `${ulid()}:3`,
+      amountCents: 5500,
+      status: "failed",
+      lastError: "account_restricted",
+    });
+
+    await processRefund(orderId, sellerId, "buyer request");
+
+    const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+    expect(order!.status).toBe("refunded");
+
+    const [refund] = await db.select().from(refunds).where(eq(refunds.orderId, orderId));
+    expect(refund!.status).toBe("processed");
+
+    const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+    expect(hold!.status).toBe("refunded");
+
+    expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
+  });
+
+  it("throws ConflictError for release_failed_retryable with an unresolved (indeterminate_5xx) transfer op — Stripe's side effect is unknown", async () => {
+    // The transfer-create call may have actually landed despite the 5xx
+    // response. Refunding via the pre-transfer path here would recreate the
+    // exact buyer-refunded + seller-paid failure PR #120 closed.
+    const { orderId, sellerId } = await createOrderFixture({
+      holdStatus: "release_failed_retryable",
+    });
+
+    await db.insert(paymentOperations).values({
+      id: ulid(),
+      orderId,
+      type: "transfer",
+      idempotencyKey: `${ulid()}:1`,
+      amountCents: 5500,
+      status: "indeterminate_5xx",
+      lastError: "503 from Stripe",
+    });
+
+    await expect(
+      processRefund(orderId, sellerId, "buyer request"),
+    ).rejects.toThrow(ConflictError);
+
+    // The refund row this attempt inserted must be marked failed, not left
+    // pending forever (which would also wrongly block a later retry via the
+    // "active refund already exists" gate).
+    const [refund] = await db.select().from(refunds).where(eq(refunds.orderId, orderId));
+    expect(refund!.status).toBe("failed");
+
+    // Hold must not have been silently transitioned to refunded.
+    const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+    expect(order!.status).toBe("paid");
+  });
+
+  it("throws ConflictError for release_failed_manual with a still-pending transfer op (crash mid-flight, never resolved)", async () => {
+    const { orderId, sellerId } = await createOrderFixture({
+      holdStatus: "release_failed_manual",
+    });
+
+    await db.insert(paymentOperations).values({
+      id: ulid(),
+      orderId,
+      type: "transfer",
+      idempotencyKey: `${ulid()}:2`,
+      amountCents: 5500,
+      status: "pending",
+    });
+
+    await expect(
+      processRefund(orderId, sellerId, "buyer request"),
+    ).rejects.toThrow(ConflictError);
+  });
+
+  it("throws ConflictError for a still-releasing hold (regression guard — releasing stays unhandled)", async () => {
+    // Confirms the fix is scoped to the two new statuses only — a hold mid-
+    // release (transfer in flight) must still hit the else-branch guard; a
+    // transfer might land moments later, so refunding it pre-transfer here
+    // would be wrong.
+    const { orderId, sellerId } = await createOrderFixture({ holdStatus: "releasing" });
+
+    await expect(
+      processRefund(orderId, sellerId, "buyer request"),
+    ).rejects.toThrow(ConflictError);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Post-transfer refund (hold = released)
 // ---------------------------------------------------------------------------
 
@@ -385,7 +525,7 @@ describe("processRefund — inventory restore", () => {
 
 describe("resumePendingRefunds", () => {
   it("completes a stale pending refund op by re-calling Stripe with the same idempotency key", async () => {
-    const { orderId } = await createOrderFixture({ holdStatus: "held" });
+    const { orderId, holdId } = await createOrderFixture({ holdStatus: "held" });
 
     // Simulate crash: insert a pending refund op older than 5 minutes
     const staleOpId = ulid();
@@ -432,7 +572,46 @@ describe("resumePendingRefunds", () => {
     const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
     expect(order!.status).toBe("refunded");
     expect(enqueueEmail).toHaveBeenCalledWith({ type: "refund_confirmation_buyer", orderId });
+
+    // PR #120 follow-up, round 4 review: this crash-recovery branch never
+    // touched payoutHolds for ANY hold status before this fix — a hold left
+    // stuck frozen here has no path forward, and (for held/
+    // release_failed_retryable) a later dispute-won webhook would unfreeze it
+    // for the payout-release sweep to pay out on an already-refunded order.
+    const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+    expect(hold!.status).toBe("refunded");
   });
+
+  it.each(["release_failed_retryable", "release_failed_manual"] as const)(
+    "finalises a %s hold to refunded when resuming a stale pending refund op",
+    async (holdStatus) => {
+      const { orderId, holdId } = await createOrderFixture({ holdStatus });
+
+      const staleOpId = ulid();
+      const staleKey = `refund_${ulid()}`;
+      await db.insert(paymentOperations).values({
+        id: staleOpId,
+        orderId,
+        type: "refund",
+        idempotencyKey: staleKey,
+        amountCents: 6000,
+        status: "pending",
+      });
+      await db.execute(sql`
+        UPDATE payment_operations
+        SET created_at = now() - interval '10 minutes'
+        WHERE id = ${staleOpId}
+      `);
+
+      await resumePendingRefunds();
+
+      const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+      expect(order!.status).toBe("refunded");
+
+      const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+      expect(hold!.status).toBe("refunded");
+    },
+  );
 
   it("completes a stale pending reversal op by re-calling Stripe with the same idempotency key", async () => {
     // Mirrors the refund-op resume test above, but for the post-transfer
@@ -704,6 +883,54 @@ describe("reconcileRefundOpFromStripe", () => {
     // double-send on the repeated webhook.
     expect(enqueueEmail).toHaveBeenCalledTimes(1);
   });
+
+  // PR #120 follow-up, round 3 review: reconcileRefundOpFromStripe's hold
+  // finalisation previously only covered held/blocked — the same gap
+  // processRefund's live path had before this PR, now also reachable here
+  // because a refund can legitimately START from release_failed_retryable/
+  // release_failed_manual. Without this, a refund that went indeterminate on
+  // the Stripe call itself (not the transfer) would complete for the buyer
+  // while the hold stayed stuck at release_failed_retryable/manual forever —
+  // and for release_failed_retryable specifically, a later dispute-won
+  // webhook would unfreeze it and the payout-release sweep could then pay the
+  // seller on an already-refunded order.
+  it.each(["release_failed_retryable", "release_failed_manual"] as const)(
+    "finalises a %s hold to refunded via the late-webhook reconcile path",
+    async (holdStatus) => {
+      const { orderId, holdId } = await createOrderFixture({ holdStatus });
+
+      const refundId = ulid();
+      await db.insert(refunds).values({
+        id: refundId,
+        orderId,
+        initiatedBy: (await db.select().from(orders).where(eq(orders.id, orderId)))[0]!.sellerId,
+        reason: "test",
+        type: "full",
+        amountCents: 6000,
+        platformFeeRefundedCents: 500,
+        status: "pending",
+      });
+
+      const opId = ulid();
+      await db.insert(paymentOperations).values({
+        id: opId,
+        orderId,
+        type: "refund",
+        idempotencyKey: `refund_${refundId}`,
+        amountCents: 6000,
+        status: "indeterminate_5xx",
+        lastError: "503",
+      });
+
+      await reconcileRefundOpFromStripe(opId, "re_reconciled_release_failed");
+
+      const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+      expect(order!.status).toBe("refunded");
+
+      const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+      expect(hold!.status).toBe("refunded");
+    },
+  );
 });
 
 describe("reconcileReversalOpFromStripe", () => {
