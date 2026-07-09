@@ -1,5 +1,5 @@
 /**
- * Browse page — public listing grid with filter/sort/pagination.
+ * Shop page (`/shop`) — public listing grid with filter/sort/pagination.
  * Server component; forced dynamic because it reads searchParams.
  *
  * Uses the cached browseListings() data fetcher from lib/data/listings.ts.
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 const PAGE_SIZE = 24;
 
-interface BrowsePageProps {
+interface ShopPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
@@ -38,9 +38,9 @@ function getNumber(v: string | string[] | undefined): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
-export default async function BrowsePage({
+export default async function ShopPage({
   searchParams,
-}: BrowsePageProps) {
+}: ShopPageProps) {
   const sp = await searchParams;
 
   const offset = getNumber(sp.offset) ?? 0;
@@ -80,7 +80,7 @@ export default async function BrowsePage({
       {/* Filter bar — client island */}
       <div className="mb-6">
         <Suspense fallback={null}>
-          <FilterBar basePath="/browse" facetDistribution={result.facetDistribution} />
+          <FilterBar basePath="/shop" facetDistribution={result.facetDistribution} />
         </Suspense>
       </div>
 
@@ -93,7 +93,7 @@ export default async function BrowsePage({
           </p>
           {offset > 0 && (
             <Button asChild variant="outline">
-              <Link href="/browse">Back to start</Link>
+              <Link href="/shop">Back to start</Link>
             </Button>
           )}
         </div>
@@ -116,7 +116,7 @@ export default async function BrowsePage({
               {offset > 0 && (
                 <Button asChild variant="outline">
                   <Link
-                    href={`/browse?offset=${prevOffset}${buildQuerySuffix(sp, ["offset"])}`}
+                    href={`/shop?offset=${prevOffset}${buildQuerySuffix(sp, ["offset"])}`}
                   >
                     ← Previous
                   </Link>
@@ -130,7 +130,7 @@ export default async function BrowsePage({
               {result.hasMore && (
                 <Button asChild variant="outline">
                   <Link
-                    href={`/browse?offset=${nextOffset}${buildQuerySuffix(sp, ["offset"])}`}
+                    href={`/shop?offset=${nextOffset}${buildQuerySuffix(sp, ["offset"])}`}
                   >
                     Next →
                   </Link>

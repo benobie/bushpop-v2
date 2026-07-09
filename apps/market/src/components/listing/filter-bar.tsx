@@ -24,7 +24,7 @@ import { DEFAULT_CHANNEL } from "@bushpop/config";
 import { SaveSearchButton } from "./save-search-button";
 
 interface FilterBarProps {
-  basePath: "/browse" | "/search";
+  basePath: "/shop" | "/search";
   /** Current query string (for search page — preserves `q` param) */
   q?: string;
   /** Result counts per filter value from Meili facetDistribution (U1 §2.1). */

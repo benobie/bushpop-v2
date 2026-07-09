@@ -20,7 +20,7 @@ export default async function HomePage() {
         <p className="mt-2 text-lg text-bp-ink-2">{config.shortTagline}</p>
         <div className="mt-6 flex justify-center gap-3">
           <Button asChild variant="primary" size="lg">
-            <Link href="/browse">Browse all</Link>
+            <Link href="/shop">Browse all</Link>
           </Button>
           <Button asChild variant="outline" size="lg">
             <Link href="/sell">Start selling</Link>
@@ -52,7 +52,7 @@ export default async function HomePage() {
           available during the static web build (see apps/market/Dockerfile:
           "the build needs NO server secrets"). `connection()` defers this
           subtree to the first request; the result still caches per the
-          'browse' cacheLife profile thereafter. */}
+          'shop' cacheLife profile thereafter. */}
       <Suspense fallback={<LatestListingsSkeleton />}>
         <LatestListings />
       </Suspense>
@@ -98,7 +98,7 @@ async function LatestListings() {
       </Rail>
       <div className="mt-6 text-center">
         <Button asChild variant="outline">
-          <Link href="/browse">View all listings</Link>
+          <Link href="/shop">View all listings</Link>
         </Button>
       </div>
     </>
@@ -139,7 +139,7 @@ async function CategoryDuo() {
         {tiles.map((tile) => (
           <Link
             key={tile.slug}
-            href={`/browse?categorySlug=${encodeURIComponent(tile.slug)}`}
+            href={`/shop?categorySlug=${encodeURIComponent(tile.slug)}`}
             className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-bp-surface-2 sm:aspect-[16/9]"
           >
             {tile.imageUrl && (

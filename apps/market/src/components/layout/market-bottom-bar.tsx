@@ -17,7 +17,7 @@ export function MarketBottomBar() {
       label: "Search",
       href: "/search",
       icon: <SearchIcon size={22} />,
-      active: pathname.startsWith("/search") || pathname.startsWith("/browse"),
+      active: pathname.startsWith("/search") || pathname.startsWith("/shop"),
     },
     { key: "sell", label: "Sell", href: "/sell", icon: <PlusCircleIcon size={22} />, active: pathname.startsWith("/sell") },
     { key: "account", label: "Account", href: "/account", icon: <UserIcon size={22} />, active: pathname.startsWith("/account") },

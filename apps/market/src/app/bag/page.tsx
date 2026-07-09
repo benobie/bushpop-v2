@@ -68,7 +68,7 @@ export default async function BagPage() {
             Browse listings and tap &ldquo;Add to bag&rdquo; to get started.
           </p>
           <Button asChild variant="primary">
-            <Link href="/browse">Browse listings</Link>
+            <Link href="/shop">Browse listings</Link>
           </Button>
         </div>
       ) : (
@@ -130,7 +130,7 @@ export default async function BagPage() {
           </Button>
 
           <Button asChild variant="ghost" size="sm" className="w-full">
-            <Link href="/browse">Continue browsing</Link>
+            <Link href="/shop">Continue browsing</Link>
           </Button>
         </div>
       )}

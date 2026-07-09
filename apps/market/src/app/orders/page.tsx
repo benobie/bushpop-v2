@@ -84,7 +84,7 @@ export default async function OrdersPage() {
             Browse listings and complete a purchase to see your orders here.
           </p>
           <Button asChild variant="primary">
-            <Link href="/browse">Browse listings</Link>
+            <Link href="/shop">Browse listings</Link>
           </Button>
         </div>
       ) : (

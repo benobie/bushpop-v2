@@ -31,7 +31,7 @@ export function MarketFooter({ channelName, tagline, supportEmail }: MarketFoote
         {
           heading: "Shop",
           links: [
-            { label: "Browse", href: "/browse" },
+            { label: "Browse", href: "/shop" },
             { label: "Sell on Bushpop", href: "/sell" },
           ],
         },

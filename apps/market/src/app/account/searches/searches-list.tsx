@@ -43,7 +43,7 @@ function filterValueLabel(key: string, value: unknown): string {
   return str;
 }
 
-/** Reconstructs a /browse or /search URL from a saved search's query + filters. */
+/** Reconstructs a /shop or /search URL from a saved search's query + filters. */
 function runAgainHref(search: SavedSearchItem): string {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(search.filters)) {
@@ -57,7 +57,7 @@ function runAgainHref(search: SavedSearchItem): string {
     params.set("q", search.query);
     return `/search?${params.toString()}`;
   }
-  return `/browse?${params.toString()}`;
+  return `/shop?${params.toString()}`;
 }
 
 export function SearchesList({ items }: { items: SavedSearchItem[] }) {
@@ -120,7 +120,7 @@ export function SearchesList({ items }: { items: SavedSearchItem[] }) {
         <p className="text-sm text-bp-ink-3">
           Filter listings on Browse or Search, then use "Save this search" to keep it here.
         </p>
-        <Link href="/browse" className="rounded-lg bg-bp-obsidian px-4 py-2 text-sm font-semibold text-white">
+        <Link href="/shop" className="rounded-lg bg-bp-obsidian px-4 py-2 text-sm font-semibold text-white">
           Browse listings
         </Link>
       </div>
