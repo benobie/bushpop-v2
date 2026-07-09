@@ -31,6 +31,8 @@ import {
   reconcileRefundOpFromStripe,
   reconcileReversalOpFromStripe,
 } from "../../../lib/refund-service.js";
+import { freezePayoutHold, unfreezePayoutHold } from "../../../lib/payout-hold-service.js";
+import { enqueueAdminAlert } from "../../../lib/admin-alerts.js";
 
 const PROVIDER = "stripe";
 
@@ -159,6 +161,21 @@ async function handleStripeEvent(event: Stripe.Event): Promise<void> {
       break;
     }
 
+    // M1: chargeback (dispute) handling. `created` freezes the order's payout
+    // hold so disputed proceeds can't be released to the seller; `closed`
+    // conservatively unfreezes only on a `won` outcome. Both alert an operator.
+    case "charge.dispute.created": {
+      const dispute = event.data.object as Stripe.Dispute;
+      await handleChargeDisputeCreated(dispute);
+      break;
+    }
+
+    case "charge.dispute.closed": {
+      const dispute = event.data.object as Stripe.Dispute;
+      await handleChargeDisputeClosed(dispute);
+      break;
+    }
+
     default:
       // Unhandled events — log and ignore (not an error)
       break;
@@ -222,6 +239,96 @@ function readPikloOpId(metadata: Stripe.Metadata | null | undefined): string | n
   if (!metadata) return null;
   const v = metadata["piklo_payment_op_id"];
   return typeof v === "string" && v.length > 0 ? v : null;
+}
+
+// ---------------------------------------------------------------------------
+// M1 — dispute (chargeback) handlers
+// ---------------------------------------------------------------------------
+
+/**
+ * Resolve a Stripe dispute to one of our orders via its PaymentIntent
+ * (`orders.stripe_payment_intent_id`). Returns null if the dispute carries no
+ * PaymentIntent we own — a dispute on a non-Bushpop charge is ignored, not an
+ * error.
+ */
+async function resolveOrderIdFromDispute(dispute: Stripe.Dispute): Promise<string | null> {
+  const piId =
+    typeof dispute.payment_intent === "string"
+      ? dispute.payment_intent
+      : (dispute.payment_intent?.id ?? null);
+  if (!piId) return null;
+
+  const [order] = await db
+    .select({ id: orders.id })
+    .from(orders)
+    .where(eq(orders.stripePaymentIntentId, piId))
+    .limit(1);
+
+  return order?.id ?? null;
+}
+
+/**
+ * `charge.dispute.created` — a chargeback was opened. Freeze the order's payout
+ * hold immediately so the disputed proceeds can't be released to the seller
+ * while the dispute is open (combined with H1's freeze wiring, this closes the
+ * "disputed funds released to seller" gap), and alert an operator.
+ *
+ * Idempotent: the webhook dedup layer plus `freezePayoutHold`'s own idempotency
+ * make redelivery a no-op. The alert fires first so a dispute is always visible
+ * to operators even if the freeze hits a transient DB error and the webhook
+ * retries.
+ */
+async function handleChargeDisputeCreated(dispute: Stripe.Dispute): Promise<void> {
+  const orderId = await resolveOrderIdFromDispute(dispute);
+  if (!orderId) {
+    console.warn(`[webhook] charge.dispute.created ${dispute.id} — no matching Bushpop order; ignoring`);
+    return;
+  }
+
+  await enqueueAdminAlert({
+    type: "dispute_created",
+    orderId,
+    disputeId: dispute.id,
+    reason: dispute.reason,
+    amountCents: dispute.amount,
+    currency: dispute.currency,
+  });
+
+  await freezePayoutHold(orderId);
+  console.info(`[webhook] charge.dispute.created ${dispute.id} — froze payout hold for order ${orderId}`);
+}
+
+/**
+ * `charge.dispute.closed` — the dispute resolved. Conservative policy: only a
+ * `won` outcome unfreezes the hold (and only if it's still frozen and in a
+ * releasable state — see `unfreezePayoutHold`); `lost` (or any other terminal
+ * status) leaves the hold frozen, because the funds have already left our
+ * platform via the chargeback and must not be paid to the seller as well.
+ * Always alerts an operator with the resolution.
+ */
+async function handleChargeDisputeClosed(dispute: Stripe.Dispute): Promise<void> {
+  const orderId = await resolveOrderIdFromDispute(dispute);
+  if (!orderId) {
+    console.warn(`[webhook] charge.dispute.closed ${dispute.id} — no matching Bushpop order; ignoring`);
+    return;
+  }
+
+  const won = dispute.status === "won";
+  const unfroze = won ? await unfreezePayoutHold(orderId) : false;
+
+  await enqueueAdminAlert({
+    type: "dispute_closed",
+    orderId,
+    disputeId: dispute.id,
+    resolution: dispute.status,
+    unfroze,
+    amountCents: dispute.amount,
+    currency: dispute.currency,
+  });
+
+  console.info(
+    `[webhook] charge.dispute.closed ${dispute.id} for order ${orderId} — status=${dispute.status}, unfroze=${unfroze}`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -754,4 +861,18 @@ export async function handlePaymentIntentSucceededForTest(paymentIntentId: strin
  */
 export async function handlePaymentIntentFailedForTest(paymentIntentId: string): Promise<void> {
   await handlePaymentIntentFailed({ id: paymentIntentId } as Stripe.PaymentIntent);
+}
+
+/**
+ * @internal Test-only: invoke the charge.dispute.created handler directly.
+ */
+export async function handleChargeDisputeCreatedForTest(dispute: Stripe.Dispute): Promise<void> {
+  await handleChargeDisputeCreated(dispute);
+}
+
+/**
+ * @internal Test-only: invoke the charge.dispute.closed handler directly.
+ */
+export async function handleChargeDisputeClosedForTest(dispute: Stripe.Dispute): Promise<void> {
+  await handleChargeDisputeClosed(dispute);
 }

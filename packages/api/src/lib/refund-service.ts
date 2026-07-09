@@ -12,7 +12,7 @@ import {
 import type { PayoutHoldStatus } from "@bushpop/types";
 import { ConflictError, ForbiddenError, NotFoundError } from "./errors.js";
 import { ORDER_STATUS_MACHINE } from "./commerce-machines.js";
-import { transitionPayoutHold } from "./payout-hold-service.js";
+import { transitionPayoutHold, freezePayoutHold } from "./payout-hold-service.js";
 import { getStripe } from "./stripe.js";
 import {
   createPaymentOp,
@@ -245,14 +245,14 @@ export async function processRefund(
     throw new ConflictError("Active refund already exists for this order");
   }
 
-  // 4. Load payout hold
-  const [hold] = await db
+  // 4. Load payout hold (existence check)
+  const [existingHold] = await db
     .select()
     .from(payoutHolds)
     .where(eq(payoutHolds.orderId, orderId))
     .limit(1);
 
-  if (!hold) {
+  if (!existingHold) {
     throw new NotFoundError(`Payout hold for order ${orderId} not found.`);
   }
 
@@ -271,6 +271,40 @@ export async function processRefund(
     .returning();
 
   const refundId = refund!.id;
+
+  // 5b. H1 — freeze the payout hold BEFORE any Stripe refund call.
+  //
+  // Without this, the pre-transfer path fires `stripe.refunds.create` while the
+  // hold is still `held` and unguarded; a concurrent `releasePayoutHold` (the
+  // always-on admin route or the release sweep) can win the `held → releasing`
+  // CAS in that window and transfer the seller's proceeds — the platform then
+  // pays BOTH sides (buyer refunded + seller transferred), and that erroneous
+  // transfer can never be reversed on retry. `freezePayoutHold` sets
+  // `frozen_at`, which `releasePayoutHold` re-checks in its entry CAS predicate
+  // AND under its session-scoped advisory lock. Because the freeze takes the
+  // SAME per-hold advisory lock the release holds continuously across
+  // `transfers.create`, this call blocks until any in-flight release has
+  // finalised — so once it returns the re-read hold status below is
+  // authoritative (never a transient `releasing` that a transfer is still
+  // completing behind).
+  //
+  // Placed AFTER the idempotency / existing-refund gates (which throw before any
+  // side effect) so an aborted refund never strands a frozen hold.
+  await freezePayoutHold(orderId);
+
+  // 5c. Re-read the hold and branch on its AUTHORITATIVE post-freeze status. If
+  // a release beat the freeze, the hold is now `released` (→ reversal path) or
+  // transiently `releasing` (→ else-branch ConflictError, retryable) — never a
+  // bare buyer refund on a hold a release may still transfer.
+  const [hold] = await db
+    .select()
+    .from(payoutHolds)
+    .where(eq(payoutHolds.orderId, orderId))
+    .limit(1);
+
+  if (!hold) {
+    throw new NotFoundError(`Payout hold for order ${orderId} not found.`);
+  }
 
   // 6. Branch on hold status
   const holdStatus = hold.status as PayoutHoldStatus;
@@ -291,6 +325,11 @@ export async function processRefund(
       stripeRefund = await stripe.refunds.create(
         {
           payment_intent: order.stripePaymentIntentId!,
+          // WP-0: pin the refund amount to the order total. Omitting `amount`
+          // refunds the full remaining charge — benign while 1 PaymentIntent
+          // maps to 1 order, but under a shared group PI (Phase-2 checkout-
+          // groups) it would refund every seller's allocation on that PI.
+          amount: order.totalCents,
           metadata: {
             piklo_payment_op_id: refundOp.id,
             piklo_order_id: orderId,
@@ -399,6 +438,9 @@ export async function processRefund(
       stripeRefund = await stripe.refunds.create(
         {
           payment_intent: order.stripePaymentIntentId!,
+          // WP-0: pin the refund amount to the order total (see the pre-transfer
+          // path above for the shared-group-PI rationale).
+          amount: order.totalCents,
           metadata: {
             piklo_payment_op_id: refundOp.id,
             piklo_order_id: orderId,
@@ -593,6 +635,8 @@ export async function resumePendingRefunds(): Promise<void> {
             stripeRefund = await stripe.refunds.create(
               {
                 payment_intent: order.stripePaymentIntentId,
+                // WP-0: pin the refund amount to the order total (see processRefund).
+                amount: order.totalCents,
                 metadata: {
                   piklo_payment_op_id: op.id,
                   piklo_order_id: orderId,
