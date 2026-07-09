@@ -20,8 +20,12 @@ import {
 import { conditionLabel } from "@/lib/condition-labels";
 import { categoryLabel } from "@/lib/category-labels";
 import { track } from "@/lib/analytics";
-import { DEFAULT_CHANNEL } from "@bushpop/config";
+import { DEFAULT_CHANNEL, GENDER_LABELS, type Gender } from "@bushpop/config";
 import { SaveSearchButton } from "./save-search-button";
+
+function genderLabel(value: string): string {
+  return GENDER_LABELS[value as Gender] ?? value;
+}
 
 interface FilterBarProps {
   basePath: "/shop" | "/search";
@@ -37,6 +41,7 @@ const FILTER_LABELS: Record<string, string> = {
   colour: "Colour",
   brand: "Brand",
   condition: "Condition",
+  gender: "Gender",
   minPrice: "Min price",
   maxPrice: "Max price",
 };
@@ -68,6 +73,7 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
   const currentSort = searchParams.get("sort") ?? "";
   const currentCondition = searchParams.get("condition") ?? "";
   const currentBrand = searchParams.get("brand") ?? "";
+  const currentGender = searchParams.get("gender") ?? "";
 
   function handleMinPrice(e: React.ChangeEvent<HTMLInputElement>) {
     pushFilter("minPrice", e.target.value);
@@ -83,6 +89,7 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
     router.push(`${basePath}?${params.toString()}`);
   }
 
+  const genderFacets = Object.entries(facetDistribution?.gender ?? {}).sort((a, b) => b[1] - a[1]);
   const categoryFacets = Object.entries(facetDistribution?.categorySlug ?? {}).sort((a, b) => b[1] - a[1]);
   const brandFacets = Object.entries(facetDistribution?.brand ?? {}).sort((a, b) => b[1] - a[1]);
   const sizeFacets = Object.entries(facetDistribution?.size ?? {}).sort((a, b) => b[1] - a[1]);
@@ -91,7 +98,7 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
   const currentSize = searchParams.get("size") ?? "";
   const currentColour = searchParams.get("colour") ?? "";
 
-  const activeFilters = ["categorySlug", "size", "colour", "brand", "condition", "minPrice", "maxPrice"]
+  const activeFilters = ["gender", "categorySlug", "size", "colour", "brand", "condition", "minPrice", "maxPrice"]
     .map((key) => ({ key, value: searchParams.get(key) }))
     .filter((f): f is { key: string; value: string } => !!f.value);
 
@@ -130,6 +137,23 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
             <SelectItem value="poor">{conditionLabel("poor")}</SelectItem>
           </SelectContent>
         </Select>
+
+        {/* Gender — first-class IA cut (W3), populated from facet counts when available */}
+        {genderFacets.length > 0 && (
+          <Select value={currentGender} onValueChange={(v) => pushFilter("gender", v === "all" ? "" : v)}>
+            <SelectTrigger className="h-9 w-32 text-sm">
+              <SelectValue placeholder="Gender" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All genders</SelectItem>
+              {genderFacets.map(([gender, count]) => (
+                <SelectItem key={gender} value={gender}>
+                  {genderLabel(gender)} ({count})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         {/* Category — populated from facet counts when available */}
         {categoryFacets.length > 0 && (
@@ -246,7 +270,9 @@ export function FilterBar({ basePath, q, facetDistribution }: FilterBarProps) {
                 ? conditionLabel(value)
                 : key === "categorySlug"
                   ? categoryLabel(value)
-                  : value}
+                  : key === "gender"
+                    ? genderLabel(value)
+                    : value}
               <span aria-hidden="true">×</span>
             </button>
           ))}

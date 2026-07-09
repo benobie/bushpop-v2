@@ -40,6 +40,7 @@ export interface BrowseFilters {
   colour?: string;
   brand?: string;
   condition?: string;
+  gender?: string;
   minPrice?: number;
   maxPrice?: number;
   sort?: "newest" | "price_asc" | "price_desc";
@@ -71,6 +72,7 @@ export async function browseListings(filters: BrowseFilters) {
         colour: filters.colour,
         brand: filters.brand,
         condition: filters.condition,
+        gender: filters.gender,
         minPrice: filters.minPrice,
         maxPrice: filters.maxPrice,
         sort: filters.sort,
@@ -128,6 +130,7 @@ export async function searchListings(filters: SearchFilters) {
         colour: filters.colour,
         brand: filters.brand,
         condition: filters.condition,
+        gender: filters.gender,
         minPrice: filters.minPrice,
         maxPrice: filters.maxPrice,
         sort: filters.sort,

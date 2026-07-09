@@ -281,6 +281,7 @@ export async function sellerDraftRoutes(app: FastifyInstance) {
               brand: z.string(),
               categoryLeaf: z.string(),
               colour: z.string(),
+              gender: z.string(),
               description: z.string(),
               confidence: z.number(),
             })

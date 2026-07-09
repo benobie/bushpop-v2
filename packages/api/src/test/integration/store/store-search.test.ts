@@ -102,5 +102,27 @@ describe("Store Search API", () => {
         Wrangler: 1,
       });
     });
+
+    it("filters by gender and returns gender facet counts — BF-15", async () => {
+      const womens = await createActiveTestListing(userId, { title: "Facet Gender Dress", gender: "women" });
+      const mens = await createActiveTestListing(userId, { title: "Facet Gender Overcoat", gender: "men" });
+      await indexTestListing(womens.id, CHANNEL_SLUG);
+      await indexTestListing(mens.id, CHANNEL_SLUG);
+
+      const facetRes = await publicRequest("GET", "/api/v1/store/search?q=facet+gender");
+      expect(facetRes.statusCode).toBe(200);
+      const facetBody = facetRes.json();
+      expect(facetBody.facetDistribution.gender).toMatchObject({
+        women: 1,
+        men: 1,
+      });
+
+      const filteredRes = await publicRequest("GET", "/api/v1/store/search?q=facet+gender&gender=women");
+      expect(filteredRes.statusCode).toBe(200);
+      const filteredBody = filteredRes.json();
+      const ids = filteredBody.items.map((i: { id: string }) => i.id);
+      expect(ids).toContain(womens.id);
+      expect(ids).not.toContain(mens.id);
+    });
   });
 });

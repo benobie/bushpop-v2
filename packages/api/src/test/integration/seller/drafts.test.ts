@@ -110,6 +110,38 @@ describe("Seller Drafts API", () => {
       expect(res.statusCode).toBe(400);
     });
 
+    it("accepts a valid gender, round-trips through GET, and doesn't score it (BF-15, optional field)", async () => {
+      const draft = await createDraft();
+      const patchRes = await authedRequest(
+        sessionToken,
+        "PATCH",
+        `/api/v1/seller/drafts/${draft.id}/details`,
+        { version: 1, gender: "unisex" },
+      );
+      expect(patchRes.statusCode).toBe(200);
+      expect(patchRes.json().gender).toBe("unisex");
+      // Optional field — not part of the listing-strength rubric (still 0 with nothing else set).
+      expect(patchRes.json().strength.score).toBe(0);
+
+      const getRes = await authedRequest(
+        sessionToken,
+        "GET",
+        `/api/v1/seller/drafts/${draft.id}`,
+      );
+      expect(getRes.json().gender).toBe("unisex");
+    });
+
+    it("rejects genders outside the taxonomy enum", async () => {
+      const draft = await createDraft();
+      const res = await authedRequest(
+        sessionToken,
+        "PATCH",
+        `/api/v1/seller/drafts/${draft.id}/details`,
+        { version: 1, gender: "nonbinary-cat" },
+      );
+      expect(res.statusCode).toBe(400);
+    });
+
     it("409s on a stale version", async () => {
       const draft = await createDraft();
       await authedRequest(sessionToken, "PATCH", `/api/v1/seller/drafts/${draft.id}/details`, {

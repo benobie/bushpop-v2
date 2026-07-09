@@ -90,6 +90,7 @@ function buildDraft(overrides: Partial<SellDraft> = {}): SellDraft {
     size: "M",
     sizeScale: "alpha",
     colour: "Black",
+    gender: null,
     description:
       "Gore-Tex shell in excellent condition with pit zips, storm hood and clean cuffs.",
     condition: "Excellent",
@@ -154,6 +155,7 @@ function buildDraft(overrides: Partial<SellDraft> = {}): SellDraft {
     aiSuggestedBrand: null,
     aiSuggestedCategory: null,
     aiSuggestedColour: null,
+    aiSuggestedGender: null,
     aiConfidence: null,
     createdAt: "2026-07-04T00:00:00.000Z",
     updatedAt: "2026-07-04T00:10:00.000Z",

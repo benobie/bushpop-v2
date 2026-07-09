@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { createBrowserApiClient } from "@bushpop/api-client/browser";
 import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Badge } from "@bushpop/ui";
-import { COLOURS } from "@bushpop/config";
+import { COLOURS, GENDERS, GENDER_LABELS } from "@bushpop/config";
 import { compressImageForUpload } from "@/components/sell/photos-step";
 
 /**
@@ -25,11 +25,13 @@ type DraftItem = {
   categoryId: string | null;
   size: string | null;
   colour: string | null;
+  gender: string | null;
   condition: string | null;
   askingPriceCents: number | null;
   aiTitle: string | null;
   aiSuggestedBrand: string | null;
   aiSuggestedColour: string | null;
+  aiSuggestedGender: string | null;
   aiConfidence: number | null;
   images: Array<{ id: string; url: string; thumbUrl: string; status: string; isPrimary: boolean }>;
   strength: { score: number; band: string; missing: Array<{ key: string }> };
@@ -211,6 +213,7 @@ export function BatchWorkspace({
       title: item.aiTitle ?? item.title,
       brand: item.aiSuggestedBrand ?? item.brand,
       colour: item.aiSuggestedColour ?? item.colour,
+      gender: item.aiSuggestedGender ?? item.gender,
     });
   }
 
@@ -322,6 +325,22 @@ export function BatchWorkspace({
                     {COLOURS.map((c) => (
                       <SelectItem key={c} value={c}>
                         {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select
+                  value={item.gender ?? undefined}
+                  onValueChange={(gender) => patchDetails(item, { gender })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {GENDERS.map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {GENDER_LABELS[g]}
                       </SelectItem>
                     ))}
                   </SelectContent>

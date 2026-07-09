@@ -1618,6 +1618,7 @@ export interface paths {
                             size: string | null;
                             sizeScale: string | null;
                             colour: string | null;
+                            gender: string | null;
                             description: string | null;
                             condition: string | null;
                             conditionNotes: string | null;
@@ -1667,6 +1668,7 @@ export interface paths {
                             aiSuggestedBrand: string | null;
                             aiSuggestedCategory: string | null;
                             aiSuggestedColour: string | null;
+                            aiSuggestedGender: string | null;
                             aiConfidence: number | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -1725,6 +1727,7 @@ export interface paths {
                             size: string | null;
                             sizeScale: string | null;
                             colour: string | null;
+                            gender: string | null;
                             description: string | null;
                             condition: string | null;
                             conditionNotes: string | null;
@@ -1774,6 +1777,7 @@ export interface paths {
                             aiSuggestedBrand: string | null;
                             aiSuggestedCategory: string | null;
                             aiSuggestedColour: string | null;
+                            aiSuggestedGender: string | null;
                             aiConfidence: number | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -1826,6 +1830,7 @@ export interface paths {
                         /** @enum {string|null} */
                         sizeScale?: "alpha" | "au" | "shoe" | null;
                         colour?: string | null;
+                        gender?: string | null;
                         description?: string | null;
                     };
                 };
@@ -1854,6 +1859,7 @@ export interface paths {
                             size: string | null;
                             sizeScale: string | null;
                             colour: string | null;
+                            gender: string | null;
                             description: string | null;
                             condition: string | null;
                             conditionNotes: string | null;
@@ -1903,6 +1909,7 @@ export interface paths {
                             aiSuggestedBrand: string | null;
                             aiSuggestedCategory: string | null;
                             aiSuggestedColour: string | null;
+                            aiSuggestedGender: string | null;
                             aiConfidence: number | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -1988,6 +1995,7 @@ export interface paths {
                             size: string | null;
                             sizeScale: string | null;
                             colour: string | null;
+                            gender: string | null;
                             description: string | null;
                             condition: string | null;
                             conditionNotes: string | null;
@@ -2037,6 +2045,7 @@ export interface paths {
                             aiSuggestedBrand: string | null;
                             aiSuggestedCategory: string | null;
                             aiSuggestedColour: string | null;
+                            aiSuggestedGender: string | null;
                             aiConfidence: number | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -2105,6 +2114,7 @@ export interface paths {
                             size: string | null;
                             sizeScale: string | null;
                             colour: string | null;
+                            gender: string | null;
                             description: string | null;
                             condition: string | null;
                             conditionNotes: string | null;
@@ -2154,6 +2164,7 @@ export interface paths {
                             aiSuggestedBrand: string | null;
                             aiSuggestedCategory: string | null;
                             aiSuggestedColour: string | null;
+                            aiSuggestedGender: string | null;
                             aiConfidence: number | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -2224,6 +2235,7 @@ export interface paths {
                             size: string | null;
                             sizeScale: string | null;
                             colour: string | null;
+                            gender: string | null;
                             description: string | null;
                             condition: string | null;
                             conditionNotes: string | null;
@@ -2273,6 +2285,7 @@ export interface paths {
                             aiSuggestedBrand: string | null;
                             aiSuggestedCategory: string | null;
                             aiSuggestedColour: string | null;
+                            aiSuggestedGender: string | null;
                             aiConfidence: number | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -2495,6 +2508,7 @@ export interface paths {
                             size: string | null;
                             sizeScale: string | null;
                             colour: string | null;
+                            gender: string | null;
                             description: string | null;
                             condition: string | null;
                             conditionNotes: string | null;
@@ -2544,6 +2558,7 @@ export interface paths {
                             aiSuggestedBrand: string | null;
                             aiSuggestedCategory: string | null;
                             aiSuggestedColour: string | null;
+                            aiSuggestedGender: string | null;
                             aiConfidence: number | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -2645,6 +2660,7 @@ export interface paths {
                                 brand: string;
                                 categoryLeaf: string;
                                 colour: string;
+                                gender: string;
                                 description: string;
                                 confidence: number;
                             } | null;
@@ -2803,6 +2819,7 @@ export interface paths {
                                 size: string | null;
                                 sizeScale: string | null;
                                 colour: string | null;
+                                gender: string | null;
                                 description: string | null;
                                 condition: string | null;
                                 conditionNotes: string | null;
@@ -2852,6 +2869,7 @@ export interface paths {
                                 aiSuggestedBrand: string | null;
                                 aiSuggestedCategory: string | null;
                                 aiSuggestedColour: string | null;
+                                aiSuggestedGender: string | null;
                                 aiConfidence: number | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -2932,6 +2950,7 @@ export interface paths {
                                 size: string | null;
                                 sizeScale: string | null;
                                 colour: string | null;
+                                gender: string | null;
                                 description: string | null;
                                 condition: string | null;
                                 conditionNotes: string | null;
@@ -2981,6 +3000,7 @@ export interface paths {
                                 aiSuggestedBrand: string | null;
                                 aiSuggestedCategory: string | null;
                                 aiSuggestedColour: string | null;
+                                aiSuggestedGender: string | null;
                                 aiConfidence: number | null;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -3651,6 +3671,7 @@ export interface paths {
                     colour?: string;
                     brand?: string;
                     condition?: string;
+                    gender?: string;
                     minPrice?: number;
                     maxPrice?: number;
                     sort?: "newest" | "price_asc" | "price_desc";
@@ -3680,6 +3701,7 @@ export interface paths {
                                 size: string | null;
                                 colour: string | null;
                                 condition: string | null;
+                                gender: string | null;
                                 categorySlug: string | null;
                                 seller: {
                                     id: string;
@@ -3728,6 +3750,7 @@ export interface paths {
                     colour?: string;
                     brand?: string;
                     condition?: string;
+                    gender?: string;
                     minPrice?: number;
                     maxPrice?: number;
                     sort?: "newest" | "price_asc" | "price_desc";
@@ -3758,6 +3781,7 @@ export interface paths {
                                 size: string | null;
                                 colour: string | null;
                                 condition: string | null;
+                                gender: string | null;
                                 categorySlug: string | null;
                                 seller: {
                                     id: string;

@@ -2,14 +2,16 @@ import { z } from "zod";
 
 /**
  * AI draft output contract (D12): {title, brand, category_leaf, colour,
- * description, confidence}. Empty string = "unsure" for brand/category/colour
- * — the model is told to never guess brands.
+ * gender, description, confidence}. Empty string = "unsure" for
+ * brand/category/colour/gender — the model is told to never guess brands,
+ * and to prefer "" over a guessed gender (BF-15 — socially sensitive).
  */
 export const aiDraftRawSchema = z.object({
   title: z.string().min(1).max(255),
   brand: z.string().max(100),
   category_leaf: z.string().max(100),
   colour: z.string().max(30),
+  gender: z.string().max(10),
   description: z.string().min(1).max(2000),
   confidence: z.number().min(0).max(1),
 });
@@ -27,10 +29,11 @@ export const AI_DRAFT_JSON_SCHEMA = {
     brand: { type: "string" },
     category_leaf: { type: "string" },
     colour: { type: "string" },
+    gender: { type: "string" },
     description: { type: "string" },
     confidence: { type: "number" },
   },
-  required: ["title", "brand", "category_leaf", "colour", "description", "confidence"],
+  required: ["title", "brand", "category_leaf", "colour", "gender", "description", "confidence"],
 } as const;
 
 /**
