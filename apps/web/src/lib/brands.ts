@@ -975,50 +975,6 @@ export const BRANDS: Brand[] = [
     lastVerified: "July 2026",
   },
   {
-    slug: "veronika-maine",
-    name: "Veronika Maine",
-    category: "Australian fashion · women's",
-    unitNote:
-      "Veronika Maine uses AU numeric sizing (6–14). Its chart is published in centimetres and matches sister label Cue's chart.",
-    answer:
-      "Veronika Maine is the sister label to Cue, both designed under Cue Clothing Co, and its official size guide publishes the same centimetre chart as Cue. Sizing runs on an AU numeric range from 6 to 14: a size 10 fits a 92cm bust, 77cm waist and 103cm hip, with each size stepping evenly by 5cm. The published international conversion maps an AU 10 to a UK 12, US 8 and EU 40, one step higher on the UK scale than many Australian labels print. Veronika Maine's range leans into tailored workwear and structured knits, which carry less ease than relaxed casual cuts, so sitting between sizes usually means taking the larger one. Because the brand shares its size guide with Cue, preloved buyers can size confidently across both labels; a flat measurement against the chart remains the safest check on fitted pieces.",
-    sizeRows: [
-      { size: "6", bust: "82", waist: "67", hip: "93" },
-      { size: "8", bust: "87", waist: "72", hip: "98" },
-      { size: "10", bust: "92", waist: "77", hip: "103" },
-      { size: "12", bust: "97", waist: "82", hip: "108" },
-      { size: "14", bust: "102", waist: "87", hip: "113" },
-    ],
-    hasLetters: false,
-    intl: [
-      { au: "6", us: "4", uk: "8", eu: "36" },
-      { au: "8", us: "6", uk: "10", eu: "38" },
-      { au: "10", us: "8", uk: "12", eu: "40" },
-      { au: "12", us: "10", uk: "14", eu: "42" },
-      { au: "14", us: "12", uk: "16", eu: "44" },
-    ],
-    fitNote:
-      "Veronika Maine shares its official size chart with sister label Cue (both Cue Clothing Co). The range leans tailored, so fitted blazers, dresses and structured knits carry less ease than casual cuts; measure flat against the chart when buying preloved.",
-    faqs: [
-      {
-        q: "Is Veronika Maine sizing the same as Cue?",
-        a: "Yes. Veronika Maine and Cue are sister labels under Cue Clothing Co, and Veronika Maine's official size guide publishes the same centimetre chart: a size 10 is a 92cm bust, 77cm waist and 103cm hip in both. If you know your Cue size, it carries straight across.",
-      },
-      {
-        q: "What is a Veronika Maine size 12 in cm?",
-        a: "A Veronika Maine size 12 fits a 97cm bust, 82cm waist and 108cm hip on the official chart. Sizes step evenly by 5cm, running from a size 6 at 82cm bust, 67cm waist and 93cm hip to a size 14 at 102cm bust, 87cm waist and 113cm hip.",
-      },
-      {
-        q: "What is Veronika Maine's size range?",
-        a: "The official chart covers AU 6 to 14 only, with no letter sizing and no plus range. The published conversion maps an AU 10 to a UK 12, US 8 and EU 40, one step higher on the UK scale than many Australian brands use.",
-      },
-    ],
-    verified: "medium",
-    cmConverted: false,
-    sources: ["https://www.veronikamaine.com.au/pages/garment-care-and-sizing"],
-    lastVerified: "July 2026",
-  },
-  {
     slug: "sussan",
     name: "Sussan",
     category: "Australian fashion · women's",
@@ -1242,9 +1198,9 @@ export const BRANDS: Brand[] = [
     name: "Kmart",
     category: "Australian department stores · women's",
     unitNote:
-      "Kmart uses AU numeric sizing (6–26) with no letter labels, published in centimetres and inches. Heads-up: at sizes 24 and 26 Kmart's own published waist (116cm, then 121cm) steps out of its otherwise even 5cm grading and looks like an error in Kmart's chart, so measure the garment's waist to be sure.",
+      "Kmart uses AU numeric sizing with no letter labels, published in centimetres and inches. Kmart's own chart continues to a size 26, but we show it only to 22 — see the note below the table.",
     answer:
-      "Kmart is Australia's biggest discount department store, and its clothing all hangs off one published body chart covering tops, bottoms, dresses and jackets, including underwear and shapewear but not bras. Sizing is AU numeric only, from 6 to 26, with no letter labels anywhere on the chart. A size 12 fits a 95cm bust, 76cm waist and 101cm hip, and sizes step evenly by 5cm through the core range. The table below shows the full 6 to 26 range as Kmart publishes it, though note the waist column jumps unusually at sizes 24 and 26 (116cm then 121cm, breaking the even 5cm grading); this appears to be an error in Kmart's own chart, so measure the waist rather than trust the number. Kmart also adds separate plus-size (18 to 26) and maternity (8 to 18) charts with their own measurements, so check the right chart for those labels. Kmart publishes the chart in both centimetres and inches. Because Kmart pieces are everywhere secondhand, the numeric tag plus the chart above is usually all you need to size a piece confidently.",
+      "Kmart is Australia's biggest discount department store, and its clothing all hangs off one published body chart covering tops, bottoms, dresses and jackets, including underwear and shapewear but not bras. Sizing is AU numeric only, with no letter labels anywhere on the chart. A size 12 fits a 95cm bust, 76cm waist and 101cm hip, and sizes step evenly by 5cm through the range. Kmart's own chart continues past a size 22 to a 26, but its published waist figures at 24 and 26 break that even 5cm grading, so we show the chart only to a size 22 rather than republish measurements we believe are wrong; check Kmart's own guide for the larger sizes and measure the garment's waist. Kmart also adds separate plus-size (18 to 26) and maternity (8 to 18) charts with their own measurements, so check the right chart for those labels. Because Kmart pieces are everywhere secondhand, the numeric tag plus the chart above is usually all you need to size a piece confidently.",
     sizeRows: [
       { size: "6", bust: "80", waist: "61", hip: "86" },
       { size: "8", bust: "85", waist: "66", hip: "91" },
@@ -1255,8 +1211,14 @@ export const BRANDS: Brand[] = [
       { size: "18", bust: "110", waist: "91", hip: "116" },
       { size: "20", bust: "115", waist: "96", hip: "121" },
       { size: "22", bust: "120", waist: "101", hip: "126" },
-      { size: "24", bust: "125", waist: "116", hip: "131" },
-      { size: "26", bust: "130", waist: "121", hip: "136" },
+      // Sizes 24 and 26 deliberately omitted. Kmart publishes waist 116cm at 24
+      // and 121cm at 26, a +15cm jump from the 101cm at 22 that breaks its own
+      // even 5cm grading; the inches toggle carries the same anomaly, so it reads
+      // as an error in Kmart's chart rather than a transcription slip. Kmart has
+      // no standalone chart URL (the source is a site-wide product-page modal) and
+      // kmart.com.au returns 403 to fetchers, so the figures cannot be independently
+      // confirmed. Per the accuracy contract at the top of this file we omit rather
+      // than republish a suspect measurement. Do not restore without a verifiable source.
     ],
     hasLetters: false,
     fitNote:
@@ -1268,14 +1230,14 @@ export const BRANDS: Brand[] = [
       },
       {
         q: "Does Kmart use letter sizes like S, M and L?",
-        a: "No. Kmart's women's clothing chart is AU numeric only, running from 6 to 26, with no published letter equivalents. Measure against the centimetre chart directly rather than converting from a letter size you wear in another brand.",
+        a: "No. Kmart's women's clothing chart is AU numeric only, with no published letter equivalents. Measure against the centimetre chart directly rather than converting from a letter size you wear in another brand.",
       },
       {
         q: "What sizes does the Kmart women's chart cover?",
-        a: "Kmart's main chart runs from a size 6 to 26 with the same bust, waist and hip columns throughout, all shown in the table above. One quirk: the waist reads 116cm at size 24 and 121cm at size 26, which breaks Kmart's even 5cm grading and looks like an error in their own chart, so measure the waist to be sure. Kmart also publishes separate plus-size (18 to 26) and maternity (8 to 18) charts with their own measurements, so check Kmart's own guide when a garment is tagged plus or maternity.",
+        a: "Kmart's own chart runs from a size 6 to a 26, but the table above stops at 22. Kmart's published waist reads 116cm at a size 24 and 121cm at a 26, a jump from 101cm at a size 22 that breaks its otherwise even 5cm grading and looks like an error in Kmart's chart. Rather than republish a measurement we think is wrong, we have left those two rows out; check Kmart's own guide for sizes 24 and 26 and measure the garment's waist. Kmart also publishes separate plus-size (18 to 26) and maternity (8 to 18) charts with their own measurements, so check those when a garment is tagged plus or maternity.",
       },
     ],
-    verified: "high",
+    verified: "medium",
     cmConverted: false,
     sources: [
       "https://www.kmart.com.au/product/short-sleeve-cotton-t-shirt-s169511/",

@@ -149,6 +149,13 @@ export default async function BrandSizeChartPage({
         </p>
       )}
 
+      {brand.verified === "medium" && (
+        <p className="text-xs text-ink-3 mb-8">
+          Note: we could not fully confirm this chart against a standalone
+          official source. Measure the garment flat before buying.
+        </p>
+      )}
+
       {brand.intl && (
         <>
           <h2 className="font-head text-2xl font-bold mb-4">
