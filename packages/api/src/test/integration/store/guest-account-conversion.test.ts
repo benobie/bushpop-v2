@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
 import {
+  cartItems,
   carts,
   checkoutSessions,
   orders,
@@ -166,15 +167,32 @@ describe("Guest → account conversion (guest merge)", () => {
     expect(await anonRow(guest.user.id)).toBeUndefined();
   });
 
-  it("re-parents a checkout session when the guest's cart is merged into an existing account cart", async () => {
+  it("releases a checkout email captured in a different case to the sign-up email", async () => {
+    const guest = await signInAnonymousTestUser();
+    const email = `Guest-Case-${Date.now()}@Example.com`;
+    await setGuestCheckoutEmail(guest.user.id, email);
+    await insertPaidOrder(guest.user.id);
+
+    const linked = await linkAnonymousToNewAccount(guest.sessionToken, {
+      email: email.toLowerCase(),
+    });
+
+    expect(linked.user.email).toBe(email.toLowerCase());
+    expect(await anonRow(guest.user.id)).toBeUndefined();
+  });
+
+  it("keeps the pinned guest cart and retires the account's cart into it, never re-pointing a session", async () => {
     const listing = await createActiveTestListing(sellerId, { priceCents: 3000 });
 
-    // Real account already has a cart in this channel — forces the merge-and-drop branch.
+    // Real account already has a cart in this channel — forces the two-cart branch.
     const real = await signUpTestUser();
     await authedRequest(real.sessionToken, "POST", "/api/v1/store/cart/items", {
       listingId: listing.id,
     });
+    const [realCart] = await db.select().from(carts).where(eq(carts.buyerId, real.user.id));
 
+    // The guest cart is pinned by a checkout session, so it must survive with
+    // its id intact — that session is quoted against exactly these items.
     const guest = await signInAnonymousTestUser();
     const { session, cart: guestCart } = await insertPaidOrder(guest.user.id);
 
@@ -191,18 +209,61 @@ describe("Guest → account conversion (guest merge)", () => {
     });
     expect(signInRes.statusCode).toBe(200);
 
-    // Guest cart dropped, and its checkout session followed the buyer across
-    // rather than dangling against a deleted cart.
-    expect((await db.select().from(carts).where(eq(carts.id, guestCart.id)))[0]).toBeUndefined();
+    // Guest cart survives, now owned by the real account; the account's own
+    // cart is the one retired.
+    const [survivor] = await db.select().from(carts).where(eq(carts.id, guestCart.id));
+    expect(survivor!.buyerId).toBe(real.user.id);
+    expect((await db.select().from(carts).where(eq(carts.id, realCart!.id)))[0]).toBeUndefined();
 
+    // The session still points at the cart it was quoted against.
     const [reloadedSession] = await db
       .select()
       .from(checkoutSessions)
       .where(eq(checkoutSessions.id, session.id));
     expect(reloadedSession!.buyerId).toBe(real.user.id);
-    expect(reloadedSession!.cartId).not.toBe(guestCart.id);
+    expect(reloadedSession!.cartId).toBe(guestCart.id);
+
+    // …and the retired cart's item came across.
+    const items = await db.select().from(cartItems).where(eq(cartItems.cartId, guestCart.id));
+    expect(items.map((i) => i.channelListingId)).toContain(listing.id);
 
     expect(await anonRow(guest.user.id)).toBeUndefined();
+  });
+
+  it("leaves both carts alone when each is pinned, still moving the orders and freeing the email", async () => {
+    const real = await signUpTestUser();
+    const { cart: realCart } = await insertPaidOrder(real.user.id);
+
+    const guest = await signInAnonymousTestUser();
+    const email = `guest-bothpinned-${Date.now()}@example.com`;
+    await setGuestCheckoutEmail(guest.user.id, email);
+    const { order, cart: guestCart } = await insertPaidOrder(guest.user.id);
+
+    const app = await getTestApp();
+    const signInRes = await app.inject({
+      method: "POST",
+      url: "/api/auth/sign-in/email",
+      headers: {
+        "content-type": "application/json",
+        "x-channel": "bushpop",
+        cookie: `better-auth.session_token=${guest.sessionToken}`,
+      },
+      payload: { email: real.user.email, password: "TestPassword123!" },
+    });
+    expect(signInRes.statusCode).toBe(200);
+
+    // Neither quote is disturbed.
+    expect((await db.select().from(carts).where(eq(carts.id, guestCart.id)))[0]).toBeDefined();
+    expect((await db.select().from(carts).where(eq(carts.id, realCart.id)))[0]).toBeDefined();
+
+    // The buyer still gets their order…
+    const [reloadedOrder] = await db.select().from(orders).where(eq(orders.id, order.id));
+    expect(reloadedOrder!.buyerId).toBe(real.user.id);
+
+    // …and even though the guest row can't be deleted here, it no longer
+    // squats the customer's email.
+    const holders = await db.select().from(user).where(eq(user.email, email));
+    expect(holders).toHaveLength(0);
   });
 
   it("carries favourites and saved searches across, skipping ones the account already has", async () => {

@@ -63,7 +63,10 @@ export const auth = betterAuth({
 
       const session = await getSessionFromCtx(ctx, { disableRefresh: true });
       const guest = session?.user;
-      if (guest?.isAnonymous && guest.email === email) {
+      // Compared case-insensitively: checkout stores the address verbatim,
+      // while sign-up canonicalises it, so `Alice@x` and `alice@x` are the
+      // same collision.
+      if (guest?.isAnonymous && guest.email.toLowerCase() === email.toLowerCase()) {
         await releaseAnonymousEmail(guest.id);
       }
     }),

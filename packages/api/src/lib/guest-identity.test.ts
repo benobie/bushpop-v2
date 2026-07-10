@@ -32,7 +32,10 @@ describe("mergeAnonymousIdentity", () => {
       currency: "AUD",
     };
 
-    const selectResults: unknown[] = [[anonCart], [], [realCart], [anonItem]];
+    // In order: anon carts, real cart lookup, real cart re-read after the
+    // 23505, the guest cart's checkout-session and order-group reference
+    // probes (both empty → cart is free to delete), then its line items.
+    const selectResults: unknown[] = [[anonCart], [], [realCart], [], [], [anonItem]];
 
     const nestedUpdateWhereMock = vi.fn().mockRejectedValue({ cause: { code: "23505" } });
     const insertValuesMock = vi.fn().mockReturnValue({
@@ -54,7 +57,13 @@ describe("mergeAnonymousIdentity", () => {
     const tx = {
       select: vi.fn().mockImplementation(() => ({
         from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockImplementation(async () => selectResults.shift() ?? []),
+        // Awaitable, and also chainable with .limit() for the reference probes.
+        where: vi.fn().mockImplementation(() => {
+          const rows = selectResults.shift() ?? [];
+          return Object.assign(Promise.resolve(rows), {
+            limit: () => Promise.resolve(rows),
+          });
+        }),
       })),
       update: vi.fn().mockImplementation(() => ({
         set: vi.fn().mockImplementation((payload: Record<string, unknown>) => {
@@ -83,13 +92,10 @@ describe("mergeAnonymousIdentity", () => {
       priceCents: anonItem.priceCents,
       currency: anonItem.currency,
     });
+    // The unreferenced guest cart is the one dropped, and no cart_id is ever
+    // rewritten — a checkout session stays quoted against its own cart.
     expect(deleteWhereMock).toHaveBeenCalledTimes(1);
-
-    // The guest's checkout sessions are re-pointed at the surviving cart
-    // BEFORE that cart is dropped — checkout_sessions.cart_id is NO ACTION.
-    const repointIndex = updatePayloads.findIndex((p) => p.cartId === realCart.id);
-    expect(repointIndex).toBeGreaterThanOrEqual(0);
-    expect(tx.delete).toHaveBeenCalledTimes(1);
+    expect(updatePayloads.some((p) => "cartId" in p)).toBe(false);
 
     // Every buyer-owned column moves to the real account.
     const reassigned = updatePayloads.filter(

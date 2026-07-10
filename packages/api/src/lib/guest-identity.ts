@@ -37,6 +37,44 @@ export function anonymousPlaceholderEmail(): string {
   return `temp-${ulid()}@${GUEST_EMAIL_DOMAIN}`;
 }
 
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Whether anything pins this cart to a specific set of line items. Both FKs
+ * are NO ACTION, so a referenced cart cannot be deleted either.
+ */
+async function cartHasReferences(tx: Tx, cartId: string): Promise<boolean> {
+  const [session] = await tx
+    .select({ id: checkoutSessions.id })
+    .from(checkoutSessions)
+    .where(eq(checkoutSessions.cartId, cartId))
+    .limit(1);
+  if (session) return true;
+
+  const [group] = await tx
+    .select({ id: orderGroups.id })
+    .from(orderGroups)
+    .where(eq(orderGroups.cartId, cartId))
+    .limit(1);
+  return Boolean(group);
+}
+
+/** Copy `fromCartId`'s line items into `toCartId`, skipping listings it already has. */
+async function mergeCartItems(tx: Tx, fromCartId: string, toCartId: string): Promise<void> {
+  const items = await tx.select().from(cartItems).where(eq(cartItems.cartId, fromCartId));
+  for (const item of items) {
+    await tx
+      .insert(cartItems)
+      .values({
+        cartId: toCartId,
+        channelListingId: item.channelListingId,
+        priceCents: item.priceCents,
+        currency: item.currency,
+      })
+      .onConflictDoNothing({ target: [cartItems.cartId, cartItems.channelListingId] });
+  }
+}
+
 /**
  * Guest commerce (BF-08) — merges an anonymous buyer's cart + addresses into
  * a real account the moment they sign up or sign in (better-auth's
@@ -103,31 +141,39 @@ export async function mergeAnonymousIdentity(anonymousUserId: string, realUserId
         }
       }
 
-      // Real account already has a cart for this channel — merge line items
-      // (skip any listing already present rather than erroring) then drop
-      // the now-empty guest cart.
-      const anonItems = await tx.select().from(cartItems).where(eq(cartItems.cartId, anonCart.id));
-      for (const item of anonItems) {
-        await tx
-          .insert(cartItems)
-          .values({
-            cartId: existingCart.id,
-            channelListingId: item.channelListingId,
-            priceCents: item.priceCents,
-            currency: item.currency,
-          })
-          .onConflictDoNothing({ target: [cartItems.cartId, cartItems.channelListingId] });
-      }
-      // checkout_sessions.cartId FKs the cart with NO ACTION, so any session
-      // the guest opened against this cart has to follow it across before the
-      // cart can be dropped. The session's money snapshot lives on its own
-      // row, not the cart, so re-pointing it changes no amounts.
-      await tx
-        .update(checkoutSessions)
-        .set({ cartId: existingCart.id })
-        .where(eq(checkoutSessions.cartId, anonCart.id));
+      // Real account already has a cart for this channel, so one of the two
+      // carts has to go. Whichever survives keeps its id: a checkout session
+      // or order group is quoted against a specific cart, and both the reuse
+      // path (`initiateCheckout`) and the late-payment path
+      // (`handlePaymentAfterExpiry`) rebuild from that cart's current items.
+      // Re-pointing cart_id would silently re-quote them against the merged
+      // contents. So a cart is only ever deleted when nothing references it.
+      const anonCartBlocked = await cartHasReferences(tx, anonCart.id);
 
-      await tx.delete(carts).where(eq(carts.id, anonCart.id));
+      if (!anonCartBlocked) {
+        await mergeCartItems(tx, anonCart.id, existingCart.id);
+        await tx.delete(carts).where(eq(carts.id, anonCart.id));
+        continue;
+      }
+
+      if (await cartHasReferences(tx, existingCart.id)) {
+        // Both carts are pinned by a checkout session or order group. Leave
+        // them alone rather than corrupt either quote — every user-owned row
+        // below still moves across, so the buyer keeps their orders. The
+        // anonymous row survives this round; its email is released at the end
+        // of the transaction so it can never squat one.
+        console.warn(
+          "[guest-identity] Skipped cart merge: both carts have checkout sessions or order groups",
+          { anonymousUserId, realUserId, anonCartId: anonCart.id, realCartId: existingCart.id },
+        );
+        continue;
+      }
+
+      // Only the guest cart is pinned — keep it and retire the real account's
+      // cart into it instead.
+      await mergeCartItems(tx, existingCart.id, anonCart.id);
+      await tx.delete(carts).where(eq(carts.id, existingCart.id));
+      await tx.update(carts).set({ buyerId: realUserId }).where(eq(carts.id, anonCart.id));
     }
 
     // Reassign any addresses the guest entered (e.g. at checkout) — no
@@ -181,6 +227,15 @@ export async function mergeAnonymousIdentity(anonymousUserId: string, realUserId
           )
         )
     `);
+
+    // The guest row is about to be deleted, and setGuestCheckoutEmail may have
+    // stamped the customer's real email on it. Hand that email back now, so a
+    // delete that fails anyway (a cart we declined to merge above) can never
+    // leave the row squatting an address nobody can sign up with.
+    await tx
+      .update(user)
+      .set({ email: anonymousPlaceholderEmail(), updatedAt: new Date() })
+      .where(and(eq(user.id, anonymousUserId), eq(user.isAnonymous, true)));
   });
 }
 
