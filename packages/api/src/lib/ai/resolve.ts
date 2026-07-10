@@ -3,6 +3,7 @@ import {
   BRANDS,
   COLOURS,
   findProhibitedTerms,
+  GENDERS,
 } from "@bushpop/config";
 import type { AiDraftRaw } from "./draft-schema.js";
 
@@ -19,6 +20,7 @@ export interface ResolvedDraft {
   brand: string;
   categoryLeaf: string;
   colour: string;
+  gender: string;
   description: string;
   confidence: number;
 }
@@ -103,6 +105,10 @@ export function resolveColour(raw: string): string {
   return matchAgainst(raw, COLOURS);
 }
 
+export function resolveGender(raw: string): string {
+  return matchAgainst(raw, GENDERS);
+}
+
 export function resolveDraft(raw: AiDraftRaw): ResolveResult {
   const hits = findProhibitedTerms(
     `${raw.title}\n${raw.brand}\n${raw.description}`,
@@ -118,6 +124,7 @@ export function resolveDraft(raw: AiDraftRaw): ResolveResult {
       brand: resolveBrand(raw.brand),
       categoryLeaf: resolveCategoryLeaf(raw.category_leaf),
       colour: resolveColour(raw.colour),
+      gender: resolveGender(raw.gender),
       description: raw.description.trim().slice(0, 2000),
       confidence: raw.confidence,
     },

@@ -23,12 +23,15 @@ import {
 } from "./service.js";
 import type { ListingStatus } from "../../../../lib/inventory-machines.js";
 
-const sellerPreHandlers = [requireAuth, requireRole("seller")];
+// Factory, not a shared array: @fastify/rate-limit pushes its handler onto the
+// preHandler array it is handed, for every route. Two routes sharing one array
+// reference would silently share a single limiter bucket.
+const sellerPreHandlers = () => [requireAuth, requireRole("seller")];
 
 export async function sellerListingRoutes(app: FastifyInstance) {
   // POST /api/v1/seller/listings
   app.post("/api/v1/seller/listings", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Listings"],
       summary: "Create a draft listing",
@@ -43,7 +46,7 @@ export async function sellerListingRoutes(app: FastifyInstance) {
 
   // GET /api/v1/seller/listings
   app.get("/api/v1/seller/listings", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Listings"],
       summary: "List own listings",
@@ -57,7 +60,7 @@ export async function sellerListingRoutes(app: FastifyInstance) {
 
   // GET /api/v1/seller/listings/:id
   app.get("/api/v1/seller/listings/:id", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Listings"],
       summary: "Get a listing",
@@ -71,7 +74,7 @@ export async function sellerListingRoutes(app: FastifyInstance) {
 
   // PATCH /api/v1/seller/listings/:id
   app.patch("/api/v1/seller/listings/:id", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Listings"],
       summary: "Update a listing",
@@ -87,7 +90,7 @@ export async function sellerListingRoutes(app: FastifyInstance) {
 
   // PATCH /api/v1/seller/listings/:id/status
   app.patch("/api/v1/seller/listings/:id/status", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Listings"],
       summary: "Transition listing status",
@@ -103,7 +106,7 @@ export async function sellerListingRoutes(app: FastifyInstance) {
 
   // GET /api/v1/seller/listings/:id/score
   app.get("/api/v1/seller/listings/:id/score", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Listings"],
       summary: "Get listing quality score and nudge",
@@ -117,7 +120,7 @@ export async function sellerListingRoutes(app: FastifyInstance) {
 
   // PATCH /api/v1/seller/listings/:id/archive
   app.patch("/api/v1/seller/listings/:id/archive", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Listings"],
       summary: "Archive a listing",

@@ -333,7 +333,7 @@ export async function publishDraft(
 
 /**
  * "List another like this" (D17): keeps brand / category (parent+leaf) /
- * colour / shipping option / parcel (+ derived class, + size scale);
+ * colour / gender / shipping option / parcel (+ derived class, + size scale);
  * clears photos, title, description, price, RRP, measurements, condition,
  * size and the legal agree (which is never persisted anyway).
  */
@@ -347,6 +347,7 @@ export async function duplicateDraft(itemId: string, ownerId: string) {
       brand: source.brand,
       categoryId: source.categoryId,
       colour: source.colour,
+      gender: source.gender,
       sizeScale: source.sizeScale,
       shippingOption: source.shippingOption,
       parcelSize: source.parcelSize,

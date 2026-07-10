@@ -8,6 +8,8 @@ import {
   COLOUR_LABELS,
   GARMENT_TYPES,
   type GarmentType,
+  GENDERS,
+  GENDER_LABELS,
   SIZE_CHART_BRAND_SLUGS,
   SIZES_BY_GARMENT,
 } from "@bushpop/config";
@@ -224,7 +226,8 @@ function hasAnyAiSuggestions(draft: SellDraft | null | undefined): boolean {
       draft?.aiDescription ??
       draft?.aiSuggestedBrand ??
       draft?.aiSuggestedCategory ??
-      draft?.aiSuggestedColour,
+      draft?.aiSuggestedColour ??
+      draft?.aiSuggestedGender,
   );
 }
 
@@ -245,6 +248,8 @@ function isAiRevealFieldEmpty(
       return draft.categoryId === null && draft.category === null;
     case "colour":
       return draft.colour === null;
+    case "gender":
+      return draft.gender === null;
     case "description":
       return !draft.description?.trim();
   }
@@ -252,6 +257,10 @@ function isAiRevealFieldEmpty(
 
 function isColourValue(value: string): value is (typeof COLOURS)[number] {
   return COLOURS.includes(value as (typeof COLOURS)[number]);
+}
+
+function isGenderValue(value: string): value is (typeof GENDERS)[number] {
+  return GENDERS.includes(value as (typeof GENDERS)[number]);
 }
 
 export function DetailsStep(): JSX.Element {
@@ -517,6 +526,8 @@ export function DetailsStep(): JSX.Element {
     draft?.aiSuggestedCategory === currentCategorySlug;
   const isColourAi =
     draft?.aiSuggestedColour !== null && draft?.aiSuggestedColour === draft?.colour;
+  const isGenderAi =
+    draft?.aiSuggestedGender !== null && draft?.aiSuggestedGender === draft?.gender;
   const isDescriptionAi =
     draft?.aiDescription !== null && draft?.aiDescription === draft?.description;
   const showScaleToggle = garmentType ? supportsScaleToggle(garmentType) : false;
@@ -676,6 +687,13 @@ export function DetailsStep(): JSX.Element {
 
         patchDetails({ colour: value }, { immediate: true });
         return;
+      case "gender":
+        if (!isGenderValue(value)) {
+          return;
+        }
+
+        patchDetails({ gender: value }, { immediate: true });
+        return;
       case "description":
         patchDetails({ description: value }, { immediate: true });
         return;
@@ -806,6 +824,15 @@ export function DetailsStep(): JSX.Element {
 
     cancelAiForUserEdit();
     patchDetails({ colour: value }, { immediate: true });
+  };
+
+  const updateGender = (value: (typeof GENDERS)[number]) => {
+    if (draft?.gender === value) {
+      return;
+    }
+
+    cancelAiForUserEdit();
+    patchDetails({ gender: value }, { immediate: true });
   };
 
   const updateDescription = (value: string) => {
@@ -1148,6 +1175,32 @@ export function DetailsStep(): JSX.Element {
               );
             })}
           </div>
+        </div>
+      </div>
+
+      <div className={["field", isGenderAi ? "aifill" : ""].filter(Boolean).join(" ")}>
+        <label>
+          Gender <span className="muted">(optional)</span>
+          <span className="aichip">✨ AI</span>
+        </label>
+        <div className="pick">
+          {GENDERS.map((gender) => {
+            const isSelected = draft?.gender === gender;
+
+            return (
+              <button
+                key={gender}
+                type="button"
+                className={["pk", isSelected ? "on" : ""].filter(Boolean).join(" ")}
+                aria-pressed={isSelected}
+                onClick={() => {
+                  updateGender(gender);
+                }}
+              >
+                {GENDER_LABELS[gender]}
+              </button>
+            );
+          })}
         </div>
       </div>
 

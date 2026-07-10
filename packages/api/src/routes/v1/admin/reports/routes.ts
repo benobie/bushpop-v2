@@ -10,14 +10,17 @@ import {
 import { listReports, patchReport } from "./service.js";
 import type { ReportStatus } from "../../../../lib/report-machines.js";
 
-const adminPreHandlers = [requireAuth, requireRole("admin")];
+// Factory, not a shared array: @fastify/rate-limit pushes its handler onto the
+// preHandler array it is handed, for every route. Two routes sharing one array
+// reference would silently share a single limiter bucket.
+const adminPreHandlers = () => [requireAuth, requireRole("admin")];
 
 export async function adminReportRoutes(app: FastifyInstance) {
   // GET /api/v1/admin/reports — list reports with optional filters
   app.get(
     "/api/v1/admin/reports",
     {
-      preHandler: adminPreHandlers,
+      preHandler: adminPreHandlers(),
       schema: {
         tags: ["Admin - Reports"],
         summary: "List listing reports (admin only)",
@@ -48,7 +51,7 @@ export async function adminReportRoutes(app: FastifyInstance) {
   app.patch(
     "/api/v1/admin/reports/:id",
     {
-      preHandler: adminPreHandlers,
+      preHandler: adminPreHandlers(),
       schema: {
         tags: ["Admin - Reports"],
         summary: "Update report status (admin only)",

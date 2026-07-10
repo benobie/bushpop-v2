@@ -22,6 +22,10 @@ export const inventoryItems = pgTable("inventory_items", {
   fit: varchar("fit", { length: 50 }),
   condition: varchar("condition", { length: 20 }),
   conditionNotes: text("condition_notes"),
+  // W3 (BF-15): first-class IA cut, not a pgEnum — mirrors every other
+  // categorical column here (varchar + config constants + Zod at the edge).
+  // Nullable, no backfill: built ahead of real op-shop inventory (batch 46).
+  gender: varchar("gender", { length: 10 }),
 
   // Sell-flow draft fields (Phase 1). Draft = inventoryItems row (D7);
   // channel_listings is only created at publish, so price/shipping intent
@@ -44,6 +48,7 @@ export const inventoryItems = pgTable("inventory_items", {
   aiSuggestedCategory: varchar("ai_suggested_category", { length: 100 }),
   aiSuggestedColour: varchar("ai_suggested_colour", { length: 30 }),
   aiSuggestedMaterial: varchar("ai_suggested_material", { length: 50 }),
+  aiSuggestedGender: varchar("ai_suggested_gender", { length: 10 }),
   aiConfidence: real("ai_confidence"),
   aiPromptVersion: varchar("ai_prompt_version", { length: 20 }),
   aiModel: varchar("ai_model", { length: 50 }),

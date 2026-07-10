@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
 import { anonymous } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@bushpop/db/client";
@@ -7,7 +8,7 @@ import { ulid } from "ulid";
 import { DEFAULT_CHANNEL, getChannelConfig } from "@bushpop/config";
 import { getEmailSender } from "./email/index.js";
 import { accountVerificationEmailTemplate, passwordResetEmailTemplate } from "./email/templates.js";
-import { GUEST_EMAIL_DOMAIN, mergeAnonymousIdentity } from "./guest-identity.js";
+import { GUEST_EMAIL_DOMAIN, mergeAnonymousIdentity, releaseAnonymousEmail } from "./guest-identity.js";
 
 function getAuthChannelName(): string {
   return getChannelConfig(process.env.CHANNEL_SLUG ?? DEFAULT_CHANNEL).name;
@@ -36,6 +37,39 @@ export const auth = betterAuth({
       const { subject, text } = accountVerificationEmailTemplate({ url, channelName: getAuthChannelName() });
       await getEmailSender()({ to: user.email, subject, text });
     },
+  },
+  hooks: {
+    // A guest who checked out has their real email stamped on their anonymous
+    // user row (setGuestCheckoutEmail). Signing up with that same email —
+    // which the sign-up page prefills — collides with their own guest row on
+    // `user.email`, and sign-up rejects with USER_ALREADY_EXISTS long before
+    // the anonymous plugin's onLinkAccount hook (and its cleanup of that row)
+    // gets to run. Hand the email back to the placeholder domain first.
+    //
+    // Scoped to the requester's own anonymous session, so it can never touch
+    // a real account's email nor another guest's. The row is about to be
+    // merged and deleted anyway.
+    //
+    // Runs before Better Auth validates the sign-up, so a rejected attempt
+    // (weak password, say) leaves the guest row back on a placeholder email.
+    // That only costs the guest later order emails if they then abandon
+    // sign-up entirely; retrying converts them normally. The alternative —
+    // releasing after validation — is unreachable: sign-up rejects the
+    // duplicate email before any user-creation hook fires.
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-up/email") return;
+      const email = (ctx.body as { email?: unknown } | undefined)?.email;
+      if (typeof email !== "string") return;
+
+      const session = await getSessionFromCtx(ctx, { disableRefresh: true });
+      const guest = session?.user;
+      // Compared case-insensitively: checkout stores the address verbatim,
+      // while sign-up canonicalises it, so `Alice@x` and `alice@x` are the
+      // same collision.
+      if (guest?.isAnonymous && guest.email.toLowerCase() === email.toLowerCase()) {
+        await releaseAnonymousEmail(guest.id);
+      }
+    }),
   },
   // In v1.5.6, generateId lives under advanced.database.generateId
   advanced: {

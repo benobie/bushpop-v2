@@ -17,7 +17,7 @@ type AiDraftRequestResponse =
 type AiDraftStatusResponse =
   paths["/api/v1/seller/drafts/{id}/ai-draft/{jobId}"]["get"]["responses"][200]["content"]["application/json"];
 
-export type AiRevealField = "title" | "brand" | "category" | "colour" | "description";
+export type AiRevealField = "title" | "brand" | "category" | "colour" | "gender" | "description";
 export type AiRevealStatus = "idle" | "thinking" | "revealing" | "done" | "failed" | "cancelled";
 
 export interface AiRevealError {
@@ -56,6 +56,10 @@ const FIELD_ORDER: ReadonlyArray<{
   {
     field: "colour",
     getValue: (suggestions) => suggestions.colour,
+  },
+  {
+    field: "gender",
+    getValue: (suggestions) => suggestions.gender,
   },
   {
     field: "description",

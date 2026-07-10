@@ -930,6 +930,533 @@ export const BRANDS: Brand[] = [
     sources: ["https://help.bardot.com/hc/en-us/articles/360000176736"],
     lastVerified: "June 2026",
   },
+  {
+    slug: "cue",
+    name: "Cue",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Cue uses AU numeric sizing (6–14). Its chart is published in centimetres.",
+    answer:
+      "Cue is one of Australia's best-known tailored workwear labels, and it sizes on a compact AU numeric range from 6 to 14. The chart is published in centimetres: a size 10 fits a 92cm bust, 77cm waist and 103cm hip, with each size stepping evenly by 5cm. Cue publishes official international conversions, where an AU 10 is a UK 12, US 8 and EU 40. That UK mapping sits one step higher than many Australian brands print, so check it before assuming a UK size. Every Cue garment is handmade, and the brand notes slight measurement differences are inherent to the process, so it also publishes per-garment measurements on each product page. When buying Cue secondhand, treat the body chart as the baseline and measure structured pieces like blazers and sheath dresses flat, since tailoring leaves less ease than casual cuts.",
+    sizeRows: [
+      { size: "6", bust: "82", waist: "67", hip: "93" },
+      { size: "8", bust: "87", waist: "72", hip: "98" },
+      { size: "10", bust: "92", waist: "77", hip: "103" },
+      { size: "12", bust: "97", waist: "82", hip: "108" },
+      { size: "14", bust: "102", waist: "87", hip: "113" },
+    ],
+    hasLetters: false,
+    intl: [
+      { au: "6", us: "4", uk: "8", eu: "36" },
+      { au: "8", us: "6", uk: "10", eu: "38" },
+      { au: "10", us: "8", uk: "12", eu: "40" },
+      { au: "12", us: "10", uk: "14", eu: "42" },
+      { au: "14", us: "12", uk: "16", eu: "44" },
+    ],
+    fitNote:
+      "Cue notes every garment is handmade, with slight measurement differences inherent to the process, and publishes exact per-garment measurements on each product page. Structured tailoring leaves less ease than casual cuts, so measure blazers and fitted dresses flat when buying preloved.",
+    faqs: [
+      {
+        q: "What is a Cue size 10 in cm?",
+        a: "A Cue size 10 fits a 92cm bust, 77cm waist and 103cm hip on the brand's official centimetre chart. The chart steps evenly by 5cm per size, running from a size 6 at 82cm bust, 67cm waist and 93cm hip up to a size 14 at 102cm bust, 87cm waist and 113cm hip.",
+      },
+      {
+        q: "What is a Cue size 10 in UK and US sizing?",
+        a: "Cue's official conversion maps an AU 10 to a UK 12, US 8 and EU 40. Note the UK number sits one size higher than the AU number, which differs from brands that print AU and UK as the same figure, so convert before buying from UK listings.",
+      },
+      {
+        q: "Why do Cue garments vary slightly in measurements?",
+        a: "Cue states each garment is handmade and slight measurement differences are inherent to its manufacturing process. The brand publishes per-garment measurements on individual product pages, so when buying secondhand the safest check is measuring the garment flat against the body chart above.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://www.cue.com/pages/garment-care-and-sizing"],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "sussan",
+    name: "Sussan",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Sussan uses AU numeric sizing (6–22) with a letter mapping from XXS to XXXXL. Its chart is published in centimetres.",
+    answer:
+      "Sussan is a long-running Australian womenswear label sizing from AU 6 to 22, with a published letter mapping where a 10 is Small, 12 is Medium and 14 is Large. The chart is in centimetres: a size 12 fits a 97cm bust, 77cm waist and 104cm hip. Sizes step evenly by 5cm up to a size 18, then by 6cm into the 20 and 22. Sussan publishes no international conversions, but it does publish separate charts for specific categories, including resort wear in combined sizes like S/M, knitwear in split sizes such as XXS/XS, and denim measured on waist and hip only, so the tag format tells you which chart applies. Sussan is a frequent op-shop find in Australia, and pieces mostly carry the numeric tag; check letter-size tags on knitwear against the split-size chart rather than assuming a standard letter fit.",
+    sizeRows: [
+      { size: "6", letter: "XXS", bust: "82", waist: "62", hip: "89" },
+      { size: "8", letter: "XS", bust: "87", waist: "67", hip: "94" },
+      { size: "10", letter: "S", bust: "92", waist: "72", hip: "99" },
+      { size: "12", letter: "M", bust: "97", waist: "77", hip: "104" },
+      { size: "14", letter: "L", bust: "102", waist: "82", hip: "109" },
+      { size: "16", letter: "XL", bust: "107", waist: "87", hip: "114" },
+      { size: "18", letter: "XXL", bust: "112", waist: "92", hip: "119" },
+      { size: "20", letter: "XXXL", bust: "118", waist: "98", hip: "125" },
+      { size: "22", letter: "XXXXL", bust: "124", waist: "104", hip: "131" },
+    ],
+    hasLetters: true,
+    fitNote:
+      "Sussan's main clothing chart covers AU 6–22 with an XXS–XXXXL letter mapping, but the brand publishes separate charts for resort wear, knitwear and denim, so match the tag format to the right chart. Denim is sized on waist and hip only.",
+    faqs: [
+      {
+        q: "What is a Sussan size 12 in cm?",
+        a: "A Sussan size 12 (Medium) fits a 97cm bust, 77cm waist and 104cm hip on the brand's official centimetre chart. Sizes step evenly by 5cm up to a size 18, then by 6cm into the 20 and 22, topping out at a 124cm bust, 104cm waist and 131cm hip.",
+      },
+      {
+        q: "Does Sussan use letter sizing?",
+        a: "Both. Every numeric size from 6 to 22 has a published letter mapping, from XXS at a size 6 through XXXXL at a 22. Resort wear and knitwear use combined or split letter sizes like S/M and XXS/XS with their own separate charts, so check which chart matches the tag.",
+      },
+      {
+        q: "Does Sussan publish international size conversions?",
+        a: "No. Sussan's official size guide has no US, UK or EU conversion table, only the AU numeric sizes with their letter mapping. Work directly from the centimetre measurements above when comparing against another brand's sizing.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://www.sussan.com.au/sussan-size-guide"],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "dotti",
+    name: "Dotti",
+    category: "Australian fast fashion · women's",
+    unitNote:
+      "Dotti uses AU numeric sizing (4–18) with a letter mapping up to XL at size 14. Its chart is published in centimetres.",
+    answer:
+      "Dotti is an Australian youth fashion label sizing from AU 4 to 18, with a published letter mapping that runs from XXS at a size 4 to XL at a size 14; sizes 16 and 18 carry no letter. The chart is in centimetres: a size 10 (Medium) fits a 90cm bust, 70cm waist and 98cm hip, and every size steps evenly by 5cm. Dotti's published measurements sit a couple of centimetres smaller per size than most mainstream Australian womenswear charts, so check your measurements against the chart rather than assuming your usual AU size. Dotti publishes full international conversions, where an AU 10 is a US 6, UK 10 and EU 38. When buying Dotti secondhand, the numeric tag is the reliable reference; check letter-tagged basics against the mapping above, since the letters stop at XL.",
+    sizeRows: [
+      { size: "4", letter: "XXS", bust: "75", waist: "55", hip: "83" },
+      { size: "6", letter: "XS", bust: "80", waist: "60", hip: "88" },
+      { size: "8", letter: "S", bust: "85", waist: "65", hip: "93" },
+      { size: "10", letter: "M", bust: "90", waist: "70", hip: "98" },
+      { size: "12", letter: "L", bust: "95", waist: "75", hip: "103" },
+      { size: "14", letter: "XL", bust: "100", waist: "80", hip: "108" },
+      { size: "16", bust: "105", waist: "85", hip: "113" },
+      { size: "18", bust: "110", waist: "90", hip: "118" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "4", us: "0", uk: "4", eu: "32" },
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+      { au: "16", us: "12", uk: "16", eu: "44" },
+      { au: "18", us: "14", uk: "18", eu: "46" },
+    ],
+    fitNote:
+      "Dotti's chart runs about 2cm smaller per size than most mainstream Australian womenswear labels (a size 10 is a 90cm bust and 70cm waist), reflecting its younger cut. Letter sizes only map up to XL at a size 14; 16 and 18 are numeric only.",
+    faqs: [
+      {
+        q: "What is a Dotti size 10 in cm?",
+        a: "A Dotti size 10 (Medium) fits a 90cm bust, 70cm waist and 98cm hip on the brand's official centimetre chart. Every size steps evenly by 5cm, from a size 4 at 75cm bust, 55cm waist and 83cm hip up to a size 18 at 110cm bust, 90cm waist and 118cm hip.",
+      },
+      {
+        q: "Does Dotti run small?",
+        a: "Dotti's published chart sits about 2cm smaller per size than most mainstream Australian labels — compare a Dotti 10 at 90cm bust, 70cm waist and 98cm hip with the 92cm bust, 72cm waist and 99cm hip that labels like Sussan and Portmans publish for a 10. If you sit between sizes elsewhere, you may prefer the larger size in Dotti.",
+      },
+      {
+        q: "What is a Dotti size 10 internationally?",
+        a: "Dotti's official conversion maps an AU 10 to a US 6, UK 10 and EU 38. Australian and UK numbers are identical across the whole range, while US sizing runs four numbers lower.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://dotti.jgl.com.au/shop/size-guide"],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "portmans",
+    name: "Portmans",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Portmans uses AU numeric sizing (6–18) with a letter mapping, plus a separate Curve range (16+–24+). Charts are published in centimetres.",
+    answer:
+      "Portmans is an Australian workwear-and-going-out label sizing from AU 6 to 18, with a published letter mapping where a 10 is Small, 12 is Medium and 14 is Large. The chart is in centimetres: a size 12 fits a 97cm bust, 77cm waist and 104cm hip. Sizes step evenly by 5cm up to the 16, then jump 8cm into the 18. Portmans also publishes a separate Curve chart running 16+ to 24+, which overlaps the main range at 16 and 18 with identical measurements before extending to a 130cm bust at 24+. International conversions are official: an AU 10 is a US 6, UK 10 and EU 38. When buying Portmans secondhand, check whether a 16 or 18 tag is main range or Curve; the published body measurements match at those sizes, but the Curve line continues up where the main range stops.",
+    sizeRows: [
+      { size: "6", letter: "XXS", bust: "82", waist: "62", hip: "89" },
+      { size: "8", letter: "XS", bust: "87", waist: "67", hip: "94" },
+      { size: "10", letter: "S", bust: "92", waist: "72", hip: "99" },
+      { size: "12", letter: "M", bust: "97", waist: "77", hip: "104" },
+      { size: "14", letter: "L", bust: "102", waist: "82", hip: "109" },
+      { size: "16", letter: "XL", bust: "107", waist: "87", hip: "114" },
+      { size: "18", letter: "XXL", bust: "115", waist: "95", hip: "122" },
+    ],
+    hasLetters: true,
+    intl: [
+      { au: "6", us: "2", uk: "6", eu: "34" },
+      { au: "8", us: "4", uk: "8", eu: "36" },
+      { au: "10", us: "6", uk: "10", eu: "38" },
+      { au: "12", us: "8", uk: "12", eu: "40" },
+      { au: "14", us: "10", uk: "14", eu: "42" },
+      { au: "16", us: "12", uk: "16", eu: "44" },
+      { au: "18", us: "14", uk: "18", eu: "46" },
+    ],
+    fitNote:
+      "Portmans' main chart steps evenly by 5cm per size until a larger 8cm jump from 16 to 18. The separate Curve range (16+–24+) shares identical published measurements at 16 and 18, then extends to a 130cm bust, 110cm waist and 137cm hip at 24+.",
+    faqs: [
+      {
+        q: "What is a Portmans size 12 in cm?",
+        a: "A Portmans size 12 (Medium) fits a 97cm bust, 77cm waist and 104cm hip on the brand's official centimetre chart. Sizes step evenly by 5cm up to the 16, then jump 8cm into the 18, which is a 115cm bust, 95cm waist and 122cm hip.",
+      },
+      {
+        q: "What is Portmans Curve sizing?",
+        a: "Portmans publishes a separate Curve chart from 16+ to 24+. The 16+ and 18+ match the main range's 16 and 18 measurements exactly, then the chart extends through 20+ (120cm bust, 100cm waist, 127cm hip), 22+ (125cm, 105cm, 132cm) and 24+ (130cm, 110cm, 137cm).",
+      },
+      {
+        q: "What is a Portmans size 10 internationally?",
+        a: "Portmans' official conversion maps an AU 10 to a US 6, UK 10 and EU 38. Australian and UK numbers are identical across the range, while US sizing runs four numbers lower.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://portmans.jgl.com.au/shop/size-guide"],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "rockmans",
+    name: "Rockmans",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Rockmans uses AU numeric sizing (8–24) with a letter mapping to XXL at size 18. Its chart is published in centimetres, jointly for Rockmans and Table Eight.",
+    answer:
+      "Rockmans is a long-running Australian womenswear label focused on sizes 8 to 24, and its official chart, published jointly for Rockmans and Table Eight, is in centimetres. Unusually, most sizes are published as ranges rather than single figures: a size 12 (Medium) fits a 97 to 99cm bust, 80 to 81cm waist and 106 to 107cm hip. Letter sizes map from XS at a size 8 through XXL at an 18, while the 20, 22 and 24 carry numeric labels only. The extended upper range is the practical strength here, reaching a 129cm bust, 112cm waist and 138cm hip at a size 24. Rockmans publishes no international conversions, so work from the centimetre figures directly. When buying Rockmans or Table Eight secondhand, the same chart applies to both labels, and measuring the garment flat against the range for your size is the safest check.",
+    sizeRows: [
+      { size: "8", letter: "XS", bust: "87", waist: "69", hip: "95" },
+      { size: "10", letter: "S", bust: "92–93", waist: "75", hip: "96–102" },
+      { size: "12", letter: "M", bust: "97–99", waist: "80–81", hip: "106–107" },
+      { size: "14", letter: "L", bust: "102–104", waist: "85–86", hip: "111–112" },
+      { size: "16", letter: "XL", bust: "107–109", waist: "90–91", hip: "116–117" },
+      { size: "18", letter: "XXL", bust: "112–117", waist: "95–99", hip: "121–125" },
+      { size: "20", bust: "119", waist: "102", hip: "128" },
+      { size: "22", bust: "124", waist: "107", hip: "133" },
+      { size: "24", bust: "129", waist: "112", hip: "138" },
+    ],
+    hasLetters: true,
+    fitNote:
+      "Rockmans publishes most sizes as measurement ranges rather than single figures (a size 12 spans a 97–99cm bust), and the chart covers an extended 8–24 range. Letter sizes stop at XXL (size 18); 20–24 are numeric only. The same chart covers Table Eight.",
+    faqs: [
+      {
+        q: "What is a Rockmans size 12 in cm?",
+        a: "A Rockmans size 12 (Medium) fits a 97 to 99cm bust, 80 to 81cm waist and 106 to 107cm hip. Rockmans publishes most sizes as measurement ranges rather than single figures, so if you fall at the top of a range, consider the next size up.",
+      },
+      {
+        q: "What sizes does Rockmans go up to?",
+        a: "The official chart runs from a size 8 to a size 24, one of the wider ranges among Australian labels. A size 24 fits a 129cm bust, 112cm waist and 138cm hip. Letter sizes stop at XXL (size 18); the 20, 22 and 24 are numeric only.",
+      },
+      {
+        q: "Is Table Eight sizing the same as Rockmans?",
+        a: "Yes. The official size chart is published jointly as the Rockmans and Table Eight size chart, so the same centimetre measurements apply to both labels. If you know your size in one, it carries across to the other.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://www.rockmans.com.au/rockmans-womens-size-guide.html"],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "sheike",
+    name: "Sheike",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Sheike uses AU numeric sizing (6–18) with no letters on its main chart. Its chart is published in centimetres.",
+    answer:
+      "Sheike is an Australian occasion and going-out label sizing on AU numerics from 6 to 18, with its chart published in centimetres. A size 10 fits a 93cm bust, 73cm waist and 102cm hip, and every size steps evenly by 5cm. The main body chart carries no letter sizing; Sheike publishes letters only for knitwear and outerwear, where an XS maps to a size 6, Small to an 8, Medium to a 10, Large to a 12 and XL to a 14 to 16. The brand itself cautions that varying designs mean the guide may not apply to every product and that different materials stretch differently, so check per-item fit details. When buying Sheike secondhand, note whether the piece is knitwear or outerwear with a letter tag, and map it back to the numeric chart before comparing measurements.",
+    sizeRows: [
+      { size: "6", bust: "83", waist: "63", hip: "92" },
+      { size: "8", bust: "88", waist: "68", hip: "97" },
+      { size: "10", bust: "93", waist: "73", hip: "102" },
+      { size: "12", bust: "98", waist: "78", hip: "107" },
+      { size: "14", bust: "103", waist: "83", hip: "112" },
+      { size: "16", bust: "108", waist: "88", hip: "117" },
+      { size: "18", bust: "113", waist: "93", hip: "122" },
+    ],
+    hasLetters: false,
+    fitNote:
+      "Sheike's own guide cautions that varying designs mean the chart may not apply to every product, and that different materials stretch differently. Knitwear and outerwear use a separate letter chart (XS = 6 through XL = 14–16); everything else is AU numeric.",
+    faqs: [
+      {
+        q: "What is a Sheike size 10 in cm?",
+        a: "A Sheike size 10 fits a 93cm bust, 73cm waist and 102cm hip on the brand's official centimetre chart. Every size steps evenly by 5cm, from a size 6 at 83cm bust, 63cm waist and 92cm hip up to a size 18 at 113cm bust, 93cm waist and 122cm hip.",
+      },
+      {
+        q: "Does Sheike use letter sizing?",
+        a: "Only for knitwear and outerwear, which have their own published mapping: XS is a size 6, Small an 8, Medium a 10, Large a 12 and XL a 14 to 16. Everything else uses AU numeric sizing from 6 to 18 with no letter labels.",
+      },
+      {
+        q: "Does Sheike sizing fit true across all styles?",
+        a: "Sheike itself notes that varying designs mean its sizing guide may not apply to all products, and that different materials have varying degrees of stretch. When buying secondhand, check the style's fit details where possible, and measure the garment flat against the chart above for fitted occasion pieces.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://www.sheike.com.au/pages/size-guide"],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "kmart",
+    name: "Kmart",
+    category: "Australian department stores · women's",
+    unitNote:
+      "Kmart uses AU numeric sizing with no letter labels, published in centimetres and inches. Kmart's own chart continues to a size 26, but we show it only to 22 — see the note below the table.",
+    answer:
+      "Kmart is Australia's biggest discount department store, and its clothing all hangs off one published body chart covering tops, bottoms, dresses and jackets, including underwear and shapewear but not bras. Sizing is AU numeric only, with no letter labels anywhere on the chart. A size 12 fits a 95cm bust, 76cm waist and 101cm hip, and sizes step evenly by 5cm through the range. Kmart's own chart continues past a size 22 to a 26, but its published waist figures at 24 and 26 break that even 5cm grading, so we show the chart only to a size 22 rather than republish measurements we believe are wrong; check Kmart's own guide for the larger sizes and measure the garment's waist. Kmart also adds separate plus-size (18 to 26) and maternity (8 to 18) charts with their own measurements, so check the right chart for those labels. Because Kmart pieces are everywhere secondhand, the numeric tag plus the chart above is usually all you need to size a piece confidently.",
+    sizeRows: [
+      { size: "6", bust: "80", waist: "61", hip: "86" },
+      { size: "8", bust: "85", waist: "66", hip: "91" },
+      { size: "10", bust: "90", waist: "71", hip: "96" },
+      { size: "12", bust: "95", waist: "76", hip: "101" },
+      { size: "14", bust: "100", waist: "81", hip: "106" },
+      { size: "16", bust: "105", waist: "86", hip: "111" },
+      { size: "18", bust: "110", waist: "91", hip: "116" },
+      { size: "20", bust: "115", waist: "96", hip: "121" },
+      { size: "22", bust: "120", waist: "101", hip: "126" },
+      // Sizes 24 and 26 deliberately omitted. Kmart publishes waist 116cm at 24
+      // and 121cm at 26, a +15cm jump from the 101cm at 22 that breaks its own
+      // even 5cm grading; the inches toggle carries the same anomaly, so it reads
+      // as an error in Kmart's chart rather than a transcription slip. Kmart has
+      // no standalone chart URL (the source is a site-wide product-page modal) and
+      // kmart.com.au returns 403 to fetchers, so the figures cannot be independently
+      // confirmed. Per the accuracy contract at the top of this file we omit rather
+      // than republish a suspect measurement. Do not restore without a verifiable source.
+    ],
+    hasLetters: false,
+    fitNote:
+      "Kmart's single chart covers tops, bottoms, dresses and jackets, including underwear and shapewear but not bras. Separate plus-size (18–26) and maternity (8–18) charts use different measurements, so a plus or maternity label needs its own chart, not this one.",
+    faqs: [
+      {
+        q: "What is a Kmart size 12 in cm?",
+        a: "A Kmart size 12 fits a 95cm bust, 76cm waist and 101cm hip on the official chart, which Kmart publishes in both centimetres and inches. Sizes step evenly by 5cm through the core range, so a 10 is 90cm, 71cm and 96cm, and a 14 is 100cm, 81cm and 106cm.",
+      },
+      {
+        q: "Does Kmart use letter sizes like S, M and L?",
+        a: "No. Kmart's women's clothing chart is AU numeric only, with no published letter equivalents. Measure against the centimetre chart directly rather than converting from a letter size you wear in another brand.",
+      },
+      {
+        q: "What sizes does the Kmart women's chart cover?",
+        a: "Kmart's own chart runs from a size 6 to a 26, but the table above stops at 22. Kmart's published waist reads 116cm at a size 24 and 121cm at a 26, a jump from 101cm at a size 22 that breaks its otherwise even 5cm grading and looks like an error in Kmart's chart. Rather than republish a measurement we think is wrong, we have left those two rows out; check Kmart's own guide for sizes 24 and 26 and measure the garment's waist. Kmart also publishes separate plus-size (18 to 26) and maternity (8 to 18) charts with their own measurements, so check those when a garment is tagged plus or maternity.",
+      },
+    ],
+    verified: "medium",
+    cmConverted: false,
+    sources: [
+      "https://www.kmart.com.au/product/short-sleeve-cotton-t-shirt-s169511/",
+    ],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "target-australia",
+    name: "Target Australia",
+    category: "Australian department stores · women's",
+    unitNote:
+      "Target uses AU numeric sizing (4–20) with a letter printed against every size; several letters span two sizes. Its chart is published in centimetres.",
+    answer:
+      "Target Australia publishes one womenswear body chart covering sizes 4 to 20, with a letter printed against every size. The letters repeat across neighbouring sizes: both a 4 and 6 are XXS, a 14 and 16 are both L, and an 18 and 20 are both XL, so several Target letter sizes span two numeric sizes. The chart is in centimetres: a size 12 (Medium) fits a 93cm bust, 76cm waist and 101cm hip. Petite sizes (4P to 16P) share the regular chart's measurements with a shorter 72cm average inseam. Target's plus range uses a plus sign and its own chart, running 16+ to 28+, and the measurements differ substantially from the core chart, with a 16+ at 115cm bust versus 103cm for a straight 16. When buying Target secondhand, read the tag carefully: a P or + changes which chart applies.",
+    sizeRows: [
+      { size: "4", letter: "XXS", bust: "76", waist: "59", hip: "84" },
+      { size: "6", letter: "XXS", bust: "80", waist: "63", hip: "88" },
+      { size: "8", letter: "XS", bust: "84", waist: "67", hip: "92" },
+      { size: "10", letter: "S", bust: "88", waist: "71", hip: "96" },
+      { size: "12", letter: "M", bust: "93", waist: "76", hip: "101" },
+      { size: "14", letter: "L", bust: "98", waist: "81", hip: "106" },
+      { size: "16", letter: "L", bust: "103", waist: "86", hip: "111" },
+      { size: "18", letter: "XL", bust: "109", waist: "92", hip: "117" },
+      { size: "20", letter: "XL", bust: "115", waist: "98", hip: "123" },
+    ],
+    hasLetters: true,
+    fitNote:
+      "Target prints a letter against every numeric size, and several letters span two sizes (14 and 16 are both L; 18 and 20 are both XL). Petite (P) sizes share the regular measurements with a 72cm average inseam; the plus (+) range 16+–28+ has its own, larger chart.",
+    faqs: [
+      {
+        q: "What is a Target size 12 in cm?",
+        a: "A Target size 12 (Medium) fits a 93cm bust, 76cm waist and 101cm hip on the official centimetre chart, which runs from a size 4 to a 20. Note the step sizes grow slightly at the top of the range: an 18 is a 109cm bust and a 20 is 115cm.",
+      },
+      {
+        q: "What is the difference between a Target 16 and a 16+?",
+        a: "They come from different charts. A straight 16 on the main womenswear chart is a 103cm bust, 86cm waist and 111cm hip, while a 16+ on the plus chart is a 115cm bust, 103.5cm waist and 121cm hip. The plus range runs 16+ to 28+, so always check for the plus sign on the tag.",
+      },
+      {
+        q: "What letter size is a Target 14 or 16?",
+        a: "Both are L on Target's own chart. The letters repeat at several points: 4 and 6 are both XXS, 14 and 16 are both L, and 18 and 20 are both XL. That makes the numeric size plus the centimetre chart the reliable reference, not the letter.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://www.target.com.au/size-chart/wmnswear"],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "big-w",
+    name: "Big W",
+    category: "Australian department stores · women's",
+    unitNote:
+      "Big W publishes two separate systems: AU numeric (6–18, single values) and letters (XXS–3XL, ranges), with no stated equivalence. Charts are in centimetres.",
+    answer:
+      "Big W publishes two separate women's sizing systems side by side: an AU numeric chart from 6 to 18 and an independent letter chart from XXS to 3XL, and it never states a numeric-to-letter equivalence, so treat a numeric tag and a letter tag as different systems. The numeric chart uses single centimetre values, with a size 12 at a 95cm bust, 75cm waist and 100cm hip, stepping evenly by 5cm. The letter chart uses ranges instead, with a Medium spanning a 92 to 98cm bust, 72 to 78cm waist and 97 to 103cm hip. Both cover tops, pants, dresses, jackets, jumpers and activewear; sleepwear has near-identical separate charts. Big W's plus range runs 16 to 26 with its own, larger measurements, where a plus 16 is a 115cm bust against 105cm on the core chart, so check which chart a larger-size tag belongs to before comparing.",
+    sizeRows: [
+      { size: "6", bust: "80", waist: "60", hip: "85" },
+      { size: "8", bust: "85", waist: "65", hip: "90" },
+      { size: "10", bust: "90", waist: "70", hip: "95" },
+      { size: "12", bust: "95", waist: "75", hip: "100" },
+      { size: "14", bust: "100", waist: "80", hip: "105" },
+      { size: "16", bust: "105", waist: "85", hip: "110" },
+      { size: "18", bust: "110", waist: "90", hip: "115" },
+    ],
+    hasLetters: false,
+    fitNote:
+      "Big W runs two independent published systems: numeric 6–18 (single values) and letter XXS–3XL (ranges), with no stated equivalence between them. The plus chart (16–26) is much larger at the same number: a plus 16 is a 115cm bust versus 105cm on the core chart.",
+    faqs: [
+      {
+        q: "What is a Big W size 12 in cm?",
+        a: "A Big W size 12 fits a 95cm bust, 75cm waist and 100cm hip on the numeric chart, which runs from 6 to 18 in even 5cm steps. The chart covers tops, pants, dresses, jackets, jumpers and activewear.",
+      },
+      {
+        q: "What is a Big W size Medium in cm?",
+        a: "Big W's letter chart is separate from its numeric chart and is published as ranges: a Medium spans a 92 to 98cm bust, 72 to 78cm waist and 97 to 103cm hip. The letter chart runs from XXS (76 to 81cm bust) to 3XL (116 to 122cm bust), and Big W states no equivalence between letters and numeric sizes.",
+      },
+      {
+        q: "How does Big W plus sizing differ from the regular chart?",
+        a: "The plus chart runs 16 to 26 with much larger measurements at the same number: a plus 16 is a 115cm bust, 98cm waist and 120cm hip versus 105cm, 85cm and 110cm for a regular 16. The plus range tops out at a 140cm bust, 123cm waist and 145cm hip at a 26.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://www.bigw.com.au/size-chart"],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "bonds",
+    name: "Bonds",
+    category: "Australian basics · women's",
+    unitNote:
+      "Bonds uses letter sizing (XXS–3XL) on its women's clothing chart, with no numeric labels. The chart is published in centimetres.",
+    answer:
+      "Bonds sizes its women's clothing on letters alone, from XXS to 3XL, with no AU numeric labels published on the clothing chart, so don't assume your usual 10 or 12 maps to a particular letter. The chart is in centimetres: a Medium fits a 92cm bust, 73cm waist and 98cm hip, and every size steps evenly by 5cm, from an XXS at 77cm bust to a 3XL at 112cm. One detail worth knowing: Bonds specifies its hip measurement is taken 20cm below the waist, so measure there rather than at the widest point when checking against this chart. Bonds publishes many separate charts for its other categories, including bras, underwear, leggings, sleep and swim, and those don't share these numbers. Because Bonds basics turn up constantly secondhand, the letter tag plus the chart above sizes most pieces; for bras, band and cup sizing applies instead.",
+    sizeRows: [
+      { size: "XXS", bust: "77", waist: "58", hip: "83" },
+      { size: "XS", bust: "82", waist: "63", hip: "88" },
+      { size: "S", bust: "87", waist: "68", hip: "93" },
+      { size: "M", bust: "92", waist: "73", hip: "98" },
+      { size: "L", bust: "97", waist: "78", hip: "103" },
+      { size: "XL", bust: "102", waist: "83", hip: "108" },
+      { size: "XXL", bust: "107", waist: "88", hip: "113" },
+      { size: "3XL", bust: "112", waist: "93", hip: "118" },
+    ],
+    hasLetters: false,
+    fitNote:
+      "Bonds' hip figure is specified as measured 20cm below the waist, not at the widest point. The clothing chart covers general apparel only; bras, underwear, leggings, sleep and swim each have their own separate Bonds charts.",
+    faqs: [
+      {
+        q: "What is a Bonds size Medium in cm?",
+        a: "A Bonds Medium fits a 92cm bust, 73cm waist and 98cm hip on the official women's clothing chart. Sizes step evenly by 5cm from an XXS (77cm bust, 58cm waist, 83cm hip) to a 3XL (112cm bust, 93cm waist, 118cm hip).",
+      },
+      {
+        q: "Does Bonds use AU numeric sizes like 10 and 12?",
+        a: "Not on its women's clothing chart, which is letter-only from XXS to 3XL with no published numeric mapping. Rather than converting from a numeric size you wear elsewhere, measure yourself against the centimetre chart directly.",
+      },
+      {
+        q: "How does Bonds measure hips on its size chart?",
+        a: "Bonds' chart specifies the hip is measured 20cm below the waist, which can differ from the fullest-point hip measurement most brands use. If your hips are widest lower than that, check both figures before choosing a size.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://www.bonds.com.au/size-charts"],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "atmos-and-here",
+    name: "Atmos&Here",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Atmos&Here uses AU numeric sizing (6–18) with an international letter mapping. Its chart is published in centimetres.",
+    answer:
+      "Atmos&Here is The Iconic's in-house Australian womenswear label, and its official chart, published on The Iconic's size guide, runs AU 6 to 18 with an international letter against every size. The chart is in centimetres: a size 10 (Medium) fits an 89cm bust, 73cm waist and 99cm hip. Note where the letters sit: Atmos&Here maps XS to a size 6 and Medium to a 10, whereas many Australian labels put XS at an 8 and Medium at a 12, so an Atmos&Here letter tag reads one step different from what you might expect. Sizes step evenly by 5cm until the final jump to 18, which adds 6cm, reaching a 110cm bust, 94cm waist and 120cm hip. No US, UK or EU conversion is published. Secondhand, Atmos&Here pieces are common; the size tag plus this chart is normally enough to buy confidently.",
+    sizeRows: [
+      { size: "6", letter: "XS", bust: "79", waist: "63", hip: "89" },
+      { size: "8", letter: "S", bust: "84", waist: "68", hip: "94" },
+      { size: "10", letter: "M", bust: "89", waist: "73", hip: "99" },
+      { size: "12", letter: "L", bust: "94", waist: "78", hip: "104" },
+      { size: "14", letter: "XL", bust: "99", waist: "83", hip: "109" },
+      { size: "16", letter: "XXL", bust: "104", waist: "88", hip: "114" },
+      { size: "18", letter: "3XL", bust: "110", waist: "94", hip: "120" },
+    ],
+    hasLetters: true,
+    fitNote:
+      "Atmos&Here's letter mapping sits one step lower than many Australian labels: XS is a size 6 and Medium a 10, where brands like Gorman, Sussan and Portmans put XS at an 8 and Medium at a 12. Go by the numeric size and the centimetre chart.",
+    faqs: [
+      {
+        q: "What is an Atmos&Here size 10 in cm?",
+        a: "An Atmos&Here size 10 (Medium) fits an 89cm bust, 73cm waist and 99cm hip on the official chart. Sizes step evenly by 5cm until the last step to a size 18, which adds 6cm and reaches a 110cm bust, 94cm waist and 120cm hip.",
+      },
+      {
+        q: "Does Atmos&Here letter sizing match other Australian brands?",
+        a: "No. Atmos&Here maps XS to a size 6 and Medium to a size 10, while many Australian labels, including Gorman, Sussan and Portmans, publish XS at an 8 and Medium at a 12. When buying secondhand, trust the numeric size and the centimetre measurements over the letter.",
+      },
+      {
+        q: "Who makes Atmos&Here?",
+        a: "Atmos&Here is The Iconic's in-house label, and its size chart is published on The Iconic's official size guide as provided by the brand. No US, UK or EU conversions are published for it, so work from the centimetre chart directly.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: [
+      "https://www.theiconic.com.au/index/sizeguidemain?brand=Atmos%26Here=&for=AA&gender=female&sku=AT049AA03WA",
+    ],
+    lastVerified: "July 2026",
+  },
+  {
+    slug: "review-australia",
+    name: "Review Australia",
+    category: "Australian fashion · women's",
+    unitNote:
+      "Review uses AU numeric sizing (6–22) with no letter labels. Its chart is published in centimetres with an inch toggle.",
+    answer:
+      "Review Australia is an occasionwear label known for fit-and-flare dresses, sizing on AU numerics from 6 to 22 with no letter labels. The chart is in centimetres: a size 10 fits a 91cm bust, 72cm waist and 99cm hip, and every size steps evenly by 5cm, topping out at a 121cm bust, 102cm waist and 129cm hip at a 22. Review publishes an official conversion where Australian and UK numbers are identical, US sizing runs four numbers lower and EU runs from 32 to 48, so an AU 10 is a UK 10, US 6 and EU 36. The brand's own guide notes measurements may vary between garments due to fabric, fit and style. Because Review dresses are structured and fitted through the bodice, measuring a secondhand piece flat against the chart is the safest check, especially on styles with little stretch.",
+    sizeRows: [
+      { size: "6", bust: "81", waist: "62", hip: "89" },
+      { size: "8", bust: "86", waist: "67", hip: "94" },
+      { size: "10", bust: "91", waist: "72", hip: "99" },
+      { size: "12", bust: "96", waist: "77", hip: "104" },
+      { size: "14", bust: "101", waist: "82", hip: "109" },
+      { size: "16", bust: "106", waist: "87", hip: "114" },
+      { size: "18", bust: "111", waist: "92", hip: "119" },
+      { size: "20", bust: "116", waist: "97", hip: "124" },
+      { size: "22", bust: "121", waist: "102", hip: "129" },
+    ],
+    hasLetters: false,
+    intl: [
+      { au: "6", us: "2", uk: "6", eu: "32" },
+      { au: "8", us: "4", uk: "8", eu: "34" },
+      { au: "10", us: "6", uk: "10", eu: "36" },
+      { au: "12", us: "8", uk: "12", eu: "38" },
+      { au: "14", us: "10", uk: "14", eu: "40" },
+      { au: "16", us: "12", uk: "16", eu: "42" },
+      { au: "18", us: "14", uk: "18", eu: "44" },
+      { au: "20", us: "16", uk: "20", eu: "46" },
+      { au: "22", us: "18", uk: "22", eu: "48" },
+    ],
+    fitNote:
+      "Review's own guide notes measurements may vary between garments due to fabric, fit and style. The chart runs AU 6–22 in even 5cm steps with no letter sizing; occasion styles are often structured with limited stretch, so measure fitted bodices flat.",
+    faqs: [
+      {
+        q: "What is a Review size 12 in cm?",
+        a: "A Review size 12 fits a 96cm bust, 77cm waist and 104cm hip on the official chart. Sizes step evenly by 5cm from a size 6 (81cm bust, 62cm waist, 89cm hip) to a size 22 (121cm bust, 102cm waist, 129cm hip).",
+      },
+      {
+        q: "What is a Review size 10 in UK and US sizing?",
+        a: "Review's official conversion maps an AU 10 to a UK 10 (identical numbers), a US 6 and an EU 36. US sizing runs four numbers below the AU size across the whole range.",
+      },
+      {
+        q: "Where does Review publish its size chart?",
+        a: "Inside the Size Guide panel on each product page, which has a Body Measurements view with a centimetre and inch toggle, plus a separate Conversion Guide tab for UK, EU and US sizing. The measurements are the same brand-wide body chart across products.",
+      },
+    ],
+    verified: "high",
+    cmConverted: false,
+    sources: ["https://review-australia.com/products/lilian-dress-ink"],
+    lastVerified: "July 2026",
+  },
 ];
 
 export function getBrand(slug: string): Brand | undefined {

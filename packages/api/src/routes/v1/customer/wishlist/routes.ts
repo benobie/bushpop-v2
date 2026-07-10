@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { requireAuth } from "../../../../middleware/require-auth.js";
+import { requireRealAccount } from "../../../../middleware/require-real-account.js";
 import {
   addToWishlistBodySchema,
   wishlistParamsSchema,
@@ -22,7 +23,7 @@ import {
 export async function wishlistRoutes(app: FastifyInstance) {
   // POST /api/v1/customer/wishlist
   app.post("/api/v1/customer/wishlist", {
-    preHandler: [requireAuth],
+    preHandler: [requireAuth, requireRealAccount],
     schema: {
       tags: ["Customer - Wishlist"],
       summary: "Add a listing to wishlist",
@@ -43,7 +44,7 @@ export async function wishlistRoutes(app: FastifyInstance) {
 
   // DELETE /api/v1/customer/wishlist/:listingId
   app.delete("/api/v1/customer/wishlist/:listingId", {
-    preHandler: [requireAuth],
+    preHandler: [requireAuth, requireRealAccount],
     schema: {
       tags: ["Customer - Wishlist"],
       summary: "Remove a listing from wishlist",
@@ -58,7 +59,7 @@ export async function wishlistRoutes(app: FastifyInstance) {
 
   // GET /api/v1/customer/wishlist/:listingId
   app.get("/api/v1/customer/wishlist/:listingId", {
-    preHandler: [requireAuth],
+    preHandler: [requireAuth, requireRealAccount],
     schema: {
       tags: ["Customer - Wishlist"],
       summary: "Check whether a listing is wishlisted",
@@ -73,7 +74,7 @@ export async function wishlistRoutes(app: FastifyInstance) {
 
   // POST /api/v1/customer/wishlist/batch-check
   app.post("/api/v1/customer/wishlist/batch-check", {
-    preHandler: [requireAuth],
+    preHandler: [requireAuth, requireRealAccount],
     schema: {
       tags: ["Customer - Wishlist"],
       summary: "Check which of the given listings are wishlisted by the caller",
@@ -88,7 +89,7 @@ export async function wishlistRoutes(app: FastifyInstance) {
 
   // GET /api/v1/customer/wishlist
   app.get("/api/v1/customer/wishlist", {
-    preHandler: [requireAuth],
+    preHandler: [requireAuth, requireRealAccount],
     schema: {
       tags: ["Customer - Wishlist"],
       summary: "List wishlisted items",

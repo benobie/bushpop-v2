@@ -12,13 +12,16 @@ import {
   refreshAccountStatus,
 } from "./service.js";
 
-const sellerPreHandlers = [requireAuth, requireRole("seller")];
+// Factory, not a shared array: @fastify/rate-limit pushes its handler onto the
+// preHandler array it is handed, for every route. Two routes sharing one array
+// reference would silently share a single limiter bucket.
+const sellerPreHandlers = () => [requireAuth, requireRole("seller")];
 
 export async function sellerStripeRoutes(app: FastifyInstance) {
   // POST /api/v1/seller/stripe/onboard
   // Creates a Stripe Connect account (idempotent) and returns an onboarding URL.
   app.post("/api/v1/seller/stripe/onboard", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Stripe"],
       summary: "Start Stripe Connect onboarding",
@@ -34,7 +37,7 @@ export async function sellerStripeRoutes(app: FastifyInstance) {
   // GET /api/v1/seller/stripe/status
   // Returns the current Stripe onboarding status from the DB (no Stripe API call).
   app.get("/api/v1/seller/stripe/status", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Stripe"],
       summary: "Get Stripe onboarding status",
@@ -48,7 +51,7 @@ export async function sellerStripeRoutes(app: FastifyInstance) {
   // Calls Stripe API synchronously and updates seller_profiles.
   // Used on the Connect return URL to handle the webhook race condition.
   app.get("/api/v1/seller/stripe/refresh", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Stripe"],
       summary: "Refresh Stripe status from live Stripe API",

@@ -76,6 +76,7 @@ describe("Publish + duplicate", () => {
       categoryId,
       ...(overrides?.skipSize ? {} : { size: "W32" }),
       colour: "navy",
+      gender: "unisex",
       description: "Classic 501s in dark indigo. Sturdy denim, no wear at the hems.",
     });
     res = await authedRequest(sessionToken, "PATCH", `/api/v1/seller/drafts/${draft.id}/condition`, {
@@ -346,7 +347,7 @@ describe("Publish + duplicate", () => {
   });
 
   describe("duplicate (D17)", () => {
-    it("keeps brand/category/colour/shipping/parcel; clears the rest", async () => {
+    it("keeps brand/category/colour/gender/shipping/parcel; clears the rest", async () => {
       const { id } = await buildCompleteDraft();
       const res = await authedRequest(sessionToken, "POST", `/api/v1/seller/drafts/${id}/duplicate`);
       expect(res.statusCode).toBe(201);
@@ -356,6 +357,7 @@ describe("Publish + duplicate", () => {
       expect(copy.brand).toBe("Levi's");
       expect(copy.category.slug).toBe("jeans");
       expect(copy.colour).toBe("navy");
+      expect(copy.gender).toBe("unisex");
       expect(copy.shippingOption).toBe("prepaid");
       expect(copy.parcelSize).toBe("medium");
       expect(copy.shippingClass).toBe("m");

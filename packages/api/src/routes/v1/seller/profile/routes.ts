@@ -17,12 +17,15 @@ import {
   confirmAvatarUpload,
 } from "./service.js";
 
-const sellerPreHandlers = [requireAuth, requireRole("seller")];
+// Factory, not a shared array: @fastify/rate-limit pushes its handler onto the
+// preHandler array it is handed, for every route. Two routes sharing one array
+// reference would silently share a single limiter bucket.
+const sellerPreHandlers = () => [requireAuth, requireRole("seller")];
 
 export async function sellerProfileRoutes(app: FastifyInstance) {
   // GET /api/v1/seller/profile — get own profile
   app.get("/api/v1/seller/profile", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Profile"],
       summary: "Get own seller profile",
@@ -34,7 +37,7 @@ export async function sellerProfileRoutes(app: FastifyInstance) {
 
   // PATCH /api/v1/seller/profile — update storeName, bio, handle, vacationMode
   app.patch("/api/v1/seller/profile", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Profile"],
       summary: "Update seller profile",
@@ -50,7 +53,7 @@ export async function sellerProfileRoutes(app: FastifyInstance) {
 
   // POST /api/v1/seller/profile/avatar/upload-url — presigned PUT for avatar
   app.post("/api/v1/seller/profile/avatar/upload-url", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Profile"],
       summary: "Request presigned upload URL for avatar",
@@ -64,7 +67,7 @@ export async function sellerProfileRoutes(app: FastifyInstance) {
 
   // POST /api/v1/seller/profile/avatar/confirm — confirm avatar uploaded
   app.post("/api/v1/seller/profile/avatar/confirm", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Profile"],
       summary: "Confirm avatar upload and update profile",

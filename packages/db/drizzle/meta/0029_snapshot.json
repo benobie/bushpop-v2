@@ -1,5 +1,5 @@
 {
-  "id": "5e89917a-9d1f-4b90-a1d6-a8b5d14978fb",
+  "id": "6b66c645-57c0-4ad9-b807-379e01048770",
   "prevId": "5ee4b577-a254-483f-9d63-e3abd8e644c0",
   "version": "7",
   "dialect": "postgresql",
@@ -1354,6 +1354,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "gender": {
+          "name": "gender",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "asking_price_cents": {
           "name": "asking_price_cents",
           "type": "integer",
@@ -1429,6 +1435,12 @@
         "ai_suggested_material": {
           "name": "ai_suggested_material",
           "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ai_suggested_gender": {
+          "name": "ai_suggested_gender",
+          "type": "varchar(10)",
           "primaryKey": false,
           "notNull": false
         },
@@ -3838,12 +3850,6 @@
         "frozen_at": {
           "name": "frozen_at",
           "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "frozen_reason": {
-          "name": "frozen_reason",
-          "type": "varchar(16)",
           "primaryKey": false,
           "notNull": false
         },

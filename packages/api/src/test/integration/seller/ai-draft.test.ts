@@ -43,6 +43,7 @@ const GOOD_RAW = {
   brand: "adidas",
   category_leaf: "sneakers",
   colour: "navy",
+  gender: "unisex",
   description: "Retro Gazelles in navy suede on the gum sole. Lightly worn, clean uppers.",
   confidence: 0.9,
 };
@@ -96,7 +97,7 @@ describe("AI draft endpoints + worker", () => {
     const [row] = await db.select().from(aiGenerations).where(eq(aiGenerations.id, jobId));
     expect(row!.status).toBe("pending");
     expect(row!.trigger).toBe("auto");
-    expect(row!.promptVersion).toBe("v1");
+    expect(row!.promptVersion).toBe("v2");
   });
 
   it("rejects drafts without a ready photo", async () => {
@@ -123,17 +124,23 @@ describe("AI draft endpoints + worker", () => {
     expect(body.status).toBe("completed");
     expect(body.suggestions.brand).toBe("adidas");
     expect(body.suggestions.categoryLeaf).toBe("sneakers");
+    // Guards the Fastify response-schema gotcha: `gender` lives in resolvedOutput
+    // but gets silently stripped from the HTTP response if routes.ts's zod
+    // schema for this endpoint doesn't also declare it.
+    expect(body.suggestions.gender).toBe("unisex");
     expect(body.confidence).toBe(0.9);
 
     const [item] = await db.select().from(inventoryItems).where(eq(inventoryItems.id, itemId));
     expect(item!.aiTitle).toBe(GOOD_RAW.title);
     expect(item!.aiSuggestedBrand).toBe("adidas");
     expect(item!.aiSuggestedCategory).toBe("sneakers");
+    expect(item!.aiSuggestedGender).toBe("unisex");
     // Canonical fields NEVER touched (confirm-not-commit)
     expect(item!.title).toBeNull();
     expect(item!.brand).toBeNull();
     expect(item!.categoryId).toBeNull();
     expect(item!.colour).toBeNull();
+    expect(item!.gender).toBeNull(); // BF-15 regression: AI must never write the confirmed gender column
 
     const [generation] = await db.select().from(aiGenerations).where(eq(aiGenerations.id, jobId));
     expect(generation!.status).toBe("completed");

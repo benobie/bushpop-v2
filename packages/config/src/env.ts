@@ -54,10 +54,19 @@ const envSchema = z.object({
 
   // Pickup collection codes (docs/BRIEF-shipping-performance.md §4). HMAC key
   // used to derive a buyer's 6-digit code deterministically from orderId, so
-  // no plaintext code is ever stored. Optional so existing deployed envs keep
-  // booting — pickup-code-service.ts falls back to a fixed dev-only secret
-  // outside production and throws if genuinely missing in production.
-  PICKUP_CODE_SECRET: z.string().min(16).optional(),
+  // no plaintext code is ever stored. `.optional()` here but required in
+  // production by the superRefine below; pickup-code-service.ts falls back to
+  // a fixed dev-only secret outside production.
+  //
+  // min(32), not min(16): this is an HMAC-SHA256 key. Sixteen *random* bytes
+  // would be fine, but nothing here enforces randomness and sixteen characters
+  // of human-chosen text can be well under 128 bits of entropy. Generate with
+  // `openssl rand -hex 32`.
+  //
+  // Rotation blast radius: codes are derived on read and never stored, so
+  // changing this value instantly invalidates the code for EVERY outstanding
+  // pickup order at once. Correct after a leak; surprising otherwise.
+  PICKUP_CODE_SECRET: z.string().min(32).optional(),
 
   // Guest commerce (BF-08, bushpop-v2 PR #106). HMAC key used to derive a
   // guest buyer's order-access token deterministically from (orderId,
@@ -67,15 +76,26 @@ const envSchema = z.object({
   // genuinely missing in production.
   GUEST_ORDER_TOKEN_SECRET: z.string().min(16).optional(),
 }).superRefine((data, ctx) => {
-  // Fail fast at boot rather than lazily at the first guest-order email send
-  // (money-path audit L2, 08/07/2026). Scoped to GUEST_ORDER_TOKEN_SECRET
-  // only — PICKUP_CODE_SECRET has the same lazy-check shape today but is a
-  // separate, out-of-scope finding.
+  // Fail fast at boot rather than lazily at the first request that needs the
+  // key (money-path audit L2, 08/07/2026).
+  //
+  // PICKUP_CODE_SECRET was added here on 10/07/2026 after it reached the
+  // staging engine unset: the container booted healthy and stayed healthy,
+  // because the only check was the lazy throw in pickup-code-service.ts, which
+  // fires on the first pickup-code request. Nothing had exercised that path,
+  // so a fail-closed outage sat latent behind a green healthcheck.
   if (data.NODE_ENV === "production" && !data.GUEST_ORDER_TOKEN_SECRET) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ["GUEST_ORDER_TOKEN_SECRET"],
       message: "GUEST_ORDER_TOKEN_SECRET is required in production (min 16 chars).",
+    });
+  }
+  if (data.NODE_ENV === "production" && !data.PICKUP_CODE_SECRET) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["PICKUP_CODE_SECRET"],
+      message: "PICKUP_CODE_SECRET is required in production (min 32 chars).",
     });
   }
 });

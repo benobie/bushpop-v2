@@ -151,6 +151,7 @@ async function serializeDraft(item: InventoryItemRow) {
     size: item.size,
     sizeScale: item.sizeScale,
     colour: item.colour,
+    gender: item.gender,
     description: item.description,
     condition: item.condition,
     conditionNotes: item.conditionNotes,
@@ -178,6 +179,7 @@ async function serializeDraft(item: InventoryItemRow) {
     aiSuggestedBrand: item.aiSuggestedBrand,
     aiSuggestedCategory: item.aiSuggestedCategory,
     aiSuggestedColour: item.aiSuggestedColour,
+    aiSuggestedGender: item.aiSuggestedGender,
     aiConfidence: item.aiConfidence,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
@@ -285,7 +287,7 @@ export async function patchDetails(id: string, ownerId: string, input: DetailsIn
   }
 
   // Normalise empty strings to null (clears)
-  for (const key of ["title", "brand", "size", "colour", "description"]) {
+  for (const key of ["title", "brand", "size", "colour", "gender", "description"]) {
     if (updates[key] === "") updates[key] = null;
   }
 

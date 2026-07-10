@@ -40,6 +40,7 @@ function buildCompletedStatus() {
       brand: "Nike",
       categoryLeaf: "t-shirts",
       colour: "blue",
+      gender: "", // uncertain — kept blank so existing reveal-order assertions are unaffected
       description: "Smoke-free home.",
       confidence: 0.82,
     },
@@ -173,6 +174,7 @@ describe("startAiReveal", () => {
       brand: null,
       category: null,
       colour: null,
+      gender: null,
       description: null,
     };
 

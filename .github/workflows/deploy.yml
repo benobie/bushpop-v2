@@ -10,6 +10,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege by default. The `deploy` job declares the extra scopes it
+# needs; `build` should never have had more than read.
+permissions:
+  contents: read
+
 jobs:
   # Build is independent of deploy so it gives a clean green CI signal even if a
   # deploy step is ever re-run or reconfigured. The static export (out/) is the

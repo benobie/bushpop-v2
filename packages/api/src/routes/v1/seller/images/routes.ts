@@ -16,12 +16,15 @@ import {
   deleteImage,
 } from "./service.js";
 
-const sellerPreHandlers = [requireAuth, requireRole("seller")];
+// Factory, not a shared array: @fastify/rate-limit pushes its handler onto the
+// preHandler array it is handed, for every route. Two routes sharing one array
+// reference would silently share a single limiter bucket.
+const sellerPreHandlers = () => [requireAuth, requireRole("seller")];
 
 export async function sellerImageRoutes(app: FastifyInstance) {
   // POST /api/v1/seller/inventory/:id/images/upload-url
   app.post("/api/v1/seller/inventory/:id/images/upload-url", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Images"],
       summary: "Request presigned upload URL",
@@ -37,7 +40,7 @@ export async function sellerImageRoutes(app: FastifyInstance) {
 
   // POST /api/v1/seller/inventory/:id/images/:imageId/confirm
   app.post("/api/v1/seller/inventory/:id/images/:imageId/confirm", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Images"],
       summary: "Confirm image upload",
@@ -56,7 +59,7 @@ export async function sellerImageRoutes(app: FastifyInstance) {
 
   // PATCH /api/v1/seller/inventory/:id/images/order
   app.patch("/api/v1/seller/inventory/:id/images/order", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Images"],
       summary: "Batch reorder images",
@@ -72,7 +75,7 @@ export async function sellerImageRoutes(app: FastifyInstance) {
 
   // DELETE /api/v1/seller/inventory/:id/images/:imageId
   app.delete("/api/v1/seller/inventory/:id/images/:imageId", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Images"],
       summary: "Delete an image",

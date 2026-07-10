@@ -181,12 +181,12 @@ async function seedDevListings() {
   });
 
   const fixtures = [
-    { title: "Vintage Levi's 501 Jeans", brand: "Levi's", size: "32", colour: "blue", condition: "good", shippingClass: "m", priceCents: 6500, categorySlug: "jeans", imageColour: { r: 60, g: 90, b: 150 } },
-    { title: "Wool Overcoat", brand: "Country Road", size: "M", colour: "camel", condition: "excellent", shippingClass: "l", priceCents: 12000, categorySlug: "coats", imageColour: { r: 170, g: 130, b: 90 } },
-    { title: "Silk Slip Dress", brand: "Zimmermann", size: "8", colour: "black", condition: "excellent", shippingClass: "s", priceCents: 9500, categorySlug: "midi-dresses", imageColour: { r: 30, g: 30, b: 30 } },
-    { title: "Leather Ankle Boots", brand: "R.M. Williams", size: "9", colour: "tan", condition: "good", shippingClass: "xl", priceCents: 14000, categorySlug: "boots", imageColour: { r: 150, g: 110, b: 70 } },
-    { title: "Linen Shirt", brand: "Bassike", size: "L", colour: "white", condition: "good", shippingClass: "s", priceCents: 4500, categorySlug: "shirts", imageColour: { r: 230, g: 228, b: 220 } },
-    { title: "Gold Hoop Earrings", brand: "Sarah & Sebastian", size: "OS", colour: "gold", condition: "excellent", shippingClass: "xs", priceCents: 3000, categorySlug: "jewellery", imageColour: { r: 200, g: 170, b: 80 } },
+    { title: "Vintage Levi's 501 Jeans", brand: "Levi's", size: "32", colour: "blue", gender: "unisex", condition: "good", shippingClass: "m", priceCents: 6500, categorySlug: "jeans", imageColour: { r: 60, g: 90, b: 150 } },
+    { title: "Wool Overcoat", brand: "Country Road", size: "M", colour: "camel", gender: "men", condition: "excellent", shippingClass: "l", priceCents: 12000, categorySlug: "coats", imageColour: { r: 170, g: 130, b: 90 } },
+    { title: "Silk Slip Dress", brand: "Zimmermann", size: "8", colour: "black", gender: "women", condition: "excellent", shippingClass: "s", priceCents: 9500, categorySlug: "midi-dresses", imageColour: { r: 30, g: 30, b: 30 } },
+    { title: "Leather Ankle Boots", brand: "R.M. Williams", size: "9", colour: "tan", gender: "men", condition: "good", shippingClass: "xl", priceCents: 14000, categorySlug: "boots", imageColour: { r: 150, g: 110, b: 70 } },
+    { title: "Linen Shirt", brand: "Bassike", size: "L", colour: "white", gender: "women", condition: "good", shippingClass: "s", priceCents: 4500, categorySlug: "shirts", imageColour: { r: 230, g: 228, b: 220 } },
+    { title: "Gold Hoop Earrings", brand: "Sarah & Sebastian", size: "OS", colour: "gold", gender: "women", condition: "excellent", shippingClass: "xs", priceCents: 3000, categorySlug: "jewellery", imageColour: { r: 200, g: 170, b: 80 } },
   ];
 
   // Category IDs are looked up by slug (@bushpop/config CATEGORY_LEAVES) rather
@@ -218,6 +218,7 @@ async function seedDevListings() {
         categoryId: categoryIdBySlug.get(f.categorySlug) ?? null,
         size: f.size,
         colour: f.colour,
+        gender: f.gender,
         condition: f.condition,
         shippingClass: f.shippingClass,
       })

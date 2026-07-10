@@ -1,4 +1,4 @@
-import { eq, and, lt, desc, sql, asc } from "drizzle-orm";
+import { eq, and, lt, desc, sql, asc, inArray } from "drizzle-orm";
 import { SCORE_NUDGE_MESSAGES, scoreToQualityTier } from "@bushpop/config";
 import { db } from "@bushpop/db/client";
 import { channelListings, inventoryItems, inventoryItemImages, listingScores } from "@bushpop/db/schema";
@@ -43,6 +43,23 @@ async function findListingWithOwner(id: string) {
   }
 
   return listing;
+}
+
+/**
+ * Ownership predicate for a mutating `channel_listings` query.
+ *
+ * Every mutation below is already preceded by `findOwnedListing()`, which
+ * throws on a mismatch — so this changes no behaviour today. It moves the
+ * guarantee from a helper call into the query itself, so extracting an update
+ * into a worker or batch job cannot silently reintroduce a real IDOR with no
+ * test failing. `channel_listings` carries no owner column, so ownership is
+ * expressed against the owning inventory item.
+ */
+function ownedByOwner(ownerId: string) {
+  return inArray(
+    channelListings.inventoryItemId,
+    db.select({ id: inventoryItems.id }).from(inventoryItems).where(eq(inventoryItems.ownerId, ownerId)),
+  );
 }
 
 async function findOwnedListing(
@@ -201,6 +218,7 @@ export async function updateListing(id: string, ownerId: string, data: UpdateInp
       and(
         eq(channelListings.id, id),
         eq(channelListings.version, version),
+        ownedByOwner(ownerId),
       ),
     )
     .returning();
@@ -276,6 +294,7 @@ export async function transitionListingStatus(
       and(
         eq(channelListings.id, id),
         eq(channelListings.version, version),
+        ownedByOwner(ownerId),
       ),
     )
     .returning();
@@ -355,6 +374,7 @@ export async function archiveListing(id: string, ownerId: string, version: numbe
       and(
         eq(channelListings.id, id),
         eq(channelListings.version, version),
+        ownedByOwner(ownerId),
       ),
     )
     .returning({ id: channelListings.id });

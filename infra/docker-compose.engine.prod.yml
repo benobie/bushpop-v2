@@ -89,6 +89,15 @@ services:
       # --- generated secrets (Coolify) ---
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
+      # Pickup collection codes are derived (HMAC), never stored. Without this
+      # line the var never reaches the container, and getPickupCodeSecret()
+      # throws under NODE_ENV=production — the buyer's code page and the
+      # seller's redemption endpoint both 500. Fail-closed, so this is an
+      # outage rather than a crypto weakness. Generate with
+      # `openssl rand -hex 32`. NOTE: rotating this instantly changes the code
+      # for EVERY outstanding pickup order — a buyer holding a screenshot of
+      # their old code silently loses it.
+      PICKUP_CODE_SECRET: ${PICKUP_CODE_SECRET}
       # --- Ben-provided secrets (test/sandbox) ---
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}

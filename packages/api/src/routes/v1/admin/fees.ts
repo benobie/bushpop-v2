@@ -4,7 +4,10 @@ import { COMMISSION_SCHEDULE, BUYER_PROTECTION_SCHEDULE } from "@bushpop/config/
 import { requireAuth } from "../../../middleware/require-auth.js";
 import { requireRole } from "../../../middleware/require-role.js";
 
-const adminPreHandlers = [requireAuth, requireRole("admin")];
+// Factory, not a shared array: @fastify/rate-limit pushes its handler onto the
+// preHandler array it is handed, for every route. Two routes sharing one array
+// reference would silently share a single limiter bucket.
+const adminPreHandlers = () => [requireAuth, requireRole("admin")];
 
 // GET /api/v1/admin/fees — read-only view of the fee constants.
 //
@@ -15,7 +18,7 @@ export async function adminFeeRoutes(app: FastifyInstance) {
   app.get(
     "/api/v1/admin/fees",
     {
-      preHandler: adminPreHandlers,
+      preHandler: adminPreHandlers(),
       schema: {
         tags: ["Admin - Fees"],
         summary: "View the current fee schedule (read-only, admin only)",

@@ -16,8 +16,8 @@ export const AI_DRAFT_CONFIG = {
   maxOutputTokens: 512,
   /** Below this the primary result is discarded and escalation runs. */
   minConfidence: 0.4,
-  /** Version stamp written to ai_generations.prompt_version. */
-  promptVersion: "v1",
+  /** Version stamp written to ai_generations.prompt_version. Bumped to v2 for BF-15 (gender field added — byte-stable prompt text changed). */
+  promptVersion: "v2",
   caps: {
     /** Manual regenerates per listing (trigger = "regenerate"). */
     regeneratesPerListing: 3,
