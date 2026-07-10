@@ -54,6 +54,7 @@ import { AppError, PublishNotReadyError } from "./lib/errors";
 import { InvalidTransitionError } from "./lib/state-machine";
 import { registerIdempotencyHook } from "./middleware/idempotency";
 import { setupListingsIndex, purgeStaleQueueEventsIfNeeded } from "./lib/search-index";
+import { parseTrustProxy } from "./lib/trust-proxy";
 
 export async function buildServer() {
   const app = Fastify({
@@ -65,6 +66,11 @@ export async function buildServer() {
           : undefined,
     },
     genReqId: () => ulid(),
+    // Behind Caddy on staging/prod, `request.ip` is the proxy's address unless
+    // we say how many hops to unwind. Every IP-keyed rate limit below depends
+    // on this. Off by default (direct connections in dev/test). See
+    // lib/trust-proxy.ts for the accepted values and why "true" is rejected.
+    trustProxy: parseTrustProxy(process.env.TRUST_PROXY),
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);

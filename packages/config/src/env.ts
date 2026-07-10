@@ -14,6 +14,12 @@ const envSchema = z.object({
   API_PORT: z.coerce.number().int().min(1).max(65535).default(3333),
   CHANNEL_SLUG: z.string().min(1).default("bushpop"),
 
+  // Proxy hop count (e.g. "1" behind Caddy) or a comma-separated list of
+  // trusted addresses/CIDRs. Unset = trust nothing, which is correct for
+  // direct connections in dev/test. "true" is rejected at boot — see
+  // packages/api/src/lib/trust-proxy.ts.
+  TRUST_PROXY: z.string().min(1).optional(),
+
   // Cloudflare R2
   R2_ACCOUNT_ID: z.string().min(1).optional(),
   R2_ACCESS_KEY_ID: z.string().min(1).optional(),
