@@ -69,7 +69,6 @@ interface Order {
   subtotalCents: number;
   shippingCents: number;
   buyerProtectionFeeCents: number;
-  sellerProceedsCents: number;
   totalCents: number;
   currency: string;
   shippingAddressSnapshot: ShippingAddress | null;

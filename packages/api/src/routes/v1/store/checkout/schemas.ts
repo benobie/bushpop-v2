@@ -16,12 +16,13 @@ export const checkoutIdParam = z.object({
 
 // ── Response schemas ──
 
+// Buyer-facing checkout totals. `platformFeeCents` / `sellerProceedsCents` are
+// deliberately absent — see the note on `orderResponseSchema`. The buyer is
+// quoted what they pay: subtotal, shipping, buyer protection, total.
 export const totalsSchema = z.object({
   subtotalCents: z.number().int().nonnegative(),
   shippingCents: z.number().int().nonnegative(),
-  platformFeeCents: z.number().int().nonnegative(),
   buyerProtectionFeeCents: z.number().int().nonnegative(),
-  sellerProceedsCents: z.number().int().nonnegative(),
   totalCents: z.number().int().positive(),
   currency: z.string().length(3),
 });

@@ -3,7 +3,12 @@ import { orderResponseSchema, listOrdersQuerySchema } from "../../store/orders/s
 
 export { listOrdersQuerySchema };
 
+// The seller sees their own payout breakdown. `platformFeeCents` and
+// `sellerProceedsCents` live here rather than on the shared buyer schema —
+// they are the seller's own commercial data, not the buyer's.
 export const sellerOrderResponseSchema = orderResponseSchema.extend({
+  platformFeeCents: z.number().int().nonnegative(),
+  sellerProceedsCents: z.number().int().nonnegative(),
   shippingLabelUrl: z.string().nullable(),
 });
 

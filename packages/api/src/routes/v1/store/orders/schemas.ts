@@ -47,9 +47,13 @@ export const orderResponseSchema = z.object({
   ]),
   subtotalCents: z.number().int().nonnegative(),
   shippingCents: z.number().int().nonnegative(),
-  platformFeeCents: z.number().int().nonnegative(),
   buyerProtectionFeeCents: z.number().int().nonnegative(),
-  sellerProceedsCents: z.number().int().nonnegative(),
+  // NOTE: `platformFeeCents` and `sellerProceedsCents` are deliberately absent.
+  // This schema serves the buyer's own order endpoints (and the guest
+  // order-access route). A buyer needs only what they paid — exposing the
+  // seller's net take on every order lets any buyer reconstruct a seller's
+  // margin structure from the wire, even though no buyer UI renders it. The
+  // seller and admin surfaces declare these fields on their own schemas.
   totalCents: z.number().int().nonnegative(),
   currency: z.string().length(3),
   shippingAddressSnapshot: addressSnapshotSchema.nullable(),
