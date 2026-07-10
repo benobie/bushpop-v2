@@ -74,10 +74,10 @@ function servePrototypes() {
 
 async function shoot(page, url, file) {
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
-  // Let lazy images, fonts and hover/scroll-triggered CSS settle. The nav is
-  // borderless-until-scroll, so shoot from the top.
+  // Let lazy images, fonts and hover/scroll-triggered CSS settle. A fresh goto
+  // leaves the page scrolled to the top, which is what we want — the nav is
+  // borderless-until-scroll.
   await page.waitForTimeout(1500);
-  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: file, fullPage: true, type: "jpeg", quality: JPEG_QUALITY });
 }
 
