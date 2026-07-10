@@ -35,11 +35,14 @@ describe("mergeAnonymousIdentity", () => {
     const selectResults: unknown[] = [[anonCart], [], [realCart], [anonItem]];
 
     const nestedUpdateWhereMock = vi.fn().mockRejectedValue({ cause: { code: "23505" } });
-    const addressUpdateWhereMock = vi.fn().mockResolvedValue(undefined);
     const insertValuesMock = vi.fn().mockReturnValue({
       onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
     });
     const deleteWhereMock = vi.fn().mockResolvedValue(undefined);
+
+    // Every tx.update(...).set(...) payload, in call order, so we can assert
+    // what got reassigned without depending on drizzle's table internals.
+    const updatePayloads: Record<string, unknown>[] = [];
 
     const nestedTx = {
       update: vi.fn().mockReturnValue({
@@ -53,16 +56,19 @@ describe("mergeAnonymousIdentity", () => {
         from: vi.fn().mockReturnThis(),
         where: vi.fn().mockImplementation(async () => selectResults.shift() ?? []),
       })),
-      update: vi.fn().mockReturnValue({
-        set: vi.fn().mockReturnThis(),
-        where: addressUpdateWhereMock,
-      }),
+      update: vi.fn().mockImplementation(() => ({
+        set: vi.fn().mockImplementation((payload: Record<string, unknown>) => {
+          updatePayloads.push(payload);
+          return { where: vi.fn().mockResolvedValue(undefined) };
+        }),
+      })),
       insert: vi.fn().mockReturnValue({
         values: insertValuesMock,
       }),
       delete: vi.fn().mockReturnValue({
         where: deleteWhereMock,
       }),
+      execute: vi.fn().mockResolvedValue(undefined),
       transaction: vi.fn(async (cb: (inner: typeof nestedTx) => Promise<void>) => cb(nestedTx)),
     };
 
@@ -78,6 +84,20 @@ describe("mergeAnonymousIdentity", () => {
       currency: anonItem.currency,
     });
     expect(deleteWhereMock).toHaveBeenCalledTimes(1);
-    expect(addressUpdateWhereMock).toHaveBeenCalledTimes(1);
+
+    // The guest's checkout sessions are re-pointed at the surviving cart
+    // BEFORE that cart is dropped — checkout_sessions.cart_id is NO ACTION.
+    const repointIndex = updatePayloads.findIndex((p) => p.cartId === realCart.id);
+    expect(repointIndex).toBeGreaterThanOrEqual(0);
+    expect(tx.delete).toHaveBeenCalledTimes(1);
+
+    // Every buyer-owned column moves to the real account.
+    const reassigned = updatePayloads.filter(
+      (p) => p.userId === "real-user" || p.buyerId === "real-user",
+    );
+    expect(reassigned.length).toBe(5); // addresses, orders, orderGroups, checkoutSessions, notifications
+
+    // …and the three uniqueness-constrained tables move via guarded SQL.
+    expect(tx.execute).toHaveBeenCalledTimes(3);
   });
 });
