@@ -4,6 +4,7 @@ import { and, count, eq, gte, isNull } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
 import { listingReports, channelListings, inventoryItems } from "@bushpop/db/schema";
 import { requireAuth } from "../../../middleware/require-auth.js";
+import { requireRealAccount } from "../../../middleware/require-real-account.js";
 import { NotFoundError, ConflictError, TooManyRequestsError, ValidationError } from "../../../lib/errors.js";
 import { reportReasonSchema } from "./listing-reports-schemas.js";
 
@@ -25,7 +26,7 @@ export async function storeListingReportRoutes(app: FastifyInstance) {
   app.post(
     "/api/v1/store/listings/:id/report",
     {
-      preHandler: [requireAuth],
+      preHandler: [requireAuth, requireRealAccount],
       schema: {
         tags: ["Store"],
         summary: "Report a listing",

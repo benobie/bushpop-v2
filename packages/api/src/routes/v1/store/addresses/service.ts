@@ -122,7 +122,11 @@ export async function updateAddress(id: string, userId: string, data: UpdateInpu
         ...(data.isDefault !== undefined && { isDefault: data.isDefault }),
         updatedAt: new Date(),
       })
-      .where(eq(addresses.id, id))
+      // Ownership is already proven by findOwnedAddress() above. Repeating the
+      // predicate here puts the guarantee in the query rather than in a caller's
+      // memory, so extracting this update into a worker or batch job can't
+      // silently reintroduce an IDOR with no test failing.
+      .where(and(eq(addresses.id, id), eq(addresses.userId, userId)))
       .returning();
 
     if (data.isDefault === true) {
@@ -155,7 +159,9 @@ export async function deleteAddress(id: string, userId: string) {
   await db
     .update(addresses)
     .set({ deletedAt: new Date() })
-    .where(eq(addresses.id, id));
+    // Ownership predicate in the query, not only in the findOwnedAddress()
+    // pre-read above. See updateAddress().
+    .where(and(eq(addresses.id, id), eq(addresses.userId, userId)));
 }
 
 // ── Sync helper ──

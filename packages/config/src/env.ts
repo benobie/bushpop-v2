@@ -57,7 +57,16 @@ const envSchema = z.object({
   // no plaintext code is ever stored. Optional so existing deployed envs keep
   // booting — pickup-code-service.ts falls back to a fixed dev-only secret
   // outside production and throws if genuinely missing in production.
-  PICKUP_CODE_SECRET: z.string().min(16).optional(),
+  //
+  // min(32), not min(16): this is an HMAC-SHA256 key. Sixteen *random* bytes
+  // would be fine, but nothing here enforces randomness and sixteen characters
+  // of human-chosen text can be well under 128 bits of entropy. Generate with
+  // `openssl rand -hex 32`.
+  //
+  // Rotation blast radius: codes are derived on read and never stored, so
+  // changing this value instantly invalidates the code for EVERY outstanding
+  // pickup order at once. Correct after a leak; surprising otherwise.
+  PICKUP_CODE_SECRET: z.string().min(32).optional(),
 
   // Guest commerce (BF-08, bushpop-v2 PR #106). HMAC key used to derive a
   // guest buyer's order-access token deterministically from (orderId,

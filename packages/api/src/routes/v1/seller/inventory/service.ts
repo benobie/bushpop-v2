@@ -159,6 +159,10 @@ export async function updateInventoryItem(
       and(
         eq(inventoryItems.id, id),
         eq(inventoryItems.version, version),
+        // Ownership is already proven by findOwnedItem() above. Repeating the
+        // predicate here keeps the guarantee in the query rather than in a
+        // caller's memory.
+        eq(inventoryItems.ownerId, ownerId),
       ),
     )
     .returning();

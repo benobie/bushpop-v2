@@ -21,12 +21,15 @@ import {
 import { z } from "zod";
 import type { LifecycleState } from "../../../../lib/inventory-machines.js";
 
-const sellerPreHandlers = [requireAuth, requireRole("seller")];
+// Factory, not a shared array: @fastify/rate-limit pushes its handler onto the
+// preHandler array it is handed, for every route. Two routes sharing one array
+// reference would silently share a single limiter bucket.
+const sellerPreHandlers = () => [requireAuth, requireRole("seller")];
 
 export async function sellerInventoryRoutes(app: FastifyInstance) {
   // POST /api/v1/seller/inventory
   app.post("/api/v1/seller/inventory", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Inventory"],
       summary: "Create an inventory item",
@@ -43,7 +46,7 @@ export async function sellerInventoryRoutes(app: FastifyInstance) {
 
   // GET /api/v1/seller/inventory
   app.get("/api/v1/seller/inventory", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Inventory"],
       summary: "List own inventory items",
@@ -57,7 +60,7 @@ export async function sellerInventoryRoutes(app: FastifyInstance) {
 
   // GET /api/v1/seller/inventory/:id
   app.get("/api/v1/seller/inventory/:id", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Inventory"],
       summary: "Get inventory item with images",
@@ -71,7 +74,7 @@ export async function sellerInventoryRoutes(app: FastifyInstance) {
 
   // PATCH /api/v1/seller/inventory/:id
   app.patch("/api/v1/seller/inventory/:id", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Inventory"],
       summary: "Update inventory item attributes",
@@ -87,7 +90,7 @@ export async function sellerInventoryRoutes(app: FastifyInstance) {
 
   // PATCH /api/v1/seller/inventory/:id/lifecycle
   app.patch("/api/v1/seller/inventory/:id/lifecycle", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Inventory"],
       summary: "Transition inventory item lifecycle state",
@@ -109,7 +112,7 @@ export async function sellerInventoryRoutes(app: FastifyInstance) {
 
   // PATCH /api/v1/seller/inventory/:id/archive
   app.patch("/api/v1/seller/inventory/:id/archive", {
-    preHandler: sellerPreHandlers,
+    preHandler: sellerPreHandlers(),
     schema: {
       tags: ["Seller - Inventory"],
       summary: "Archive inventory item",
