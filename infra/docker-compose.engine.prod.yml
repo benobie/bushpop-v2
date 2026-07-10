@@ -86,6 +86,13 @@ services:
       ADMIN_URL: ${ADMIN_URL:-https://admin.bushpop.xyz}
       API_URL: ${API_URL:-https://api.bushpop.xyz}
       CHANNEL_SLUG: ${CHANNEL_SLUG:-bushpop}
+      # Caddy (host) → published port 3334 → this container = exactly one proxy
+      # hop, so `request.ip` unwinds one entry from the right of X-Forwarded-For.
+      # Without it every IP-keyed rate limit (incl. the 10/min /api/auth/* gate)
+      # keys on the docker gateway and locks sign-in for all users at once.
+      # Non-empty default is deliberate — Coolify re-syncs env rows from this
+      # file on every deploy, so the default must BE the real staging value.
+      TRUST_PROXY: ${TRUST_PROXY:-1}
       # --- generated secrets (Coolify) ---
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}

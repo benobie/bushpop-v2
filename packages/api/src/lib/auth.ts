@@ -8,6 +8,7 @@ import { DEFAULT_CHANNEL, getChannelConfig } from "@bushpop/config";
 import { getEmailSender } from "./email/index.js";
 import { accountVerificationEmailTemplate, passwordResetEmailTemplate } from "./email/templates.js";
 import { GUEST_EMAIL_DOMAIN, mergeAnonymousIdentity } from "./guest-identity.js";
+import { CLIENT_IP_HEADER } from "./trust-proxy.js";
 
 function getAuthChannelName(): string {
   return getChannelConfig(process.env.CHANNEL_SLUG ?? DEFAULT_CHANNEL).name;
@@ -41,6 +42,13 @@ export const auth = betterAuth({
   advanced: {
     database: {
       generateId: () => ulid(),
+    },
+    // better-auth's default IP resolution reads client-settable forwarding
+    // headers directly. Pin it to the single header plugins/auth.ts stamps
+    // with Fastify's trustProxy-resolved `request.ip`, so better-auth's
+    // IP-derived logic can't be steered by a spoofed X-Forwarded-For.
+    ipAddress: {
+      ipAddressHeaders: [CLIENT_IP_HEADER],
     },
   },
   trustedOrigins: [

@@ -1,6 +1,7 @@
 import fp from "fastify-plugin";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { auth } from "../lib/auth.js";
+import { CLIENT_IP_HEADER } from "../lib/trust-proxy.js";
 
 async function authPluginFn(app: FastifyInstance) {
   // Rate-limit the entire /api/auth/* proxy to 10 req/min per IP.
@@ -30,6 +31,11 @@ async function authPluginFn(app: FastifyInstance) {
         headers.set(key, value);
       }
     }
+
+    // Overwrite (never append) — better-auth reads only this header for the
+    // client IP, so a client-supplied value must not survive. `request.ip` has
+    // already been resolved against the server's trustProxy setting.
+    headers.set(CLIENT_IP_HEADER, request.ip);
 
     const hasBody = request.method !== "GET" && request.method !== "HEAD";
     const webRequest = new Request(url, {
