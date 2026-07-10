@@ -6,7 +6,10 @@ import { aiGenerations } from "@bushpop/db/schema";
 import { requireAuth } from "../../../middleware/require-auth.js";
 import { requireRole } from "../../../middleware/require-role.js";
 
-const adminPreHandlers = [requireAuth, requireRole("admin")];
+// Factory, not a shared array: @fastify/rate-limit pushes its handler onto the
+// preHandler array it is handed, for every route. Two routes sharing one array
+// reference would silently share a single limiter bucket.
+const adminPreHandlers = () => [requireAuth, requireRole("admin")];
 
 const listQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -18,7 +21,7 @@ export async function adminAiUsageRoutes(app: FastifyInstance) {
   app.get(
     "/api/v1/admin/ai-usage/summary",
     {
-      preHandler: adminPreHandlers,
+      preHandler: adminPreHandlers(),
       schema: {
         tags: ["Admin - AI Usage"],
         summary: "AI draft generation cost + usage summary (admin only)",
@@ -72,7 +75,7 @@ export async function adminAiUsageRoutes(app: FastifyInstance) {
   app.get(
     "/api/v1/admin/ai-usage",
     {
-      preHandler: adminPreHandlers,
+      preHandler: adminPreHandlers(),
       schema: {
         tags: ["Admin - AI Usage"],
         summary: "List recent AI draft generations (admin only)",

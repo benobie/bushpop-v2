@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { requireAuth } from "../../../../middleware/require-auth.js";
+import { requireRealAccount } from "../../../../middleware/require-real-account.js";
 import {
   createSavedSearchBody,
   savedSearchParams,
@@ -21,7 +22,7 @@ export async function customerSavedSearchRoutes(app: FastifyInstance) {
   app.post(
     "/api/v1/customer/saved-searches",
     {
-      preHandler: [requireAuth],
+      preHandler: [requireAuth, requireRealAccount],
       schema: {
         tags: ["Customer - Saved Searches"],
         summary: "Save a search",
@@ -46,7 +47,7 @@ export async function customerSavedSearchRoutes(app: FastifyInstance) {
   app.get(
     "/api/v1/customer/saved-searches",
     {
-      preHandler: [requireAuth],
+      preHandler: [requireAuth, requireRealAccount],
       schema: {
         tags: ["Customer - Saved Searches"],
         summary: "List saved searches",
@@ -65,7 +66,7 @@ export async function customerSavedSearchRoutes(app: FastifyInstance) {
   app.patch(
     "/api/v1/customer/saved-searches/:id",
     {
-      preHandler: [requireAuth],
+      preHandler: [requireAuth, requireRealAccount],
       schema: {
         tags: ["Customer - Saved Searches"],
         summary: "Rename (or clear the label of) a saved search",
@@ -86,7 +87,7 @@ export async function customerSavedSearchRoutes(app: FastifyInstance) {
   app.delete(
     "/api/v1/customer/saved-searches/:id",
     {
-      preHandler: [requireAuth],
+      preHandler: [requireAuth, requireRealAccount],
       schema: {
         tags: ["Customer - Saved Searches"],
         summary: "Delete a saved search",

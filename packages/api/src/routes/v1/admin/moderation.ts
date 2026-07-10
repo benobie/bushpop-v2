@@ -9,7 +9,10 @@ import { NotFoundError, ConflictError } from "../../../lib/errors.js";
 import { dispatchEvent } from "../../../lib/events.js";
 import { reportReasonSchema } from "./reports/schemas.js";
 
-const adminPreHandlers = [requireAuth, requireRole("admin")];
+// Factory, not a shared array: @fastify/rate-limit pushes its handler onto the
+// preHandler array it is handed, for every route. Two routes sharing one array
+// reference would silently share a single limiter bucket.
+const adminPreHandlers = () => [requireAuth, requireRole("admin")];
 
 const createFlagBodySchema = z.object({
   channelListingId: z.string().length(26),
@@ -35,7 +38,7 @@ export async function adminModerationRoutes(app: FastifyInstance) {
   app.post(
     "/api/v1/admin/moderation/flags",
     {
-      preHandler: adminPreHandlers,
+      preHandler: adminPreHandlers(),
       schema: {
         tags: ["Admin - Moderation"],
         summary: "Manually flag a listing for review (admin only)",

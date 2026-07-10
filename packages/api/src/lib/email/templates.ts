@@ -1,5 +1,24 @@
 // Plain text email templates — MVP. No HTML.
 
+/**
+ * Strip CR, LF and NUL from any string interpolated into an email subject line.
+ *
+ * Subjects are headers. Newlines in a header value are how header injection
+ * works; the only user-controlled string that reaches a subject today is a
+ * seller's own listing title (`listingPublishedSellerTemplate`), and
+ * `drafts/schemas.ts` permits newlines in a title. The transport is Resend's
+ * JSON API rather than raw SMTP, so exploiting this would additionally require
+ * Resend's own encoder to mishandle a multiline subject — untested, and not
+ * something to leave to a third party.
+ *
+ * Collapses any resulting run of whitespace so a stripped title still reads
+ * cleanly, and trims. Bodies are NOT sanitised: they are plain text, where a
+ * newline is just a newline.
+ */
+export function sanitiseSubject(value: string): string {
+  return value.replace(/[\r\n\0]+/g, " ").replace(/\s{2,}/g, " ").trim();
+}
+
 export interface OrderConfirmationBuyerParams {
   orderId: string;
   buyerName: string;
@@ -297,7 +316,9 @@ export function listingPublishedSellerTemplate(params: ListingPublishedSellerPar
   const urlLine = params.listingUrl ? `View it live: ${params.listingUrl}` : null;
 
   return {
-    subject: `Your listing is live on ${params.channelName} — ${params.listingTitle}`,
+    subject: sanitiseSubject(
+      `Your listing is live on ${params.channelName} — ${params.listingTitle}`,
+    ),
     text: [
       `Your listing "${params.listingTitle}" is now live on ${params.channelName}.`,
       "",
