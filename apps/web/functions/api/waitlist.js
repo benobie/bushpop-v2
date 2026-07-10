@@ -18,8 +18,25 @@
 const SEGMENTS = new Set(["buyer", "seller", "opshop"]);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Best-effort rate limit: per-isolate memory, resets when the isolate recycles.
-// Good enough to blunt naive form spam; not a security boundary.
+// Only our own pages may post here. A browser always sends `Origin` on a POST
+// (fetch spec), so a missing or foreign origin is not a real form submission.
+// Scripted abuse can of course forge the header — this is a cheap filter that
+// removes the drive-by class, not an authentication boundary. See the residual
+// gap note below.
+const ALLOWED_ORIGINS = new Set([
+  "https://bushpop.com.au",
+  "https://www.bushpop.com.au",
+  "https://bushpop-v2.pages.dev",
+  "http://localhost:3000",
+  // `wrangler pages dev` — the only local server that actually runs Functions.
+  "http://localhost:8788",
+]);
+
+// Best-effort rate limit: per-isolate memory, resets when the isolate recycles
+// and is not shared across the many isolates Pages runs. Blunts a naive loop
+// from one client; a distributed or reconnecting client walks straight past it.
+// A real limiter needs a KV/Durable Object binding or Turnstile on the form —
+// both require new project config, so neither ships here.
 const RATE_LIMIT = 5;
 const WINDOW_MS = 60_000;
 const hits = new Map();
@@ -31,7 +48,25 @@ function json(status, body) {
   });
 }
 
+/** The `Origin` header, or the origin of `Referer` when a client strips it. */
+function requestOrigin(request) {
+  const origin = request.headers.get("Origin");
+  if (origin) return origin;
+  const referer = request.headers.get("Referer");
+  if (!referer) return null;
+  try {
+    return new URL(referer).origin;
+  } catch {
+    return null;
+  }
+}
+
 export async function onRequestPost(context) {
+  const origin = requestOrigin(context.request);
+  if (!origin || !ALLOWED_ORIGINS.has(origin)) {
+    return json(403, { ok: false, error: "forbidden_origin" });
+  }
+
   const ip = context.request.headers.get("CF-Connecting-IP") ?? "unknown";
   const now = Date.now();
   if (hits.size > 1000) hits.clear();
@@ -52,7 +87,15 @@ export async function onRequestPost(context) {
     return json(400, { ok: false, error: "bad_json" });
   }
 
-  if (typeof body.company === "string" && body.company.trim() !== "") {
+  // Honeypot. Absent, null, or an empty string is a real human leaving the
+  // hidden field alone; anything else (including a non-string value that would
+  // slip past a `typeof` check) is a bot, and gets a fake success.
+  const company = body.company;
+  const companyFilled =
+    company !== undefined &&
+    company !== null &&
+    (typeof company !== "string" || company.trim() !== "");
+  if (companyFilled) {
     return json(200, { ok: true });
   }
 

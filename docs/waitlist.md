@@ -72,8 +72,28 @@ The table also rides the existing `pg_dump -n bushpop` sellability boundary, and
 ```bash
 curl -sS -X POST https://bushpop-v2.pages.dev/api/waitlist \
   -H "Content-Type: application/json" \
+  -H "Origin: https://bushpop-v2.pages.dev" \
   -d '{"email":"probe@example.com","segment":"buyer","source":"manual-verify"}' -w "\n%{http_code}\n"
 ```
 
 Expect `{"ok":true}` / 200, then a row in `bushpop.waitlist`. Delete test rows:
 `delete from bushpop.waitlist where source in ('manual-verify');`
+
+The `Origin` header is required — the Function only accepts posts from
+`bushpop.com.au`, `www.bushpop.com.au`, `bushpop-v2.pages.dev`, and
+`localhost:3000`. Anything else gets a 403. Add the production origin to
+`ALLOWED_ORIGINS` in `apps/web/functions/api/waitlist.js` if it ever changes.
+
+## Endpoint hardening — what is and isn't in place
+
+The Function is an unauthenticated relay into n8n → Resend, so abuse costs the
+domain's sender reputation. Current controls: an origin allowlist, a honeypot
+field (`company` — any value at all means bot, and gets a fake `200`), an email
+shape/length check, a 2 KB body cap, and a best-effort in-memory rate limit.
+
+**Residual gap:** that rate limit lives in per-isolate memory. Cloudflare Pages
+runs many isolates and recycles them freely, so the limit is not shared and does
+not survive; a distributed or reconnecting caller is not slowed by it. Closing
+this properly needs either a KV / Durable Object binding for a shared counter,
+or Turnstile on the form — both require new project bindings and config, so
+neither is wired up yet.
