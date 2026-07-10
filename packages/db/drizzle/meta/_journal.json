@@ -211,6 +211,13 @@
       "when": 1783583094083,
       "tag": "0029_little_kingpin",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1783683303181,
+      "tag": "0030_buyer_email_snapshot",
+      "breakpoints": true
     }
   ]
 }
