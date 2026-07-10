@@ -232,6 +232,7 @@ function buildDraft(overrides: Partial<SellDraft> = {}): SellDraft {
     size: null,
     sizeScale: null,
     colour: null,
+    gender: null,
     description: null,
     condition: null,
     conditionNotes: null,
@@ -259,6 +260,7 @@ function buildDraft(overrides: Partial<SellDraft> = {}): SellDraft {
     aiSuggestedBrand: null,
     aiSuggestedCategory: null,
     aiSuggestedColour: null,
+    aiSuggestedGender: null,
     aiConfidence: null,
     createdAt: "2026-07-04T00:00:00.000Z",
     updatedAt: "2026-07-04T00:00:00.000Z",
@@ -354,6 +356,7 @@ function installDraftHandlers() {
             ? (body.sizeScale as SellDraft["sizeScale"])
             : currentDraft.sizeScale,
         colour: "colour" in body ? (body.colour as string | null) : currentDraft.colour,
+        gender: "gender" in body ? (body.gender as string | null) : currentDraft.gender,
         description:
           "description" in body
             ? (body.description as string | null)
@@ -468,6 +471,7 @@ function installDraftHandlers() {
           brand: "",
           categoryLeaf: "",
           colour: "",
+          gender: "",
           description: "",
           confidence: 0.82,
         },

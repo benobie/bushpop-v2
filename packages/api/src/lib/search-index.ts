@@ -35,6 +35,7 @@ const INDEX_SETTINGS_FROZEN = {
     "colour",
     "brand",
     "condition",
+    "gender",
     "priceCents",
     "qualityTier",
   ],
@@ -76,6 +77,7 @@ export interface ListingDocument {
   size: string | null;
   colour: string | null;
   condition: string | null;
+  gender: string | null;
   categorySlug: string | null;
   tags: string[];
   publishedAt: number | null; // Unix timestamp (ms) — faster numeric sort
@@ -217,6 +219,7 @@ export function buildListingDocument(row: FullListingRow): ListingDocument {
     size: item.size ?? null,
     colour: item.colour ?? null,
     condition: item.condition ?? null,
+    gender: item.gender ?? null,
     categorySlug: category?.slug ?? null,
     tags,
     publishedAt: listing.publishedAt ? listing.publishedAt.getTime() : null,

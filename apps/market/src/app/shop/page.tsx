@@ -59,6 +59,7 @@ export default async function ShopPage({
     colour: getString(sp.colour),
     brand: getString(sp.brand),
     condition: getString(sp.condition),
+    gender: getString(sp.gender),
     minPrice: getNumber(sp.minPrice),
     maxPrice: getNumber(sp.maxPrice),
     sort,

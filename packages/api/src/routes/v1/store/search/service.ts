@@ -9,7 +9,7 @@ import type { BrowseQuery, SearchQuery, ListingPageResponse, StoreListingCard } 
 // ---------------------------------------------------------------------------
 
 /** Filter attributes surfaced as facet counts for the PLP/search filter bar (U1 §2.1). */
-const FACET_ATTRIBUTES = ["categorySlug", "size", "colour", "brand", "condition"] as const;
+const FACET_ATTRIBUTES = ["categorySlug", "size", "colour", "brand", "condition", "gender"] as const;
 
 /** Escape a string value for use in a MeiliSearch filter expression. */
 function escapeFilterValue(value: string): string {
@@ -36,6 +36,9 @@ function buildFilters(query: BrowseQuery): string[] {
   }
   if (query.condition) {
     filters.push(`condition = "${escapeFilterValue(query.condition)}"`);
+  }
+  if (query.gender) {
+    filters.push(`gender = "${escapeFilterValue(query.gender)}"`);
   }
   if (query.minPrice !== undefined) {
     filters.push(`priceCents >= ${query.minPrice}`);
@@ -86,6 +89,7 @@ function toListingCard(doc: ListingDocument): StoreListingCard {
     size: doc.size,
     colour: doc.colour,
     condition: doc.condition,
+    gender: doc.gender,
     categorySlug: doc.categorySlug,
     seller: {
       id: doc.seller.id,

@@ -6,6 +6,7 @@ import {
   resolveCategoryLeaf,
   resolveColour,
   resolveDraft,
+  resolveGender,
 } from "../../lib/ai/resolve.js";
 import { AI_DRAFT_SYSTEM_PROMPT } from "../../lib/ai/draft-prompt.js";
 import { computeCostUsdMicros } from "../../lib/ai/provider.js";
@@ -15,6 +16,7 @@ const VALID_RAW = {
   brand: "The North Face",
   category_leaf: "jackets",
   colour: "black",
+  gender: "unisex",
   description: "700-fill puffer in black. Boxy fit, clean baffles, zip intact.",
   confidence: 0.92,
 };
@@ -73,6 +75,13 @@ describe("resolve — brand/category/colour normalisation", () => {
 
   it("short strings do not prefix-match", () => {
     expect(matchAgainst("On", ["Onitsuka"])).toBe("");
+  });
+
+  it("resolves gender exactly, and returns blank instead of guessing", () => {
+    expect(resolveGender("women")).toBe("women");
+    expect(resolveGender("Unisex")).toBe("unisex");
+    expect(resolveGender("")).toBe("");
+    expect(resolveGender("toddler")).toBe("");
   });
 });
 

@@ -15,6 +15,7 @@ export async function createActiveTestListing(
     title?: string;
     channelId?: string;
     brand?: string;
+    gender?: string;
   },
 ) {
   const channel = await getBushpopChannel();
@@ -27,6 +28,7 @@ export async function createActiveTestListing(
       condition: "good",
       lifecycleState: "for_sale",
       brand: overrides?.brand,
+      gender: overrides?.gender,
     })
     .returning();
 

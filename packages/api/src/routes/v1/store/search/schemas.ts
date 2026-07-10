@@ -15,6 +15,7 @@ export const browseQuerySchema = z.object({
   colour: z.string().optional(),
   brand: z.string().optional(),
   condition: z.string().optional(),
+  gender: z.string().optional(),
   minPrice: z.coerce.number().int().min(0).optional(),
   maxPrice: z.coerce.number().int().min(0).optional(),
   sort: z.enum(SORT_OPTIONS).default("newest"),
@@ -51,6 +52,7 @@ export const storeListingCardSchema = z.object({
   size: z.string().nullable(),
   colour: z.string().nullable(),
   condition: z.string().nullable(),
+  gender: z.string().nullable(),
   categorySlug: z.string().nullable(),
   seller: storeListingCardSellerSchema,
 });

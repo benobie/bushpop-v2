@@ -127,6 +127,7 @@ async function finaliseGeneration(
           aiSuggestedBrand: resolved.brand || null,
           aiSuggestedCategory: resolved.categoryLeaf || null,
           aiSuggestedColour: resolved.colour || null,
+          aiSuggestedGender: resolved.gender || null,
           aiConfidence: resolved.confidence,
           aiPromptVersion: AI_DRAFT_PROMPT_VERSION,
           aiModel: provider?.model ?? AI_DRAFT_CONFIG.model,

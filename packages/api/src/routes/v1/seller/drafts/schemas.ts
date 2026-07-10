@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   COLOURS,
+  GENDERS,
   MEASUREMENT_KEYS,
   PARCEL_SIZES,
   SHIPPING_OPTIONS,
@@ -38,6 +39,14 @@ export const detailsStepSchema = z.object({
     .string()
     .refine((c) => (COLOURS as readonly string[]).includes(c), {
       message: `Colour must be one of: ${COLOURS.join(", ")}`,
+    })
+    .nullable()
+    .optional(),
+  /** Optional (W3/BF-15) — not required for publish, no listing-strength weight. */
+  gender: z
+    .string()
+    .refine((g) => (GENDERS as readonly string[]).includes(g), {
+      message: `Gender must be one of: ${GENDERS.join(", ")}`,
     })
     .nullable()
     .optional(),
@@ -123,6 +132,7 @@ export const draftResponseSchema = z.object({
   size: z.string().nullable(),
   sizeScale: z.string().nullable(),
   colour: z.string().nullable(),
+  gender: z.string().nullable(),
   description: z.string().nullable(),
   condition: z.string().nullable(),
   conditionNotes: z.string().nullable(),
@@ -145,6 +155,7 @@ export const draftResponseSchema = z.object({
   aiSuggestedBrand: z.string().nullable(),
   aiSuggestedCategory: z.string().nullable(),
   aiSuggestedColour: z.string().nullable(),
+  aiSuggestedGender: z.string().nullable(),
   aiConfidence: z.number().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),

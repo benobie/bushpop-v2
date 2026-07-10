@@ -1,6 +1,19 @@
 // Fashion taxonomy constants — garment types, sizes, colours, materials
 // Used across web, mobile, and backend for structured filter taxonomy
 
+// W3 (BF-15): gender as first-class IA — home tiles, PLP filter, wizard.
+// Optional on a listing; not enforced against garment type or category.
+export const GENDERS = ["women", "men", "unisex", "kids"] as const;
+
+export type Gender = (typeof GENDERS)[number];
+
+export const GENDER_LABELS: Record<Gender, string> = {
+  women: "Women",
+  men: "Men",
+  unisex: "Unisex",
+  kids: "Kids",
+};
+
 export const GARMENT_TYPES = [
   "tops",
   "bottoms",
