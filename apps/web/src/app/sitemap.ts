@@ -32,6 +32,8 @@ const READY_PATHS: { path: string; priority: number }[] = [
   { path: "/guides/op-shops-canberra/", priority: 0.7 },
   { path: "/guides/op-shops-newcastle/", priority: 0.7 },
   { path: "/guides/op-shops-hobart/", priority: 0.7 },
+  { path: "/guides/op-shops-wollongong/", priority: 0.7 },
+  { path: "/guides/op-shops-geelong/", priority: 0.7 },
   { path: "/guides/op-shops-darwin/", priority: 0.7 },
   { path: "/guides/op-shops-sunshine-coast/", priority: 0.7 },
   { path: "/guides/op-shops-cairns/", priority: 0.7 },
