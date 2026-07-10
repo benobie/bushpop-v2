@@ -115,6 +115,14 @@ export const orders = pgTable("orders", {
   // Address snapshots (immutable at order creation)
   shippingAddressSnapshot: jsonb("shipping_address_snapshot"),
   senderAddressSnapshot: jsonb("sender_address_snapshot"),
+  // Buyer contact email as it stood at order creation. Transactional email must
+  // NOT resolve its recipient by joining `user.email` at send time: that column
+  // is mutable (a buyer can change it, and releaseAnonymousEmail rewrites a
+  // converting guest's back to a placeholder) while the email worker runs
+  // asynchronously — so a live join can silently redirect or suppress the
+  // confirmation, shipping and refund emails of an order already placed.
+  // Nullable only for rows predating this column.
+  buyerEmailSnapshot: varchar("buyer_email_snapshot", { length: 255 }),
   // Tracking
   trackingNumber: varchar("tracking_number", { length: 255 }),
   trackingCarrier: varchar("tracking_carrier", { length: 100 }),

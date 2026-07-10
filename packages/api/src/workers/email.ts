@@ -137,7 +137,8 @@ async function fetchOrderWithParties(orderId: string): Promise<OrderWithParties 
       trackingNumber: orders.trackingNumber,
       trackingCarrier: orders.trackingCarrier,
       shippingAddressSnapshot: orders.shippingAddressSnapshot,
-      buyerEmail: buyerAlias.email,
+      buyerEmailSnapshot: orders.buyerEmailSnapshot,
+      buyerAccountEmail: buyerAlias.email,
       buyerName: buyerAlias.name,
       buyerIsAnonymous: buyerAlias.isAnonymous,
       sellerEmail: sellerAlias.email,
@@ -150,7 +151,16 @@ async function fetchOrderWithParties(orderId: string): Promise<OrderWithParties 
     .innerJoin(channels, eq(channels.id, orders.channelId))
     .where(eq(orders.id, orderId));
 
-  return rows[0] ?? null;
+  const row = rows[0];
+  if (!row) return null;
+
+  // The order's frozen contact email wins over the buyer's current account
+  // email. Only rows predating buyer_email_snapshot fall back to the live
+  // join — for everyone else, mutating `user.email` after checkout (a guest
+  // converting, a buyer changing their address) cannot touch where this
+  // order's mail goes.
+  const { buyerEmailSnapshot, buyerAccountEmail, ...rest } = row;
+  return { ...rest, buyerEmail: buyerEmailSnapshot ?? buyerAccountEmail };
 }
 
 async function fetchOrderItems(orderId: string): Promise<OrderItem[]> {
@@ -355,19 +365,22 @@ async function processEmailJob(job: Job<EmailJobData>): Promise<void> {
       return;
     }
 
-    // Anonymous-guest orders (BF-08 guest bag) carry a placeholder
-    // `<id>@guest.bushpop.com.au` buyer email that is undeliverable — sending
-    // would bounce and hurt Resend sender reputation, so skip buyer-facing
-    // emails for them (the job completes; no DLQ noise).
-    // TODO(PR #106 guest checkout): setGuestCheckoutEmail will overwrite the
-    // placeholder with the buyer's real email at checkout, so once that
-    // merges this guard only catches orders that predate email capture. The
-    // guest order-access HMAC link belongs in these buyer emails at that
-    // point — this is the integration site.
-    // Both conditions required: the placeholder-domain suffix alone must not
-    // suppress a real (non-anonymous) account that happens to use this
-    // domain, and isAnonymous alone must not suppress a guest whose real
-    // email PR #106 has captured onto the user row.
+    // A guest who never reached checkout email capture still carries a
+    // placeholder `<id>@guest.bushpop.com.au` address that is undeliverable —
+    // sending would bounce and hurt Resend sender reputation, so skip
+    // buyer-facing emails for them (the job completes; no DLQ noise).
+    //
+    // `order.buyerEmail` here is the order's frozen buyer_email_snapshot, so a
+    // guest who DID give an email at checkout is never caught by this guard,
+    // even mid-conversion: releaseAnonymousEmail rewrites `user.email` back to
+    // a placeholder before sign-up is validated, and this job may drain in that
+    // window, but the snapshot is immune. Transactional email never depends on
+    // whether the buyer signs up.
+    //
+    // Both conditions still required: the placeholder-domain suffix alone must
+    // not suppress a real (non-anonymous) account that happens to use this
+    // domain, and isAnonymous alone must not suppress a guest with a real
+    // captured email.
     if (
       (type === "order_confirmation_buyer" ||
         type === "shipping_confirmation_buyer" ||

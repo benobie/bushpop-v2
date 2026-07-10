@@ -13,6 +13,7 @@ import {
   payoutHolds,
   sellerProfiles,
   addresses,
+  user,
 } from "@bushpop/db/schema";
 import { getStripe } from "../../../lib/stripe.js";
 import {
@@ -550,6 +551,17 @@ async function createOrderForSession(
       }
     }
 
+    // Freeze the buyer's contact email onto the order. `user.email` is mutable
+    // and the email worker runs asynchronously, so resolving the recipient by
+    // joining it at send time lets a later change — a guest converting to an
+    // account, say — redirect or suppress this order's confirmation, shipping
+    // and refund emails. A guest's real address is already on the row by now:
+    // setGuestCheckoutEmail stamps it during checkout, before payment.
+    const [buyer] = await tx
+      .select({ email: user.email })
+      .from(user)
+      .where(eq(user.id, session.buyerId));
+
     // ── LINEARISATION POINT ──────────────────────────────────────────────
     // Insert the order first. onConflictDoNothing on the unique
     // checkout_session_id means only ONE runner ever wins.
@@ -570,6 +582,7 @@ async function createOrderForSession(
         currency: session.currency,
         shippingAddressSnapshot,
         senderAddressSnapshot,
+        buyerEmailSnapshot: buyer?.email ?? null,
         stripePaymentIntentId: pi.id,
       })
       .onConflictDoNothing({ target: orders.checkoutSessionId })
