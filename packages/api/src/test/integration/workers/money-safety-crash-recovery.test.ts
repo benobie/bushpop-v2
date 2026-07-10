@@ -633,6 +633,55 @@ describe("Codex C1 — atomic WAL+finalise (reconcile double-transfer window)", 
     expect(stripeMock.transfers.create).not.toHaveBeenCalled();
   });
 
+  it("reconcile finalises a release_failed_manual hold to released when its indeterminate transfer landed (PR #120 follow-up round 2)", async () => {
+    // The retry-cap path (markManual) can also leave a transfer op
+    // indeterminate_5xx (Stripe 5xx on the final attempt). Before this fix,
+    // reconcilePendingTransfers's finalisation WHERE clause didn't include
+    // release_failed_manual, so a landed-transfer match here would mark the
+    // op succeeded and set orders.stripeTransferId while silently leaving the
+    // hold stuck at release_failed_manual forever — a later refund attempt
+    // (refund-service.ts step 6a) would then see no unresolved transfer op
+    // and refund the buyer even though the seller was already paid.
+    const f = await makeRecoveryFixture();
+    const { orderId, holdId } = await makeOrderWithHeldHold(f, {
+      status: "release_failed_manual",
+    });
+
+    const [op] = await db
+      .insert(paymentOperations)
+      .values({
+        orderId,
+        type: "transfer",
+        idempotencyKey: `${holdId}:3`,
+        amountCents: 5500,
+        status: "indeterminate_5xx",
+        createdAt: new Date(Date.now() - 60 * 60_000),
+      })
+      .returning({ id: paymentOperations.id });
+
+    stripeMock.transfers.list.mockResolvedValue({
+      has_more: false,
+      data: [{ id: "tr_manual_reconciled", metadata: { piklo_payment_op_id: op!.id } }],
+    });
+    stripeMock.transfers.create.mockResolvedValue({ id: "tr_DOUBLE_PAY" });
+
+    const swept = await runPayoutReleaseSweep();
+    expect(swept.transfersReconciled).toBe(1);
+    expect(stripeMock.transfers.create).not.toHaveBeenCalled();
+
+    const [opAfter] = await db
+      .select()
+      .from(paymentOperations)
+      .where(eq(paymentOperations.id, op!.id));
+    expect(opAfter!.status).toBe("succeeded");
+
+    const [hold] = await db.select().from(payoutHolds).where(eq(payoutHolds.id, holdId));
+    expect(hold!.status).toBe("released");
+    expect(hold!.transferId).toBe("tr_manual_reconciled");
+    const [order] = await db.select().from(orders).where(eq(orders.id, orderId));
+    expect(order!.stripeTransferId).toBe("tr_manual_reconciled");
+  });
+
   it("List-first adopt finalises op + hold + order together (no half-committed state)", async () => {
     const f = await makeRecoveryFixture();
     const { orderId, holdId } = await makeOrderWithHeldHold(f);

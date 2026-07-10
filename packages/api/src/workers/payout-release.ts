@@ -267,6 +267,15 @@ async function reconcilePendingTransfers(): Promise<number> {
                 inArray(payoutHolds.status, [
                   "releasing",
                   "release_failed_retryable",
+                  // release_failed_manual: the retry-cap path (markManual) can
+                  // also leave the transfer op indeterminate_5xx (Stripe 5xx on
+                  // the final attempt) — without this, a List-first match here
+                  // marks the op succeeded and sets orders.stripeTransferId,
+                  // but silently no-ops the hold status update (WHERE clause
+                  // miss), stranding the hold at release_failed_manual forever
+                  // even though the transfer landed (PR #120 follow-up round 2,
+                  // cross-model review).
+                  "release_failed_manual",
                   "held",
                 ]),
               ),

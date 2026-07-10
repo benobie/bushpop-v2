@@ -153,6 +153,10 @@ describe("handlePaymentAfterExpiry — LB-F7-REFUND-FLAGS", () => {
 
     const refundArgs = refundCreate.mock.calls[0]![0] as Record<string, unknown>;
     expect(refundArgs["payment_intent"]).toBe(pi);
+    // WP-0 residual: pin the refund amount to the session total, matching the
+    // three sites refund-service.ts already pins (the raw default would
+    // refund Stripe's full remaining charge).
+    expect(refundArgs["amount"]).toBe(6000);
     expect(refundArgs["reverse_transfer"]).toBe(true);
     expect(refundArgs["refund_application_fee"]).toBe(true);
     expect(refundArgs["reason"]).toBe("requested_by_customer");

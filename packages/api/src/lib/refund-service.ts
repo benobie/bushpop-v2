@@ -309,9 +309,68 @@ export async function processRefund(
   // 6. Branch on hold status
   const holdStatus = hold.status as PayoutHoldStatus;
 
-  if (holdStatus === "held" || holdStatus === "blocked") {
+  // 6a. release_failed_retryable/release_failed_manual do NOT by themselves
+  // prove no transfer landed. handleTransferError (payout-hold-service.ts)
+  // routes an indeterminate_5xx transfer-create response (Stripe's side
+  // effect unknown — it may have created the transfer server-side despite
+  // the 5xx) into release_failed_retryable, and at the retry cap into
+  // release_failed_manual — the SAME statuses a genuine deterministic
+  // failure (no transfer created) lands on. The hold status alone can't
+  // distinguish the two; only the transfer payment_operations WAL row can.
+  // Refuse the pre-transfer path while any transfer op for this order is not
+  // definitively `failed` (i.e. is `pending`/`indeterminate_5xx`, OR has
+  // `succeeded` — belt-and-suspenders in case a transfer lands but the hold's
+  // own status column doesn't get updated to `released` for some reason,
+  // e.g. the reconcilePendingTransfers WHERE-clause gap fixed alongside this
+  // in payout-release.ts) — proceeding would recreate the exact
+  // buyer-refunded + seller-paid race PR #120 closed (gap surfaced by
+  // cross-model review, PR #120 follow-up, round 2). This check uses the
+  // AUTHORITATIVE post-freeze `holdStatus` above, not a pre-freeze read —
+  // freezePayoutHold blocks on the same per-hold advisory lock a release
+  // attempt holds across its whole transfer-create + failure-transition
+  // critical section, so by the time we get here any race has fully settled.
+  if (holdStatus === "release_failed_retryable" || holdStatus === "release_failed_manual") {
+    const [unresolvedTransferOp] = await db
+      .select({ id: paymentOperations.id, status: paymentOperations.status })
+      .from(paymentOperations)
+      .where(
+        and(
+          eq(paymentOperations.orderId, orderId),
+          eq(paymentOperations.type, "transfer"),
+          inArray(paymentOperations.status, ["pending", "indeterminate_5xx", "succeeded"]),
+        ),
+      )
+      .limit(1);
+
+    if (unresolvedTransferOp) {
+      await db
+        .update(refunds)
+        .set({ status: "failed" })
+        .where(eq(refunds.id, refundId));
+      throw new ConflictError(
+        `Payout hold for order ${orderId} has a transfer operation in status ` +
+          `'${unresolvedTransferOp.status}' — Stripe's side effect is indeterminate ` +
+          `or a transfer already landed. Wait for the payout-release reconcile ` +
+          `sweep to resolve it, or verify manually via Stripe, before refunding.`,
+      );
+    }
+  }
+
+  if (
+    holdStatus === "held" ||
+    holdStatus === "blocked" ||
+    holdStatus === "release_failed_retryable" ||
+    holdStatus === "release_failed_manual"
+  ) {
     // ---------------------------------------------------------------------------
-    // Pre-transfer path — refund directly from buyer's charge, no reversal needed
+    // Pre-transfer path — refund directly from buyer's charge, no reversal needed.
+    //
+    // release_failed_retryable/release_failed_manual reach here only once 6a
+    // has confirmed no transfer op for this order is still ambiguous — same
+    // pre-transfer scenario as held/blocked from that point on. Without 6a,
+    // both states fell into the else-branch ConflictError below with the
+    // hold already frozen by the freezePayoutHold call above and no path
+    // back to a terminal state (PR #120 follow-up, batch 48 review).
     // ---------------------------------------------------------------------------
     const refundOp = await createPaymentOp(
       orderId,
@@ -376,14 +435,16 @@ export async function processRefund(
           .set({ status: terminalOrderStatus })
           .where(and(eq(orders.id, orderId), eq(orders.status, order.status)));
 
-        // Transition payout hold → refunded
-        // For `blocked` holds (seller account issues), transitionPayoutHold would
-        // reject the transition since `blocked` is terminal in the state machine.
-        // Use a direct update for those.
-        if (holdStatus === "held") {
+        // Transition payout hold → refunded.
+        // held / release_failed_retryable are legal PAYOUT_HOLD_MACHINE
+        // transitions to refunded — use transitionPayoutHold.
+        // blocked / release_failed_manual are terminal (no outbound
+        // transitions defined) — direct update bypasses the state machine,
+        // system-only refund path.
+        if (holdStatus === "held" || holdStatus === "release_failed_retryable") {
           await transitionPayoutHold(hold.id, holdStatus, "refunded", hold.version, undefined, tx);
         } else {
-          // blocked — direct update (bypasses state machine, system-only refund path)
+          // blocked / release_failed_manual — direct update
           await tx
             .update(payoutHolds)
             .set({ status: "refunded" })
@@ -696,6 +757,46 @@ export async function resumePendingRefunds(): Promise<void> {
             )
             .returning({ id: orders.id });
 
+          // Transition hold → refunded (matches the live pre-transfer path and
+          // reconcileRefundOpFromStripe). Pre-existing gap, not specific to
+          // release_failed_retryable/manual — this crash-recovery branch never
+          // touched payoutHolds for ANY hold status, including held. A hold
+          // left stuck here stays frozen forever with no path forward, and for
+          // held/release_failed_retryable specifically, a later dispute-won
+          // webhook unfreezes it and the payout-release sweep or an admin
+          // release can then pay the seller on an order already refunded to
+          // the buyer (PR #120 follow-up, round 4 review).
+          const [recoveryHold] = await db
+            .select({ id: payoutHolds.id, status: payoutHolds.status })
+            .from(payoutHolds)
+            .where(eq(payoutHolds.orderId, orderId))
+            .limit(1);
+
+          if (recoveryHold) {
+            if (
+              recoveryHold.status === "held" ||
+              recoveryHold.status === "release_failed_retryable"
+            ) {
+              await db
+                .update(payoutHolds)
+                .set({ status: "refunded" })
+                .where(
+                  and(
+                    eq(payoutHolds.id, recoveryHold.id),
+                    eq(payoutHolds.status, recoveryHold.status),
+                  ),
+                );
+            } else if (
+              recoveryHold.status === "blocked" ||
+              recoveryHold.status === "release_failed_manual"
+            ) {
+              await db
+                .update(payoutHolds)
+                .set({ status: "refunded" })
+                .where(eq(payoutHolds.id, recoveryHold.id));
+            }
+          }
+
           if (recoveredOrder.length > 0) {
             await enqueueEmail({ type: "refund_confirmation_buyer", orderId }).catch((emailErr) => {
               console.error("[refund-service] Failed to enqueue refund confirmation email:", emailErr);
@@ -929,13 +1030,24 @@ export async function reconcileRefundOpFromStripe(
         ),
       );
 
-    // Transition hold → refunded (matches pre-transfer path writes).
-    if (hold && hold.status === "held") {
+    // Transition hold → refunded (matches pre-transfer path writes). Covers
+    // release_failed_retryable/release_failed_manual too — processRefund's
+    // step 6a already confirmed (at the time of the original call, before
+    // freezing blocked any further release attempts) that no transfer op for
+    // this order is ambiguous, so a refund that reached here via ANY of these
+    // four hold statuses is safe to finalise the same way. Without this, a
+    // refund that crashed/went indeterminate on the Stripe call itself (not
+    // the transfer) after starting from release_failed_retryable/manual would
+    // leave the hold stuck there forever despite the refund completing — the
+    // same "no path forward" bug this PR exists to fix, just reachable via
+    // the webhook-reconcile path instead of the live path (PR #120 follow-up,
+    // round 3 review).
+    if (hold && (hold.status === "held" || hold.status === "release_failed_retryable")) {
       await tx
         .update(payoutHolds)
         .set({ status: "refunded" })
-        .where(and(eq(payoutHolds.id, hold.id), eq(payoutHolds.status, "held")));
-    } else if (hold && hold.status === "blocked") {
+        .where(and(eq(payoutHolds.id, hold.id), eq(payoutHolds.status, hold.status)));
+    } else if (hold && (hold.status === "blocked" || hold.status === "release_failed_manual")) {
       await tx
         .update(payoutHolds)
         .set({ status: "refunded" })
