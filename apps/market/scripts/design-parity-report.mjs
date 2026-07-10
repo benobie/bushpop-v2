@@ -81,9 +81,21 @@ async function shoot(page, url, file) {
   await page.screenshot({ path: file, fullPage: true, type: "jpeg", quality: JPEG_QUALITY });
 }
 
-async function main() {
-  await rm(OUT_DIR, { recursive: true, force: true });
+/**
+ * Clear only what THIS script generates (the JPEGs and README.md). An earlier
+ * version did `rm -rf OUT_DIR`, which silently deleted the hand-written
+ * FINDINGS.md sitting alongside them. Never blow away a directory you share
+ * with a human author.
+ */
+async function clearGenerated() {
   await mkdir(OUT_DIR, { recursive: true });
+  for (const f of await readdir(OUT_DIR)) {
+    if (f.endsWith(".jpg") || f === "README.md") await rm(path.join(OUT_DIR, f), { force: true });
+  }
+}
+
+async function main() {
+  await clearGenerated();
 
   if (!existsSync(PROTOTYPE_DIR)) {
     console.error(`Prototype dir not found: ${PROTOTYPE_DIR}`);
