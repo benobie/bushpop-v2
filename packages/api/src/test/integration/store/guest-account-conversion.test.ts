@@ -6,10 +6,13 @@ import {
   carts,
   checkoutSessions,
   orders,
+  refunds,
   savedSearches,
   user,
   wishlists,
 } from "@bushpop/db/schema";
+import { getSentEmails, clearMockEmails, _resetEmailSender } from "../../../lib/email/index.js";
+import { GUEST_EMAIL_DOMAIN } from "../../../lib/guest-identity.js";
 import {
   signUpTestUser,
   signInAnonymousTestUser,
@@ -76,6 +79,12 @@ describe("Guest → account conversion (guest merge)", () => {
       .values({ cartId: cart!.id, buyerId, channelId, status: "succeeded", ...money })
       .returning();
 
+    // Mirrors the real order-creation path (webhooks/stripe.ts): the buyer's
+    // contact email is frozen onto the order at insert, read from the user row
+    // as it stands right then. checkout-flow.test.ts pins that the actual
+    // webhook does this; here it keeps the fixture honest.
+    const [buyer] = await db.select({ email: user.email }).from(user).where(eq(user.id, buyerId));
+
     const [order] = await db
       .insert(orders)
       .values({
@@ -85,6 +94,7 @@ describe("Guest → account conversion (guest merge)", () => {
         channelId,
         status: "paid",
         stripePaymentIntentId: `pi_test_guest_merge_${session!.id}`,
+        buyerEmailSnapshot: buyer?.email ?? null,
         ...money,
       })
       .returning();
@@ -294,5 +304,95 @@ describe("Guest → account conversion (guest merge)", () => {
     expect(searches).toHaveLength(1);
 
     expect(await anonRow(guest.user.id)).toBeUndefined();
+  });
+
+  /**
+   * Transactional email must never depend on whether the buyer signs up.
+   *
+   * `releaseAnonymousEmail` hands the guest's captured email back to the
+   * placeholder domain BEFORE Better Auth validates the sign-up — there is no
+   * later hook to use. The email worker runs asynchronously, so if it resolved
+   * the recipient by joining `user.email` at send time (as it did before
+   * orders.buyer_email_snapshot), it would see a placeholder, skip the send and
+   * mark the job terminal. The buyer pays and is never told.
+   *
+   * Both tests below fail without the snapshot.
+   */
+  describe("transactional email is immune to the sign-up lifecycle", () => {
+    beforeEach(async () => {
+      _resetEmailSender();
+      clearMockEmails();
+    });
+
+    it("still sends the order confirmation to the guest's real address after a rejected sign-up", async () => {
+      const guest = await signInAnonymousTestUser();
+      const email = `guest-email-survives-${Date.now()}@example.com`;
+      await setGuestCheckoutEmail(guest.user.id, email);
+      const { order } = await insertPaidOrder(guest.user.id);
+
+      // Rejected: password too short. The release hook has already fired.
+      const app = await getTestApp();
+      const rejected = await app.inject({
+        method: "POST",
+        url: "/api/auth/sign-up/email",
+        headers: {
+          "content-type": "application/json",
+          "x-channel": "bushpop",
+          cookie: `better-auth.session_token=${guest.sessionToken}`,
+        },
+        payload: { email, password: "short", name: "Test User" },
+      });
+      expect(rejected.statusCode).toBeGreaterThanOrEqual(400);
+
+      // The guest row survives, and its email really has been released — this
+      // is precisely the state that used to suppress the email.
+      const guestRow = await anonRow(guest.user.id);
+      expect(guestRow!.isAnonymous).toBe(true);
+      expect(guestRow!.email.endsWith(`@${GUEST_EMAIL_DOMAIN}`)).toBe(true);
+
+      const { processEmailJobForTest } = await import("../../../workers/email.js");
+      await processEmailJobForTest({ type: "order_confirmation_buyer", orderId: order.id });
+
+      const sent = getSentEmails();
+      expect(sent, "confirmation must not be skipped").toHaveLength(1);
+      expect(sent[0]!.to).toBe(email);
+    });
+
+    it("sends the refund confirmation to the order's email even after the buyer changes their account email", async () => {
+      const guest = await signInAnonymousTestUser();
+      const email = `guest-refund-email-${Date.now()}@example.com`;
+      await setGuestCheckoutEmail(guest.user.id, email);
+      const { order } = await insertPaidOrder(guest.user.id);
+
+      const linked = await linkAnonymousToNewAccount(guest.sessionToken, { email });
+      const [reloaded] = await db.select().from(orders).where(eq(orders.id, order.id));
+      expect(reloaded!.buyerId).toBe(linked.user.id);
+
+      // Latent bug this also closes, unrelated to guests: a live join to
+      // `user.email` would send this order's refund notice to whatever address
+      // the account happens to hold *now*, not the one that placed the order.
+      await db
+        .update(user)
+        .set({ email: `changed-${Date.now()}@example.com` })
+        .where(eq(user.id, linked.user.id));
+
+      await db.update(orders).set({ status: "refunded" }).where(eq(orders.id, order.id));
+      await db.insert(refunds).values({
+        orderId: order.id,
+        reason: "test refund",
+        type: "full",
+        amountCents: order.totalCents,
+        platformFeeRefundedCents: order.platformFeeCents,
+        stripeRefundId: `re_test_guest_merge_${order.id.toLowerCase()}`,
+        status: "processed",
+      });
+
+      const { processEmailJobForTest } = await import("../../../workers/email.js");
+      await processEmailJobForTest({ type: "refund_confirmation_buyer", orderId: order.id });
+
+      const sent = getSentEmails();
+      expect(sent, "refund confirmation must not be skipped").toHaveLength(1);
+      expect(sent[0]!.to).toBe(email);
+    });
   });
 });

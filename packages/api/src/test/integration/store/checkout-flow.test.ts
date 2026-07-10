@@ -182,6 +182,9 @@ describe("Phase 2A — E2E smoke test (happy path)", () => {
     expect(order!.buyerId, "buyer ID on order").toBe(buyerId);
     expect(order!.sellerId, "seller ID on order").toBe(sellerId);
     expect(order!.subtotalCents, "subtotal").toBe(4500);
+    // Contact email frozen at order creation, so a later change to user.email
+    // cannot redirect or suppress this order's transactional mail.
+    expect(order!.buyerEmailSnapshot, "buyer email snapshotted onto order").toBe(buyer.user.email);
 
     // Inventory items marked sold
     const [soldItem] = await db
