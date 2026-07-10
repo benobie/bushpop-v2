@@ -215,7 +215,7 @@ describe("freezePayoutHold", () => {
     const updateChain = makeUpdateNoReturning();
     mockDb.update.mockReturnValue(updateChain);
 
-    await freezePayoutHold("order01");
+    await freezePayoutHold("order01", "refund");
 
     expect(updateChain.set).toHaveBeenCalledWith(
       expect.objectContaining({ frozenAt: expect.any(Date) }),
@@ -226,7 +226,7 @@ describe("freezePayoutHold", () => {
     const hold = { id: "hold01", frozenAt: new Date("2026-04-01T10:00:00Z") };
     mockDb.select.mockReturnValue(makeSelectChain([hold]));
 
-    await freezePayoutHold("order01");
+    await freezePayoutHold("order01", "refund");
 
     // update should NOT have been called
     expect(mockDb.update).not.toHaveBeenCalled();
@@ -235,7 +235,7 @@ describe("freezePayoutHold", () => {
   it("throws NotFoundError when no hold exists for orderId", async () => {
     mockDb.select.mockReturnValue(makeSelectChain([]));
 
-    await expect(freezePayoutHold("order01")).rejects.toThrow(NotFoundError);
+    await expect(freezePayoutHold("order01", "refund")).rejects.toThrow(NotFoundError);
   });
 });
 

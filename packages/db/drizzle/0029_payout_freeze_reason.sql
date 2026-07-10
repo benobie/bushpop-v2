@@ -1,0 +1,1 @@
+ALTER TABLE "payout_holds" ADD COLUMN "frozen_reason" varchar(16);

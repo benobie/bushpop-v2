@@ -4237,9 +4237,7 @@ export interface paths {
                             totals: {
                                 subtotalCents: number;
                                 shippingCents: number;
-                                platformFeeCents: number;
                                 buyerProtectionFeeCents: number;
-                                sellerProceedsCents: number;
                                 totalCents: number;
                                 currency: string;
                             };
@@ -4288,9 +4286,7 @@ export interface paths {
                             version: number;
                             subtotalCents: number;
                             shippingCents: number;
-                            platformFeeCents: number;
                             buyerProtectionFeeCents: number;
-                            sellerProceedsCents: number;
                             totalCents: number;
                             currency: string;
                             stripePaymentIntentId: string | null;
@@ -4948,9 +4944,7 @@ export interface paths {
                                 status: "paid" | "shipped" | "delivered" | "completed" | "cancelled" | "delivery_assumed" | "shipment_stale_review" | "refund_in_progress" | "refunded";
                                 subtotalCents: number;
                                 shippingCents: number;
-                                platformFeeCents: number;
                                 buyerProtectionFeeCents: number;
-                                sellerProceedsCents: number;
                                 totalCents: number;
                                 currency: string;
                                 shippingAddressSnapshot: {
@@ -5041,9 +5035,7 @@ export interface paths {
                             status: "paid" | "shipped" | "delivered" | "completed" | "cancelled" | "delivery_assumed" | "shipment_stale_review" | "refund_in_progress" | "refunded";
                             subtotalCents: number;
                             shippingCents: number;
-                            platformFeeCents: number;
                             buyerProtectionFeeCents: number;
-                            sellerProceedsCents: number;
                             totalCents: number;
                             currency: string;
                             shippingAddressSnapshot: {
@@ -5177,9 +5169,7 @@ export interface paths {
                             status: "paid" | "shipped" | "delivered" | "completed" | "cancelled" | "delivery_assumed" | "shipment_stale_review" | "refund_in_progress" | "refunded";
                             subtotalCents: number;
                             shippingCents: number;
-                            platformFeeCents: number;
                             buyerProtectionFeeCents: number;
-                            sellerProceedsCents: number;
                             totalCents: number;
                             currency: string;
                             shippingAddressSnapshot: {

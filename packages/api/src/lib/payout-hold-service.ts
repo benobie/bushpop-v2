@@ -8,7 +8,7 @@ import {
   type DbExecutor,
   type ReservedSql,
 } from "@bushpop/db/client";
-import { payoutHolds, orders, sellerProfiles } from "@bushpop/db/schema";
+import { payoutHolds, orders, sellerProfiles, paymentOperations } from "@bushpop/db/schema";
 import type { Order, PayoutHold, PayoutHoldStatus } from "@bushpop/types";
 import { ConflictError, NotFoundError } from "./errors.js";
 import { transition, InvalidTransitionError } from "./state-machine.js";
@@ -143,9 +143,64 @@ function holdAdvisoryKey(holdId: string): string {
 }
 
 /**
- * Freeze a payout hold for an order, setting `frozen_at = now()`.
+ * Why a payout hold was frozen. See the `frozen_reason` column.
  *
- * Idempotent — if `frozen_at` is already set, returns without error.
+ * - `refund`  — a refund was started for this order. May or may not have
+ *   reached Stripe; the payment-operations WAL is the only proof.
+ * - `dispute` — a chargeback was opened. Never operator-clearable: a won
+ *   dispute is unfrozen automatically by the `charge.dispute.closed` webhook,
+ *   and a lost one must stay frozen forever.
+ */
+export type PayoutFreezeReason = "refund" | "dispute";
+
+/**
+ * Has any refund for this order possibly moved money at Stripe?
+ *
+ * `refunds.status` is NOT the source of truth: the finalisation transaction
+ * runs AFTER `stripe.refunds.create` returns, so a crash in that window leaves
+ * `refunds.status = 'failed'` while Stripe shows a successful refund. The
+ * payment-operations WAL records the Stripe call itself, so it is the only
+ * honest answer.
+ *
+ * Returns true (i.e. "assume the money moved") when any refund op for the order
+ * is `succeeded`, still `pending`, `indeterminate_5xx`, or was auto-failed
+ * without verification. Only a definitively-failed refund op means no money left.
+ */
+export async function hasReachableRefundAtStripe(orderId: string): Promise<boolean> {
+  const rows = await db
+    .select({ id: paymentOperations.id })
+    .from(paymentOperations)
+    .where(
+      and(
+        eq(paymentOperations.orderId, orderId),
+        eq(paymentOperations.type, "refund"),
+        sql`NOT (
+          ${paymentOperations.status} = 'failed'
+          AND (
+            ${paymentOperations.failureProvenance} IS NULL
+            OR ${paymentOperations.failureProvenance} <> 'auto_timeout_unverified'
+          )
+        )`,
+      ),
+    )
+    .limit(1);
+
+  return rows.length > 0;
+}
+
+/**
+ * Freeze a payout hold for an order, setting `frozen_at = now()` and recording
+ * WHY via `frozen_reason`.
+ *
+ * The reason is load-bearing, not decoration. `frozen_at` alone cannot tell a
+ * refund that crashed before finalising (money may never have left Stripe — the
+ * hold can legitimately be released later) from a chargeback the buyer won (the
+ * funds are already gone and the seller must never be paid). Both leave the
+ * hold at `status = 'held'`. Only `frozen_reason` distinguishes them, and the
+ * admin unfreeze route depends on it.
+ *
+ * Idempotent — if `frozen_at` is already set, returns without error, except
+ * that a `dispute` reason escalates an existing `refund` reason (see below).
  * Called when a dispute or refund event arrives that may claw back funds
  * from a payout already in the `releasing` pipeline.
  *
@@ -159,9 +214,16 @@ function holdAdvisoryKey(holdId: string): string {
  * this lock until the release has finished. Frozen holds are also excluded from
  * payout release sweeps in Step 7.
  */
-export async function freezePayoutHold(orderId: string): Promise<void> {
+export async function freezePayoutHold(
+  orderId: string,
+  reason: PayoutFreezeReason,
+): Promise<void> {
   const [existing] = await db
-    .select({ id: payoutHolds.id, frozenAt: payoutHolds.frozenAt })
+    .select({
+      id: payoutHolds.id,
+      frozenAt: payoutHolds.frozenAt,
+      frozenReason: payoutHolds.frozenReason,
+    })
     .from(payoutHolds)
     .where(eq(payoutHolds.orderId, orderId))
     .limit(1);
@@ -170,8 +232,24 @@ export async function freezePayoutHold(orderId: string): Promise<void> {
     throw new NotFoundError(`Payout hold for order ${orderId} not found.`);
   }
 
-  // Idempotent: already frozen
+  // Idempotent: already frozen.
+  //
+  // One exception — a `dispute` freeze ESCALATES an existing `refund` freeze.
+  // A refund-provenance freeze can legitimately be cleared by an operator once
+  // the WAL proves no money left Stripe; a dispute-provenance freeze can never
+  // be. If a dispute lands on an order that was already frozen by a refund
+  // attempt, the stronger reason must win, or the order would remain
+  // operator-unfreezable-into-payment on the weaker one.
   if (existing.frozenAt !== null) {
+    if (reason === "dispute" && existing.frozenReason !== "dispute") {
+      await db.transaction(async (tx) => {
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(${holdAdvisoryKey(existing.id)}::bigint)`);
+        await tx
+          .update(payoutHolds)
+          .set({ frozenReason: "dispute" })
+          .where(eq(payoutHolds.id, existing.id));
+      });
+    }
     return;
   }
 
@@ -179,7 +257,7 @@ export async function freezePayoutHold(orderId: string): Promise<void> {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(${holdAdvisoryKey(existing.id)}::bigint)`);
     await tx
       .update(payoutHolds)
-      .set({ frozenAt: new Date() })
+      .set({ frozenAt: new Date(), frozenReason: reason })
       .where(and(eq(payoutHolds.id, existing.id), isNull(payoutHolds.frozenAt)));
   });
 }
@@ -218,7 +296,7 @@ export async function unfreezePayoutHold(orderId: string): Promise<boolean> {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(${holdAdvisoryKey(existing.id)}::bigint)`);
     const cleared = await tx
       .update(payoutHolds)
-      .set({ frozenAt: null })
+      .set({ frozenAt: null, frozenReason: null })
       .where(
         and(
           eq(payoutHolds.id, existing.id),

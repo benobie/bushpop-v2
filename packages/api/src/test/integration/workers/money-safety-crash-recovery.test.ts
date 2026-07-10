@@ -851,7 +851,7 @@ describe("Codex H2 — freeze mid-flight (after entry CAS) blocks the transfer",
       .mockImplementation(async (...args: Parameters<typeof realCreate>) => {
         const op = await realCreate(...args);
         const orderId = args[0] as string;
-        await freezePayoutHold(orderId); // freeze arrives now (e.g. a dispute webhook)
+        await freezePayoutHold(orderId, "dispute"); // freeze arrives now (e.g. a dispute webhook)
         return op;
       });
 
@@ -921,7 +921,7 @@ describe("Codex H2 — freeze mid-flight (after entry CAS) blocks the transfer",
     // Fire a concurrent freeze (e.g. a dispute webhook landing mid-flight). It
     // takes the SAME advisory key and MUST block on the session lock until the
     // release finishes — so it cannot set frozen_at during the transfer window.
-    const freezePromise = freezePayoutHold(orderId).then(() => {
+    const freezePromise = freezePayoutHold(orderId, "refund").then(() => {
       freezeCommittedAt = Date.now();
     });
 
@@ -971,7 +971,7 @@ describe("Codex H2 — freeze mid-flight (after entry CAS) blocks the transfer",
       .spyOn(paymentOps, "createPaymentOp")
       .mockImplementation(async (...args: Parameters<typeof realCreate>) => {
         const op = await realCreate(...args);
-        await freezePayoutHold(args[0] as string);
+        await freezePayoutHold(args[0] as string, "refund");
         return op;
       });
 

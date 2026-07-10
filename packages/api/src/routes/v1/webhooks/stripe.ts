@@ -294,7 +294,11 @@ async function handleChargeDisputeCreated(dispute: Stripe.Dispute): Promise<void
     currency: dispute.currency,
   });
 
-  await freezePayoutHold(orderId);
+  // `dispute` provenance is permanent as far as the admin unfreeze route is
+  // concerned: a WON dispute is unfrozen by charge.dispute.closed below; a LOST
+  // one must stay frozen forever, because the funds have already left the
+  // platform via the chargeback.
+  await freezePayoutHold(orderId, "dispute");
   console.info(`[webhook] charge.dispute.created ${dispute.id} — froze payout hold for order ${orderId}`);
 }
 

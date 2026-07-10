@@ -184,6 +184,13 @@ export const payoutHolds = pgTable("payout_holds", {
   // held | releasing | released | refunded | blocked | release_failed_retryable | release_failed_manual
   // Phase 2B: freeze + retry + policy tracking columns
   frozenAt: timestamp("frozen_at", { withTimezone: true }),
+  // WHY the hold was frozen: 'refund' | 'dispute'. Load-bearing for recovery.
+  // `frozen_at` alone cannot distinguish "a refund crashed before finalising,
+  // and no money ever left Stripe" (safely unfreezable) from "the buyer charged
+  // back and won" (must NEVER be released — the funds already left the platform
+  // and the seller would be paid twice). Both leave the hold at status='held'.
+  // NULL means provenance unknown; the admin unfreeze route fails closed on it.
+  frozenReason: varchar("frozen_reason", { length: 16 }),
   nextRetryAt: timestamp("next_retry_at", { withTimezone: true }),
   failureReason: varchar("failure_reason", { length: 500 }),
   // Per-attempt counter for the payout-release worker. Drives the per-attempt

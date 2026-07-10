@@ -6,7 +6,11 @@ import { idempotencyMiddleware } from "../../../../middleware/idempotency.js";
 import { desc, eq, sql } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
 import { payoutHolds } from "@bushpop/db/schema";
-import { releasePayoutHold, unfreezePayoutHold } from "../../../../lib/payout-hold-service.js";
+import {
+  releasePayoutHold,
+  unfreezePayoutHold,
+  hasReachableRefundAtStripe,
+} from "../../../../lib/payout-hold-service.js";
 import { dispatchEvent } from "../../../../lib/events.js";
 import { AppError, NotFoundError, ConflictError, ValidationError } from "../../../../lib/errors.js";
 
@@ -182,16 +186,29 @@ export async function adminPayoutRoutes(app: FastifyInstance) {
   //
   // A hold is frozen by `freezePayoutHold()` (refund start, dispute opened).
   // It is normally unfrozen only by the `charge.dispute.closed` handler on a
-  // `won` dispute — so a hold frozen by a refund whose finalisation crashed
-  // after the Stripe call has no path back and can never be released. This is
-  // the operator route out.
+  // `won` dispute — so a hold frozen by a refund that failed before it ever
+  // reached Stripe has no path back and can never be released. That, and only
+  // that, is what this route exists to recover.
   //
-  // This route ONLY clears the freeze flag. It moves no money, and it does not
+  // This route ONLY clears the freeze flag. It moves no money and does not
   // release the payout: the operator must still call the release route, which
-  // re-applies every money-safety gate. The shared core refuses to unfreeze a
-  // hold that is not in a releasable state (`held` / `release_failed_retryable`)
-  // — a `released`, `refunded` or `blocked` hold stays exactly as it is, so a
-  // hold frozen because a dispute was *lost* cannot be unfrozen into payment.
+  // re-applies every money-safety gate.
+  //
+  // Status is NOT sufficient authority here, and an earlier version of this
+  // route wrongly assumed it was. A lost chargeback and a crashed refund BOTH
+  // leave the hold at `status = 'held'` with `frozen_at` set — freezing never
+  // touches status. Clearing the freeze on either would let the seller be paid
+  // for money the platform no longer holds. So the gate is provenance:
+  //
+  //   frozen_reason = 'dispute' → refuse. A won dispute unfreezes itself via
+  //       the webhook; a lost one must stay frozen forever.
+  //   frozen_reason = 'refund'  → refuse if the payment-operations WAL shows a
+  //       refund for this order that reached (or may have reached) Stripe.
+  //       `refunds.status` is NOT consulted: finalisation runs after
+  //       `refunds.create` returns, so a crash there leaves the row 'failed'
+  //       while Stripe shows a successful refund.
+  //   frozen_reason = NULL      → refuse. Provenance unknown (frozen before this
+  //       column existed). Fail closed.
   app.post(
     "/api/v1/admin/payouts/:holdId/unfreeze",
     {
@@ -226,6 +243,29 @@ export async function adminPayoutRoutes(app: FastifyInstance) {
       if (pre.status !== "held" && pre.status !== "release_failed_retryable") {
         throw new ConflictError(
           `Cannot unfreeze a payout in status '${pre.status}'. Only 'held' or 'release_failed_retryable' payouts can be unfrozen.`,
+        );
+      }
+
+      // Provenance gate — see the block comment above. This, not `status`, is
+      // what keeps a lost chargeback or a completed refund from being released.
+      if (pre.frozenReason === "dispute") {
+        throw new ConflictError(
+          "This payout is frozen because of a chargeback and cannot be unfrozen here. " +
+            "A dispute resolved in our favour unfreezes the hold automatically; a lost " +
+            "dispute must stay frozen — the funds have already left the platform.",
+        );
+      }
+      if (pre.frozenReason !== "refund") {
+        throw new ConflictError(
+          "This payout's freeze has no recorded reason, so it cannot be proven safe to clear. " +
+            "Reconcile the order against Stripe manually.",
+        );
+      }
+      if (await hasReachableRefundAtStripe(pre.orderId)) {
+        throw new ConflictError(
+          "A refund for this order reached Stripe (or its outcome is unresolved), so the " +
+            "buyer may already have their money back. Releasing this payout would pay the " +
+            "seller as well. Reconcile the refund first.",
         );
       }
 

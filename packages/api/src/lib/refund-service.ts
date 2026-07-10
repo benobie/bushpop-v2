@@ -290,7 +290,7 @@ export async function processRefund(
   //
   // Placed AFTER the idempotency / existing-refund gates (which throw before any
   // side effect) so an aborted refund never strands a frozen hold.
-  await freezePayoutHold(orderId);
+  await freezePayoutHold(orderId, "refund");
 
   // 5c. Re-read the hold and branch on its AUTHORITATIVE post-freeze status. If
   // a release beat the freeze, the hold is now `released` (→ reversal path) or
