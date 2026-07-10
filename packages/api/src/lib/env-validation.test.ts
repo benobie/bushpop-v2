@@ -32,11 +32,51 @@ describe("validateEnv — GUEST_ORDER_TOKEN_SECRET production requirement (money
         ...REQUIRED_BASE_ENV,
         NODE_ENV: "production",
         GUEST_ORDER_TOKEN_SECRET: "a".repeat(16),
+        PICKUP_CODE_SECRET: "b".repeat(32),
       }),
     ).not.toThrow();
   });
 
   it("passes in development with the secret unset (dev-fallback path unaffected)", () => {
     expect(() => validateEnv({ ...REQUIRED_BASE_ENV, NODE_ENV: "development" })).not.toThrow();
+  });
+});
+
+describe("validateEnv — PICKUP_CODE_SECRET production requirement", () => {
+  // Regression guard: this var reached the deployed staging engine unset and
+  // the container booted healthy, because the only check was the lazy throw in
+  // pickup-code-service.ts (fires on the first pickup-code request). 10/07/2026.
+  const PROD_BASE = {
+    ...REQUIRED_BASE_ENV,
+    NODE_ENV: "production",
+    GUEST_ORDER_TOKEN_SECRET: "a".repeat(16),
+  };
+
+  it("throws at boot when NODE_ENV=production and the secret is unset", () => {
+    expect(() => validateEnv(PROD_BASE)).toThrow(/PICKUP_CODE_SECRET/);
+  });
+
+  it("throws when the secret is the empty string (what compose injects for an unset ${VAR})", () => {
+    expect(() => validateEnv({ ...PROD_BASE, PICKUP_CODE_SECRET: "" })).toThrow(
+      /PICKUP_CODE_SECRET/,
+    );
+  });
+
+  it("throws when the secret is shorter than the 32-char HMAC-key floor", () => {
+    expect(() => validateEnv({ ...PROD_BASE, PICKUP_CODE_SECRET: "abc" })).toThrow(
+      /PICKUP_CODE_SECRET/,
+    );
+  });
+
+  it("passes when NODE_ENV=production and the secret is set (>=32 chars)", () => {
+    expect(() =>
+      validateEnv({ ...PROD_BASE, PICKUP_CODE_SECRET: "b".repeat(64) }),
+    ).not.toThrow();
+  });
+
+  it("passes in development with the secret unset (dev-fallback path unaffected)", () => {
+    expect(() =>
+      validateEnv({ ...REQUIRED_BASE_ENV, NODE_ENV: "development" }),
+    ).not.toThrow();
   });
 });
