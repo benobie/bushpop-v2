@@ -294,7 +294,11 @@ async function handleChargeDisputeCreated(dispute: Stripe.Dispute): Promise<void
     currency: dispute.currency,
   });
 
-  await freezePayoutHold(orderId);
+  // `dispute` provenance is permanent as far as the admin unfreeze route is
+  // concerned: a WON dispute is unfrozen by charge.dispute.closed below; a LOST
+  // one must stay frozen forever, because the funds have already left the
+  // platform via the chargeback.
+  await freezePayoutHold(orderId, "dispute");
   console.info(`[webhook] charge.dispute.created ${dispute.id} — froze payout hold for order ${orderId}`);
 }
 
@@ -347,6 +351,30 @@ async function handlePaymentIntentSucceeded(pi: Stripe.PaymentIntent): Promise<v
   if (!session) {
     console.warn(`[webhook] No checkout session found for PaymentIntent ${pi.id}`);
     return;
+  }
+
+  // 1b. Money invariant: what Stripe captured must equal what we quoted.
+  //
+  // Today the PaymentIntent is created server-side from the same `totals`
+  // object persisted onto the session, so this can only fire on a bug or on an
+  // out-of-band mutation of the PI. It is asserted anyway because every
+  // downstream money field — the order rows, the payout hold, the refund
+  // amount on the expiry path — is read from the SESSION, never from the
+  // charge. The moment a second PI-creation path exists (multi-vendor, partial
+  // capture) the absence of this check becomes load-bearing.
+  //
+  // Fail closed: throw rather than fulfil. The event is not marked processed,
+  // so Stripe redelivers and the mismatch surfaces as a stuck webhook rather
+  // than as a silently under-collected order.
+  if (pi.amount !== session.totalCents || pi.currency.toUpperCase() !== session.currency.toUpperCase()) {
+    console.error(
+      `[webhook] MONEY MISMATCH for session ${session.id}: PaymentIntent ${pi.id} is ` +
+        `${pi.amount} ${pi.currency.toUpperCase()} but the session quoted ` +
+        `${session.totalCents} ${session.currency.toUpperCase()}. Refusing to fulfil.`,
+    );
+    throw new Error(
+      `PaymentIntent ${pi.id} amount/currency does not match checkout session ${session.id}`,
+    );
   }
 
   // 2. Idempotency / AUDIT-003 recovery: if the session is already `succeeded`,
@@ -850,10 +878,26 @@ export async function enqueueOrderJobs(
 
 /**
  * @internal Test-only: invoke payment_intent.succeeded handler directly.
- * Accepts paymentIntentId as string and constructs a minimal PI object.
+ *
+ * Constructs a minimal PI object. `amount` / `currency` default to the matching
+ * checkout session's own values, because a real `payment_intent.succeeded` for
+ * that session always carries exactly those — the handler now asserts it. Pass
+ * `overrides` to simulate a mismatched charge.
  */
-export async function handlePaymentIntentSucceededForTest(paymentIntentId: string): Promise<void> {
-  await handlePaymentIntentSucceeded({ id: paymentIntentId } as Stripe.PaymentIntent);
+export async function handlePaymentIntentSucceededForTest(
+  paymentIntentId: string,
+  overrides?: { amount?: number; currency?: string },
+): Promise<void> {
+  const [session] = await db
+    .select({ totalCents: checkoutSessions.totalCents, currency: checkoutSessions.currency })
+    .from(checkoutSessions)
+    .where(eq(checkoutSessions.stripePaymentIntentId, paymentIntentId));
+
+  await handlePaymentIntentSucceeded({
+    id: paymentIntentId,
+    amount: overrides?.amount ?? session?.totalCents ?? 0,
+    currency: overrides?.currency ?? session?.currency?.toLowerCase() ?? "aud",
+  } as Stripe.PaymentIntent);
 }
 
 /**

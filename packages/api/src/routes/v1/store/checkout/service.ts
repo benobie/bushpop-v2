@@ -659,21 +659,30 @@ export async function handlePaymentAfterExpiry(
     hasApplicationFee = (charge.application_fee_amount ?? 0) > 0;
   }
 
-  await stripe.refunds.create({
-    payment_intent: paymentIntentId,
-    reason: "requested_by_customer",
-    // WP-0: pin the refund amount. This path runs before any order row exists,
-    // so there's no order.totalCents to reuse — the checkout session's own
-    // locked-at-creation total is the equivalent value (see refund-service.ts
-    // for the shared-group-PI rationale this guards against).
-    amount: session.totalCents,
-    metadata: {
-      piklo_reason: "late_success_recovery",
-      checkout_session_id: sessionId,
+  await stripe.refunds.create(
+    {
+      payment_intent: paymentIntentId,
+      reason: "requested_by_customer",
+      // WP-0: pin the refund amount. This path runs before any order row exists,
+      // so there's no order.totalCents to reuse — the checkout session's own
+      // locked-at-creation total is the equivalent value (see refund-service.ts
+      // for the shared-group-PI rationale this guards against).
+      amount: session.totalCents,
+      metadata: {
+        piklo_reason: "late_success_recovery",
+        checkout_session_id: sessionId,
+      },
+      ...(hasDestinationTransfer && { reverse_transfer: true }),
+      ...(hasApplicationFee && { refund_application_fee: true }),
     },
-    ...(hasDestinationTransfer && { reverse_transfer: true }),
-    ...(hasApplicationFee && { refund_application_fee: true }),
-  });
+    // Keyed on the session, which is the unit being recovered here (no refund
+    // row and no order row exist on this path). Two concurrent or retried
+    // recoveries of the same expired session therefore refund the buyer once,
+    // matching the `refund_${refundId}` keying in refund-service.ts. The
+    // session's terminal `refunded_after_expiry` status below is not a
+    // sufficient guard on its own — it is written after the money moves.
+    { idempotencyKey: `late_success_refund_${sessionId}` },
+  );
 
   await db
     .update(checkoutSessions)

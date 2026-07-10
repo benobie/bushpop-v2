@@ -167,14 +167,26 @@ describe("Checkout API", () => {
       });
 
       expect(res.statusCode).toBe(200);
-      const { totals } = res.json();
+      const { totals, sessionId } = res.json();
       expect(totals.subtotalCents).toBe(20_000);
       expect(totals.shippingCents).toBe(0); // prepaid = free shipping for the buyer
       // prepaid is a posted order → Buyer Protection fee applies: 4% of 20000 + 50 = 850
       expect(totals.buyerProtectionFeeCents).toBe(850);
       expect(totals.totalCents).toBe(20_850);
-      expect(totals.platformFeeCents).toBe(380); // 175bps + 30c, UNCHANGED
-      expect(totals.sellerProceedsCents).toBe(18_525); // exactly $185.25, BP fee never touches this
+
+      // Seller economics are asserted against the PERSISTED session, not the
+      // buyer's response: the buyer-facing schema deliberately withholds
+      // platformFeeCents / sellerProceedsCents. The money lock is unchanged.
+      const [persisted] = await db
+        .select()
+        .from(checkoutSessions)
+        .where(eq(checkoutSessions.id, sessionId));
+      expect(persisted!.platformFeeCents).toBe(380); // 175bps + 30c, UNCHANGED
+      expect(persisted!.sellerProceedsCents).toBe(18_525); // exactly $185.25, BP fee never touches this
+
+      // ...and the buyer never sees either of them.
+      expect(totals).not.toHaveProperty("platformFeeCents");
+      expect(totals).not.toHaveProperty("sellerProceedsCents");
 
       // The buyer must actually be CHARGED totalCents (incl. BP fee), not
       // just have it reported back in the response — assert the real Stripe
@@ -210,13 +222,19 @@ describe("Checkout API", () => {
         shippingAddressId: addressId,
       });
 
-      const { totals } = res.json();
-      // 5000 * 1.75% = 87.5 → 88 + 30 = 118 (old 8% model would say 400)
-      expect(totals.platformFeeCents).toBe(118);
+      const { totals, sessionId } = res.json();
       // Legacy item (shipping_option NULL) = buyer_pays: seller keeps shipping
-      // m rate 1095: proceeds = 5000 + 1095 - 118 = 5977
       expect(totals.shippingCents).toBe(1095);
-      expect(totals.sellerProceedsCents).toBe(5977);
+
+      // Commission + proceeds read off the persisted session — the buyer's
+      // response withholds both. 5000 * 1.75% = 87.5 → 88 + 30 = 118 (the old
+      // 8% model would say 400); m rate 1095: proceeds = 5000 + 1095 - 118.
+      const [persisted] = await db
+        .select()
+        .from(checkoutSessions)
+        .where(eq(checkoutSessions.id, sessionId));
+      expect(persisted!.platformFeeCents).toBe(118);
+      expect(persisted!.sellerProceedsCents).toBe(5977);
     });
 
     it("calculates multi-item shipping: highest class + $3 per additional item", async () => {

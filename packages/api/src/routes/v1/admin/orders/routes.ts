@@ -5,9 +5,10 @@ import { requireRole } from "../../../../middleware/require-role.js";
 import { idempotencyMiddleware } from "../../../../middleware/idempotency.js";
 import { desc, eq } from "drizzle-orm";
 import { db } from "@bushpop/db/client";
-import { orders, refunds } from "@bushpop/db/schema";
+import { orders, pickupCodes, refunds } from "@bushpop/db/schema";
 import { dispatchEvent } from "../../../../lib/events.js";
-import { NotFoundError } from "../../../../lib/errors.js";
+import { NotFoundError, ConflictError } from "../../../../lib/errors.js";
+import { MAX_PICKUP_CODE_ATTEMPTS } from "../../../../lib/pickup-code-service.js";
 import { processRefund } from "../../../../lib/refund-service.js";
 import {
   listOrdersQuerySchema,
@@ -17,15 +18,22 @@ import {
 } from "./schemas.js";
 import { listOrders, getOrderDetail } from "./service.js";
 
-const adminReadPreHandlers = [requireAuth, requireRole("admin")];
-const adminPreHandlers = [requireAuth, requireRole("admin"), idempotencyMiddleware];
+// `@fastify/rate-limit`'s onRoute hook pushes its handler onto whatever array
+// object is passed as `preHandler`, for every route, whether or not that route
+// declares `config.rateLimit`. Two routes sharing one array *reference* would
+// share a single limiter bucket, and a per-request guard means only the first
+// registered route's limit would ever apply — silently. Both money-movement
+// routes below (refund, cancel) sit on these arrays. Build a fresh one per
+// route, matching the factory pattern in seller/drafts and seller/orders.
+const adminReadPreHandlers = () => [requireAuth, requireRole("admin")];
+const adminPreHandlers = () => [requireAuth, requireRole("admin"), idempotencyMiddleware];
 
 export async function adminOrderRoutes(app: FastifyInstance) {
   // GET /api/v1/admin/orders — list orders, optional status filter
   app.get(
     "/api/v1/admin/orders",
     {
-      preHandler: adminReadPreHandlers,
+      preHandler: adminReadPreHandlers(),
       schema: {
         tags: ["Admin - Orders"],
         summary: "List orders (admin only)",
@@ -51,7 +59,7 @@ export async function adminOrderRoutes(app: FastifyInstance) {
   app.get(
     "/api/v1/admin/orders/:id",
     {
-      preHandler: adminReadPreHandlers,
+      preHandler: adminReadPreHandlers(),
       schema: {
         tags: ["Admin - Orders"],
         summary: "Get order detail (admin only)",
@@ -76,7 +84,7 @@ export async function adminOrderRoutes(app: FastifyInstance) {
   app.post(
     "/api/v1/admin/orders/:id/refund",
     {
-      preHandler: adminPreHandlers,
+      preHandler: adminPreHandlers(),
       schema: {
         tags: ["Admin - Orders"],
         summary: "Refund a paid order via the processor (admin only)",
@@ -153,7 +161,7 @@ export async function adminOrderRoutes(app: FastifyInstance) {
   app.post(
     "/api/v1/admin/orders/:id/cancel",
     {
-      preHandler: adminPreHandlers,
+      preHandler: adminPreHandlers(),
       schema: {
         tags: ["Admin - Orders"],
         summary: "Cancel a paid order (admin only)",
@@ -218,6 +226,71 @@ export async function adminOrderRoutes(app: FastifyInstance) {
         status: order.status,
         refundId: refundRow?.stripeRefundId ?? null,
       };
+    },
+  );
+
+  // POST /api/v1/admin/orders/:id/reset-pickup-attempts — clear the pickup-code
+  // lockout on an order.
+  //
+  // The seller-side redemption lockout at MAX_PICKUP_CODE_ATTEMPTS is permanent
+  // and not time-windowed, so a buyer who has already collected the goods can
+  // jam an order's automated completion for good by feeding the seller wrong
+  // codes. There is otherwise no route back. Support-operated, audited.
+  //
+  // This does NOT move money and does not complete the order — it only restores
+  // the seller's ability to attempt a redemption, which then runs every
+  // pre-existing check. An already-redeemed code is left alone: re-opening a
+  // completed handover would be a fresh attempt surface against a code whose
+  // holder has already used it.
+  app.post(
+    "/api/v1/admin/orders/:id/reset-pickup-attempts",
+    {
+      preHandler: adminPreHandlers(),
+      schema: {
+        tags: ["Admin - Orders"],
+        summary: "Reset the pickup-code attempt lockout on an order (admin only)",
+        params: z.object({ id: z.string().length(26) }),
+        body: z.object({ reason: z.string().min(1).max(500) }),
+        response: {
+          200: z.object({
+            orderId: z.string(),
+            attempts: z.number(),
+            maxAttempts: z.number(),
+          }),
+        },
+      },
+    },
+    async (request) => {
+      const { id } = request.params as { id: string };
+      const { reason } = request.body as { reason: string };
+
+      const [pickup] = await db.select().from(pickupCodes).where(eq(pickupCodes.orderId, id));
+      if (!pickup) {
+        throw new NotFoundError("No pickup code exists for this order");
+      }
+      if (pickup.redeemedAt !== null) {
+        throw new ConflictError("Pickup code has already been redeemed.");
+      }
+
+      const previousAttempts = pickup.attempts;
+
+      await db
+        .update(pickupCodes)
+        .set({ attempts: 0 })
+        .where(eq(pickupCodes.id, pickup.id));
+
+      dispatchEvent({
+        eventName: "pickup.attempts_reset",
+        category: "order",
+        actorId: request.user!.id,
+        entityType: "order",
+        entityId: id,
+        metadata: { reason, previousAttempts, resetBy: "admin" },
+      }).catch((err) => {
+        request.log.error({ err }, "[admin/orders] Failed to dispatch pickup.attempts_reset");
+      });
+
+      return { orderId: id, attempts: 0, maxAttempts: MAX_PICKUP_CODE_ATTEMPTS };
     },
   );
 }
