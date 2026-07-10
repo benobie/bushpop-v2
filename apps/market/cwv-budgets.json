@@ -1,0 +1,36 @@
+{
+  "$comment": [
+    "Two-tier CWV budget — see docs/cwv-budget.md for the full rationale.",
+    "`target`  = Google's 'good' threshold. Breaching it WARNS (exit 0).",
+    "`ceiling` = regression guard. Breaching it FAILS (exit 1).",
+    "Ceilings follow one rule: ceiling = max(target, measured_median * ~1.2).",
+    "So a metric already inside target (CLS, TBT everywhere) has ceiling == target and must stay good;",
+    "a metric short of target (LCP everywhere) gets ~20% headroom over today's median for Lighthouse noise.",
+    "Baselines: Lighthouse mobile, median of 3, vs https://market.bushpop.xyz on 2026-07-10.",
+    "Re-baseline deliberately when a page's content genuinely changes — never to turn a red run green."
+  ],
+  "defaultBase": "https://market.bushpop.xyz",
+  "pages": [
+    {
+      "name": "Home",
+      "path": "/",
+      "baseline": { "lcp": 3933, "cls": 0.0, "tbt": 28 },
+      "target": { "lcp": 2500, "cls": 0.1, "tbt": 200 },
+      "ceiling": { "lcp": 4600, "cls": 0.1, "tbt": 200 }
+    },
+    {
+      "name": "Shop (PLP)",
+      "path": "/shop",
+      "baseline": { "lcp": 3168, "cls": 0.008, "tbt": 36 },
+      "target": { "lcp": 2500, "cls": 0.1, "tbt": 200 },
+      "ceiling": { "lcp": 3800, "cls": 0.1, "tbt": 200 }
+    },
+    {
+      "name": "Listing (PDP)",
+      "path": "/listing/linen-shirt-k06tm2",
+      "baseline": { "lcp": 3025, "cls": 0.0, "tbt": 35 },
+      "target": { "lcp": 2500, "cls": 0.1, "tbt": 200 },
+      "ceiling": { "lcp": 3700, "cls": 0.1, "tbt": 200 }
+    }
+  ]
+}
