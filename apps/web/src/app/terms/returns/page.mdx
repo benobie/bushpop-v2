@@ -4,32 +4,64 @@ export const metadata = {
     "Bushpop's returns policy for buyers and sellers. What to do if an item doesn't arrive or isn't as described.",
 };
 
+{/* DRAFT — pending Ben + legal review, not ratified. Written 08/07/2026 from design/home/returns.html (design-track DRAFT, 3 Jul 2026). Ratify together with /terms/buyer-protection/ — the two policies share the same claim window and escrow logic. */}
+
 # Returns Policy
 
-{/* TODO: Ben writes copy — audit verdict: REBUILD (legal review). Peer-to-peer marketplace returns are different from retailer returns. Be clear about what Bushpop covers vs what the seller covers. Australian Consumer Law applies. */}
+*Draft · 8 July 2026*
 
-*Last updated: [DATE]*
+> **Draft policy, pending review.** This is a working draft. It becomes our binding policy once it has been reviewed by our lawyer and ratified; until then it is a draft, not a promise.
 
 ## Overview
 
-{/* TODO: Legal copy — Bushpop is a peer-to-peer marketplace. Returns are primarily between buyer and seller. Bushpop facilitates dispute resolution. */}
+Everything on Bushpop is one-of-one, so returns work differently from a retail store: there is no shelf of identical replacements to swap yours for. Bushpop is a peer-to-peer marketplace, which means there are two paths, and it helps to know which one you are on.
+
+**Something's wrong with the order.** It never arrived, it arrived damaged, or it is significantly not as described. That is not a return in the retail sense; it is a [Buyer Protection](/terms/buyer-protection/) claim, and it is covered on every order paid through Bushpop checkout.
+
+**Change of mind, or fit.** The marketplace default: change-of-mind returns are between you and the seller. Some sellers accept them and others don't, which is their call to make. {/* TODO: Ben ratify — the per-seller "returns setting" this sentence leans on is BACKLOG, not built (returns.html .dp chip #4). Either keep the hedged "some sellers" wording, or simplify to "at the seller's discretion — ask before you buy" until the setting exists. */}
 
 ## When you can return an item
 
-{/* TODO: Legal copy — Item not as described. Item not received. Significant defect not disclosed. Counterfeit item. Outline what does NOT qualify (change of mind, fit issues unless seller misrepresented sizing). */}
+A Buyer Protection claim covers:
+
+- your item never arrives;
+- your item arrives damaged; or
+- your item is significantly not as described: the wrong item, the wrong size against the listed measurements, or condition clearly below the listed grade.
+
+What does not qualify: change of mind, or fit issues where the listing's measurements were accurate. Minor wear consistent with the listed condition grade is not a defect; that is what the five-step condition scale is for.
 
 ## How to initiate a return
 
-{/* TODO: Legal copy — Timeframe (e.g. within 7 days of delivery). How to contact the seller. How to open a dispute with Bushpop if seller is unresponsive. */}
+If your claim is resolved as a return-for-refund, here is the shape of it:
+
+1. Report the problem from your order page within 7 days of delivery. {/* TODO: Ben ratify — CLAIM WINDOW CONFLICT. The Ben-approved 02/07 decisions log and the approved /help/ copy say 7 days from delivery; the design-track drafts (returns.html + buyer-protection.html .dp chips) say 2 days; the live apps/market /returns page states no window at all. Pick one value and apply it across returns + buyer-protection + help + the market app. Drafted as 7 days here because that is the only Ben-approved figure. */}
+2. We pause the seller's payout. Your money is still sitting with Bushpop, not the seller.
+3. If the resolution is a return-for-refund, we confirm the return details with both of you. {/* TODO: Ben ratify — return postage arrangement: who pays return postage on a return-for-refund (returns.html .dp chip #2, currently unstated). */}
+4. Tracking confirms the item is back with the seller, and your refund is released. {/* TODO: Ben ratify — refund timing after tracked return delivery (returns.html .dp chip #3). Note the live apps/market /returns page separately promises "we start a refund within 2 business days of hearing from you" — align the two. */}
+
+If the seller has gone quiet, or you cannot resolve it together, contact support@bushpop.com.au and we will step in.
 
 ## Seller obligations
 
-{/* TODO: Legal copy — What sellers must do when a return is raised. Refund timeframe. Return shipping who pays. */}
+When a claim is raised on one of your orders, we will email you straight away with what the buyer has raised. Reply within 2 business days with your side and any evidence: photos, tracking, the listing description. We look at both sides and work to a fair outcome; most disputes are resolved within a week.
+
+If the resolution is a return-for-refund, the payout for that order stays paused until tracking confirms the item is back with you.
+
+## Dodge the dud fit before you buy
+
+Most "it doesn't fit" moments never need to happen, because every listing carries the two things a size label can't give you:
+
+- **Real measurements.** Compare them against a piece you already own and love, not against a brand's idea of a size.
+- **The five-step condition scale.** New with tags · Like new · Excellent · Good · Well loved, so "good" means the same thing on every listing.
+
+Buying a brand you don't know? Check our [size charts](/guides/size-charts/) before you buy; we keep charts for the brands Australians search most.
 
 ## Australian Consumer Law
 
-{/* TODO: Legal copy — Brief note that ACL applies regardless of these terms. Guarantees on goods. How to contact ACCC or fair trading if not resolved. */}
+This policy sits alongside your rights under the Australian Consumer Law; it does not replace or limit them. Consumer guarantees apply to goods sold in trade or commerce and cannot be excluded by these terms. Secondhand items are judged against their age, price, and disclosed condition, but you are always entitled to a remedy if an item is not as described.
+
+If we cannot resolve an issue and you believe your consumer rights have not been met, you can contact the ACCC or your state or territory fair trading body.
 
 ## Contact
 
-{/* TODO: Legal copy — How to reach Bushpop support. Link to /contact/. */}
+Email support@bushpop.com.au or use our [contact page](/contact/). A real person in Australia reads and answers, usually within one business day.
